@@ -17,10 +17,10 @@ export default function Customer(props: CustomerProps) {
     }
 
     return (
-        <main>
-            <div>
-                {customer.customerName}
-            </div>
-        </main>
+        <>
+            <header>
+                <h1>{customer.customerName}</h1>
+            </header>
+        </>
     );
 }

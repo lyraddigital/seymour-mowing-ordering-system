@@ -16,7 +16,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        <main className="flex justify-center p-3">
+          <div className="container">
+            {children}
+          </div>
+        </main>
+      </body>
     </html>
   );
 }
