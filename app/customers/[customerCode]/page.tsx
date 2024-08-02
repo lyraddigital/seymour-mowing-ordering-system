@@ -17,10 +17,8 @@ export default function Customer(props: CustomerProps) {
     }
 
     return (
-        <>
-            <header>
-                <h1>{customer.customerName}</h1>
-            </header>
-        </>
+        <header>
+            <h1>{customer.customerName}</h1>
+        </header>
     );
 }

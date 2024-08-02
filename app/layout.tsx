@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import Image from "next/image";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -17,6 +18,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
+        <header className="flex justify-center py-3 bg-green-200 drop-shadow-md">
+          <div className="flex items-end gap-2 container">
+            <Image width="130" height="1" src="/main-logo.png" alt="Seymour Mowing & Maintenance" />
+            <h1 className="text-3xl text-green-800 font-bold uppercase">Seymour Mowing & Maintenance</h1>
+          </div>          
+        </header>
         <main className="flex justify-center p-3">
           <div className="container">
             {children}
