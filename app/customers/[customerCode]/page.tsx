@@ -1,4 +1,3 @@
-import { getCustomerByCode } from "@/app/data/customers";
 import { notFound } from "next/navigation";
 
 interface CustomerProps {
@@ -10,7 +9,7 @@ interface CustomerParams {
 }
 
 export default function Customer(props: CustomerProps) {
-    const customer = getCustomerByCode(props.params.customerCode);
+    const customer = { customerName: 'Egg' }; //getCustomerByCode(props.params.customerCode);
 
     if (!customer) {
         notFound();
