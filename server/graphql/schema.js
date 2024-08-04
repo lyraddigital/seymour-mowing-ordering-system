@@ -1,0 +1,37 @@
+const { buildSchema } = require("graphql");
+
+const schema = buildSchema(`
+    type DashboardSummary {
+       totalAmountOwed: Float!
+       numberOfCustomersOwing: Int!
+       amountReceivedLastThirty: Float!
+    }
+
+    type DashboardCustomer {       
+       customerCode: String!
+       customerName: String!
+       amountOwing: Float!
+    }
+
+    type DashboardJob {
+        date: String!
+        jobName: String!
+        customerName: String!
+        status: String!
+        quantity: Int
+        cost: Float
+        total: Float
+    }
+
+    type Dashboard {
+        summary: DashboardSummary!
+        customersOwing: [DashboardCustomer!]!
+        latestJobs: [DashboardJob!]!
+    }
+
+    type Query {
+      getDashboard: Dashboard
+    }
+`);
+
+module.exports = schema;
