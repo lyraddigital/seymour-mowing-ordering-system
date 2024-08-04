@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+
 import "./globals.css";
-import Image from "next/image";
+
+import SideNavigation from "./components/ui/side-navigation/side-navigation";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -17,18 +19,17 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>
-        <header className="flex justify-center py-3 bg-green-700 drop-shadow-md">
-          <div className="flex items-end gap-5 container">
-            <Image width="110" height="72" src="/main-logo.png" alt="Seymour Mowing & Maintenance" />
-            <h1 className="text-3xl text-white font-bold uppercase">Seymour Mowing & Maintenance</h1>
+      <body className={inter.className + " h-screen flex"}>
+        <div className="flex flex-1">
+          <SideNavigation />
+          <div className="flex-1">
+            <main className="flex justify-center px-6">
+              <div className="container">
+                {children}
+              </div>
+            </main>
           </div>
-        </header>
-        <main className="flex justify-center p-3">
-          <div className="container">
-            {children}
-          </div>
-        </main>
+        </div>
       </body>
     </html>
   );

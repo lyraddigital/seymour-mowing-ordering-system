@@ -1,11 +1,11 @@
 const customers = [
   {
     code: "CUST-01",
-    name: "Seymour Petstock",
+    name: "Local Petstock",
   },
   {
     code: "CUST-02",
-    name: "Seymour Pizza",
+    name: "Local Pizza",
   },
 ];
 
