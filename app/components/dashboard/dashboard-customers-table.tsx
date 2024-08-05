@@ -29,7 +29,7 @@ export default function DashboardCustomersTable({ customers }: DashboardCustomer
               <col className="w-[150px]" />
             </colgroup>
             <thead>
-              <tr className="bg-green-200">
+              <tr className="bg-green-800 text-white">
                 <th className="text-left py-2 px-1 border border-slate-500 uppercase">Customer</th>
                 <th className="py-2 px-1 border border-slate-500 uppercase">Amount Owing</th>
                 <th className="py-2 px-1 border border-slate-500">&nbsp;</th>

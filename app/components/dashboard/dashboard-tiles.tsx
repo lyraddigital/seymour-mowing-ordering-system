@@ -14,7 +14,7 @@ export default function DashboardTiles({ summary }: DashboardTilesProps) {
       <header>
         <SectionHeading>Summary</SectionHeading>
       </header>
-      <div className="flex gap-20 my-3">
+      <div className="flex gap-5 my-3">
         <DashboardTile title="Total Amount Owed" value={getCurrencyString(summary.totalAmountOwed)} />
         <DashboardTile title="Number of customers owing" value={summary.numberOfCustomersOwing.toString()} />
         <DashboardTile title="Amount recieved (last 30)" value={getCurrencyString(summary.amountReceivedLastThirty)} />

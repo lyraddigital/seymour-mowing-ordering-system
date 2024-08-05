@@ -7,11 +7,11 @@ import SideNavigationLink from "./side-navigation-link";
 
 export default function SideNavigation() {
     return (
-        <div className="px-6 basis-[240px] grow-0 bg-green-300 flex flex-col gap-6">
-            <div className="h-[64px] py-2">
-                <Image width="44" height="36" src="/main-logo.png" alt="Seymour Mowing & Maintenance" />
+        <div className="basis-[240px] grow-0 bg-green-800 flex flex-col gap-6">
+            <div className="h-[60px] px-6 py-2 border-b border-b-green-900">
+                <Image width="40" height="36" src="/main-logo.png" alt="Seymour Mowing & Maintenance" />
             </div>
-            <nav>
+            <nav className="px-6">
                 <ul>
                     <li>
                         <SideNavigationLink path="/">

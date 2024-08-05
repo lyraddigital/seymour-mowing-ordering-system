@@ -13,8 +13,8 @@ export default function SideNavigationLink({ children, path }: SideNavigationLin
     const currentPath = usePathname();
     const isActiveLink = path === currentPath;
     const linkClasses = clsx(
-        "flex gap-3 p-2 block text-green-950 font-bold hover:bg-green-400 rounded mb-1",
-        isActiveLink ? "bg-green-400" : undefined
+        "flex gap-3 p-2 block text-green-100 font-bold hover:bg-green-700 rounded mb-1",
+        isActiveLink ? "bg-green-700 text-green-50" : undefined
     );
 
     return (
