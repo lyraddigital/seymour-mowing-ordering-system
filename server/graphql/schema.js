@@ -13,6 +13,14 @@ const schema = buildSchema(`
        amountOwing: Float!
     }
 
+    type DashboardUnpaidInvoice {
+        invoiceNumber: String!
+        dueDate: String!
+        status: String!
+        customerName: String!
+        total: Float!
+    }
+
     type DashboardJob {
         date: String!
         jobName: String!
@@ -26,6 +34,7 @@ const schema = buildSchema(`
     type Dashboard {
         summary: DashboardSummary!
         customersOwing: [DashboardCustomer!]!
+        unpaidInvoices: [DashboardUnpaidInvoice!]!
         latestJobs: [DashboardJob!]!
     }
 

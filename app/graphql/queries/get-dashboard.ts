@@ -13,6 +13,13 @@ export const getDashboardQuery = gql`
         customerName
         amountOwing
       }
+      unpaidInvoices {
+        invoiceNumber
+        dueDate
+        status
+        customerName
+        total
+      }
       latestJobs {
         date
         jobName

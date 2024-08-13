@@ -1,23 +1,35 @@
 const { getCustomerByCode } = require("../../data/customers");
+const { getLatestJobs } = require("../../data/jobs");
 const {
-  getUnpaidJobs,
-  getPaidJobs,
-  getLatestJobs,
-} = require("../../data/jobs");
+  getUnpaidInvoices,
+  getPaymentsForLastDays,
+} = require("../../data/invoices");
 
 module.exports = () => {
-  const unpaidJobs = getUnpaidJobs();
-  const paidJobs = getPaidJobs(30);
   const latestJobs = getLatestJobs();
-  const totalAmountOwed = unpaidJobs
-    .map((uj) => uj.total)
+  const latestPayments = getPaymentsForLastDays(30);
+  const unpaidInvoices = getUnpaidInvoices();
+  const totalAmountOwed = unpaidInvoices
+    .map((uj) => uj.total - uj.paid)
     .reduce((amountOwed, t) => amountOwed + t);
-  const amountReceivedLastThirty = paidJobs
-    .map((pj) => pj.total)
+  const amountReceivedLastThirty = latestPayments
+    .map((pj) => pj.amount)
     .reduce((amountReceived, t) => amountReceived + t);
   const numberOfCustomersOwing = new Set(
-    unpaidJobs.map((uj) => uj.customerCode)
+    unpaidInvoices.map((uj) => uj.customerCode)
   ).size;
+  const unpaidInvoicesWithCustomerNames = unpaidInvoices.map((ui) => {
+    const customer = getCustomerByCode(ui.customerCode);
+
+    return {
+      invoiceNumber: ui.invoiceNumber,
+      status: ui.status,
+      dueDate: ui.dueDate,
+      total: ui.total,
+      customerName: customer?.name,
+    };
+  });
+
   const latestJobsWithCustomerNames = latestJobs.map((lj) => {
     const customer = getCustomerByCode(lj.customerCode);
 
@@ -33,19 +45,19 @@ module.exports = () => {
   });
   const customersOwing = [];
 
-  for (let uj of unpaidJobs) {
+  for (let ui of unpaidInvoices) {
     const existingCustomerOwing = customersOwing.find(
-      (c) => c.customerCode === uj.customerCode
+      (c) => c.customerCode === ui.customerCode
     );
 
     if (!existingCustomerOwing) {
       customersOwing.push({
-        customerCode: uj.customerCode,
-        customerName: getCustomerByCode(uj.customerCode).name,
-        amountOwing: uj.total,
+        customerCode: ui.customerCode,
+        customerName: getCustomerByCode(ui.customerCode).name,
+        amountOwing: ui.total,
       });
     } else {
-      existingCustomerOwing.amountOwing += uj.total;
+      existingCustomerOwing.amountOwing += ui.total;
     }
   }
 
@@ -56,6 +68,7 @@ module.exports = () => {
       amountReceivedLastThirty,
     },
     customersOwing,
+    unpaidInvoices: unpaidInvoicesWithCustomerNames,
     latestJobs: latestJobsWithCustomerNames,
   };
 };

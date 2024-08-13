@@ -22,7 +22,7 @@ export default function RootLayout({
       <body className={inter.className + " h-screen flex bg-green-100"}>
         <div className="flex justify-center flex-1">
           <SideNavigation />
-          <div className="flex-1 bg-slate-100 shadow-xl">
+          <div className="flex-1 bg-slate-200 shadow-xl">
             <div className="h-[60px] px-6 py-2 border-b bg-white border-b-slate-300">
 
             </div>
