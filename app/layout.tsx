@@ -19,12 +19,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className + " h-screen flex bg-green-100"}>
+      <body className={inter.className + " min-h-screen flex bg-green-100"}>
         <div className="flex justify-center flex-1">
           <SideNavigation />
           <div className="flex-1 bg-slate-200 shadow-xl">
             <div className="h-[60px] px-6 py-2 border-b bg-white border-b-slate-300">
-
             </div>
             <main className="px-6">
               {children}

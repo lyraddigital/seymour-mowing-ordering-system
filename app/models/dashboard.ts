@@ -8,4 +8,5 @@ export interface Dashboard {
   customersOwing: DashboardCustomer[];
   unpaidInvoices: DashboardUnpaidInvoice[];
   latestJobs: DashboardJob[];
+  recentPayments: unknown[];
 }

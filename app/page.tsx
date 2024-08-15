@@ -9,9 +9,10 @@ import { GetDashboardResult } from "./models/get-dashboard-result";
 
 export default async function Home() {
   const { getDashboard } = await client.request<GetDashboardResult>(getDashboardQuery);
-  const noCustomerOwingData = !getDashboard?.customersOwing;
-  const noInvoicesUnpaid = !getDashboard?.unpaidInvoices;
-  const noLatestJobData = !getDashboard?.latestJobs;
+  const numberOfCustomersOwing = getDashboard?.customersOwing?.length || 0;
+  const numberOfInvoicesUnpaid = getDashboard?.unpaidInvoices?.length || 0;
+  const numberOfJobsNotStarted = getDashboard?.latestJobs?.length || 0;
+  const numberOfRecentPayments = getDashboard?.recentPayments?.length || 0;
 
   return (
     <>
@@ -19,15 +20,38 @@ export default async function Home() {
         <h1 className="text-3xl text-green-800 font-bold uppercase my-6">Dashboard</h1>
       </header>
       <DashboardSummaryTiles summary={getDashboard.summary} />
-      <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-10 min-h-32">
-        <DashboardListTile title="Customers Owing" description="Number of customers owing money currently" hasNoData={noCustomerOwingData}>
+      <div className="my-6 grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-10 min-h-32 items-start">
+        <DashboardListTile 
+          title="Customers Owing" 
+          description="Number of customers owing money currently"
+          numberOfRecords={numberOfCustomersOwing}
+          showMoreUrl="/customers?filter=owe"
+        >
           <DashboardCustomersList customers={getDashboard?.customersOwing} />
         </DashboardListTile>
-        <DashboardListTile title="Unpaid Invoices" description="The number of invoices that are yet to be fully paid" hasNoData={noInvoicesUnpaid}>
+        <DashboardListTile
+          title="Unpaid Invoices"
+          description="The number of invoices that are yet to be fully paid"
+          numberOfRecords={numberOfInvoicesUnpaid}
+          showMoreUrl="/invoices?filter=unpaid"
+        >
           <DashboardInvoiceList unpaidInvoices={getDashboard?.unpaidInvoices} />
         </DashboardListTile>
-        <DashboardListTile title="Jobs to complete" description="The latest jobs that have been registered" hasNoData={noLatestJobData}>
+        <DashboardListTile
+          title="Scheduled Jobs"
+          description="The latest jobs that have been registered, but not started"
+          numberOfRecords={numberOfJobsNotStarted}
+          showMoreUrl="/jobs?filter=not-started"
+        >
           <DashboardJobsList jobs={getDashboard?.latestJobs} />
+        </DashboardListTile>
+        <DashboardListTile 
+          title="Recent Payments" 
+          description="The most recent payments made" 
+          numberOfRecords={numberOfRecentPayments}
+          showMoreUrl="/payments?mode=recent"
+        >
+          
         </DashboardListTile>
       </div>
     </>

@@ -8,7 +8,7 @@ interface DashboardSummaryTileProps {
 
 export default function DashboardSummaryTile({ title, value, color }: DashboardSummaryTileProps) {
   const tileClasses = clsx(
-    'bg-gradient-to-r flex flex-col justify-between h-[85px] shadow-xl border p-3 rounded-md',
+    'bg-gradient-to-r flex flex-col justify-between sm:h-[85px] shadow-xl border p-3 rounded-md',
     color === 'green' ? 'from-green-800 to-green-600 border-green-700' : color === 'red' ? 'from-red-700 to-red-400 border-red-700' : ''
   );
   const titleClasses = clsx(
