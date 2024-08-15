@@ -29,6 +29,11 @@ export const getDashboardQuery = gql`
         cost
         total
       }
+      recentPayments {
+        date
+        customerName
+        amount
+      }
     }
   }
 `;

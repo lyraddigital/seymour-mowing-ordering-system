@@ -70,5 +70,8 @@ module.exports = () => {
     customersOwing,
     unpaidInvoices: unpaidInvoicesWithCustomerNames,
     latestJobs: latestJobsWithCustomerNames,
+    recentPayments: [
+      { customerName: "test", amount: 22.3, date: "2024-01-01" },
+    ],
   };
 };

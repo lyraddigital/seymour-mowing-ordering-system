@@ -2,6 +2,7 @@ import DashboardSummaryTiles from "./components/dashboard/dashboard-summary-tile
 import DashboardCustomersList from "./components/dashboard/dashboard-customers-list";
 import DashboardInvoiceList from "./components/dashboard/dashboard-invoice-list";
 import DashboardJobsList from "./components/dashboard/dashboard-jobs-list";
+import DashboardPaymentsList from "./components/dashboard/dashboard-payments-list";
 import DashboardListTile from "./components/dashboard/dashboard-list-tile";
 import client from "./graphql/graphql-client";
 import { getDashboardQuery } from "./graphql/queries/get-dashboard";
@@ -51,7 +52,7 @@ export default async function Home() {
           numberOfRecords={numberOfRecentPayments}
           showMoreUrl="/payments?mode=recent"
         >
-          
+          <DashboardPaymentsList payments={getDashboard?.recentPayments} />
         </DashboardListTile>
       </div>
     </>

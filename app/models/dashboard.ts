@@ -1,5 +1,6 @@
 import { DashboardCustomer } from "./dashboard-customer";
 import { DashboardJob } from "./dashboard-job";
+import { DashboardPayment } from "./dashboard-payment";
 import { DashboardSummary } from "./dashboard-summary";
 import { DashboardUnpaidInvoice } from "./dashboard-unpaid-invoice";
 
@@ -8,5 +9,5 @@ export interface Dashboard {
   customersOwing: DashboardCustomer[];
   unpaidInvoices: DashboardUnpaidInvoice[];
   latestJobs: DashboardJob[];
-  recentPayments: unknown[];
+  recentPayments: DashboardPayment[];
 }

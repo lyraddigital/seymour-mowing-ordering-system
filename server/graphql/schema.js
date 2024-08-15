@@ -31,11 +31,18 @@ const schema = buildSchema(`
         total: Float
     }
 
+    type DashboardRecentPayment {
+        date: String!
+        customerName: String!
+        amount: Float!
+    }
+
     type Dashboard {
         summary: DashboardSummary!
         customersOwing: [DashboardCustomer!]!
         unpaidInvoices: [DashboardUnpaidInvoice!]!
         latestJobs: [DashboardJob!]!
+        recentPayments: [DashboardRecentPayment!]!
     }
 
     type Query {
