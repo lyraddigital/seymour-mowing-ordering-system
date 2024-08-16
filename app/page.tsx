@@ -23,8 +23,8 @@ export default async function Home() {
   }));
   const numberOfJobsNotStarted = getDashboard?.latestJobs?.map<DashboardListItem>(lj => ({
     code: lj.jobCode,
-    title: lj.jobName,
-    summary: lj.customerName,
+    title: lj.customerName,
+    summary: lj.jobName,
     pageLink: `jobs/${lj.jobCode}`
   }));
   const numberOfRecentPayments = getDashboard?.recentPayments?.map<DashboardListItem>(rp => ({
