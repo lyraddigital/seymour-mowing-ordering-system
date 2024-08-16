@@ -1,19 +1,38 @@
 import DashboardSummaryTiles from "./components/dashboard/dashboard-summary-tiles";
-import DashboardCustomersList from "./components/dashboard/dashboard-customers-list";
-import DashboardInvoiceList from "./components/dashboard/dashboard-invoice-list";
-import DashboardJobsList from "./components/dashboard/dashboard-jobs-list";
-import DashboardPaymentsList from "./components/dashboard/dashboard-payments-list";
 import DashboardListTile from "./components/dashboard/dashboard-list-tile";
 import client from "./graphql/graphql-client";
 import { getDashboardQuery } from "./graphql/queries/get-dashboard";
+import { DashboardListItem } from "./models/dashboard-list-item";
 import { GetDashboardResult } from "./models/get-dashboard-result";
+import { getCurrencyString } from "./utilities/currency";
+import { convertFromISOToShortDate } from "./utilities/dates";
 
 export default async function Home() {
   const { getDashboard } = await client.request<GetDashboardResult>(getDashboardQuery);
-  const numberOfCustomersOwing = getDashboard?.customersOwing?.length || 0;
-  const numberOfInvoicesUnpaid = getDashboard?.unpaidInvoices?.length || 0;
-  const numberOfJobsNotStarted = getDashboard?.latestJobs?.length || 0;
-  const numberOfRecentPayments = getDashboard?.recentPayments?.length || 0;
+  const customerOwingListItems = getDashboard?.customersOwing?.map<DashboardListItem>(co => ({
+    code: co.customerCode,
+    title: co.customerName,
+    summary: getCurrencyString(co.amountOwing),
+    pageLink: `customers/${co.customerCode}`
+  }));
+  const numberOfInvoicesUnpaid = getDashboard?.unpaidInvoices?.map<DashboardListItem>(ui => ({
+    code: ui.invoiceNumber,
+    title: `${ui.customerName} (${getCurrencyString(ui.total)})`,
+    summary: `Due ${convertFromISOToShortDate(ui.dueDate)}`,
+    pageLink: `invoices/${ui.invoiceNumber}`
+  }));
+  const numberOfJobsNotStarted = getDashboard?.latestJobs?.map<DashboardListItem>(lj => ({
+    code: lj.jobCode,
+    title: lj.jobName,
+    summary: lj.customerName,
+    pageLink: `jobs/${lj.jobCode}`
+  }));
+  const numberOfRecentPayments = getDashboard?.recentPayments?.map<DashboardListItem>(rp => ({
+    code: rp.paymentCode,
+    title: rp.customerName,
+    summary: `Payment of $${rp.amount} was made on the ${convertFromISOToShortDate(rp.date)}`,
+    pageLink: `payments/${rp.paymentCode}`
+  }));
 
   return (
     <>
@@ -25,35 +44,27 @@ export default async function Home() {
         <DashboardListTile 
           title="Customers Owing" 
           description="Number of customers owing money currently"
-          numberOfRecords={numberOfCustomersOwing}
+          items={customerOwingListItems}
           showMoreUrl="/customers?filter=owe"
-        >
-          <DashboardCustomersList customers={getDashboard?.customersOwing} />
-        </DashboardListTile>
+        />
         <DashboardListTile
           title="Unpaid Invoices"
           description="The number of invoices that are yet to be fully paid"
-          numberOfRecords={numberOfInvoicesUnpaid}
+          items={numberOfInvoicesUnpaid}
           showMoreUrl="/invoices?filter=unpaid"
-        >
-          <DashboardInvoiceList unpaidInvoices={getDashboard?.unpaidInvoices} />
-        </DashboardListTile>
+        />
         <DashboardListTile
           title="Scheduled Jobs"
           description="The latest jobs that have been registered, but not started"
-          numberOfRecords={numberOfJobsNotStarted}
+          items={numberOfJobsNotStarted}
           showMoreUrl="/jobs?filter=not-started"
-        >
-          <DashboardJobsList jobs={getDashboard?.latestJobs} />
-        </DashboardListTile>
+        />
         <DashboardListTile 
           title="Recent Payments" 
           description="The most recent payments made" 
-          numberOfRecords={numberOfRecentPayments}
+          items={numberOfRecentPayments}
           showMoreUrl="/payments?mode=recent"
-        >
-          <DashboardPaymentsList payments={getDashboard?.recentPayments} />
-        </DashboardListTile>
+        />
       </div>
     </>
   );
