@@ -22,14 +22,25 @@ export default async function Home() {
       </header>
       <DashboardSummaryTiles summary={getDashboard.summary} />
       <div className="my-6 grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-10 min-h-32 items-start">
-        <DashboardListTile 
-          title="Customers Owing" 
-          description="Number of customers owing money currently"
-          numberOfRecords={numberOfCustomersOwing}
-          showMoreUrl="/customers?filter=owe"
-        >
-          <DashboardCustomersList customers={getDashboard?.customersOwing} />
-        </DashboardListTile>
+        <div>
+          <DashboardListTile
+            title="Customers Owing"
+            description="Number of customers owing money currently"
+            numberOfRecords={numberOfCustomersOwing}
+            showMoreUrl="/customers?filter=owe"
+          >
+            <DashboardCustomersList customers={getDashboard?.customersOwing} />
+          </DashboardListTile>
+          <DashboardListTile
+            title="Recent Payments"
+            description="The most recent payments made"
+            numberOfRecords={numberOfRecentPayments}
+            showMoreUrl="/payments?mode=recent"
+          >
+            <DashboardPaymentsList payments={getDashboard?.recentPayments} />
+          </DashboardListTile>
+        </div>
+
         <DashboardListTile
           title="Unpaid Invoices"
           description="The number of invoices that are yet to be fully paid"
@@ -45,14 +56,6 @@ export default async function Home() {
           showMoreUrl="/jobs?filter=not-started"
         >
           <DashboardJobsList jobs={getDashboard?.latestJobs} />
-        </DashboardListTile>
-        <DashboardListTile 
-          title="Recent Payments" 
-          description="The most recent payments made" 
-          numberOfRecords={numberOfRecentPayments}
-          showMoreUrl="/payments?mode=recent"
-        >
-          <DashboardPaymentsList payments={getDashboard?.recentPayments} />
         </DashboardListTile>
       </div>
     </>

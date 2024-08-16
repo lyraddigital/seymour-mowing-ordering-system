@@ -7,7 +7,7 @@ import SideNavigationLink from "./side-navigation-link";
 
 export default function SideNavigation() {
     return (
-        <div className="w-0 md:basis-0 lg:basis-[240px] md:grow-0 bg-green-800 flex flex-col gap-6">
+        <div className="w-0 transition-all duration-300 lg:transition-all lg:duration-300 lg:w-[240px] bg-green-800 flex flex-col gap-6">
             <div className="h-[60px] px-6 py-2 border-b border-b-green-900">
                 <Image width="40" height="36" src="/main-logo.png" alt="Seymour Mowing & Maintenance" />
             </div>
