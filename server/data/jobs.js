@@ -17,6 +17,15 @@ const jobs = [
     cost: 20.3,
     total: 40.6,
   },
+  {
+    date: "2024-08-07T12:00:00.000Z",
+    jobName: "What's going on",
+    customerCode: "CUST-01",
+    status: "NotStarted",
+    quantity: 1,
+    cost: 44.2,
+    total: 44.2,
+  },
 ];
 
 function getLatestJobs(count) {
