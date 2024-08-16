@@ -40,11 +40,11 @@ export default async function Home() {
         <h1 className="text-3xl text-green-800 font-bold uppercase my-6">Dashboard</h1>
       </header>
       <DashboardSummaryTiles summary={getDashboard.summary} />
-      <div className="my-6 grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-10 min-h-32 items-start">
+      <div className="my-6 grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-10 min-h-32 lg:auto-rows-[303px]">
         <DashboardListTile 
           title="Customers Owing" 
           description="Number of customers owing money currently"
-          items={customerOwingListItems}
+          items={[]}
           showMoreUrl="/customers?filter=owe"
         />
         <DashboardListTile
