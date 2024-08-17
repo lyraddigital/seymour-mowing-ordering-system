@@ -3,15 +3,15 @@ import clsx from "clsx";
 interface DashboardSummaryTileProps {
   title: string;
   value?: string;
-  className?: string;
+  hideInMobile?: boolean;
   color?: 'red' | 'green' | 'yellow'
 }
 
-export default function DashboardSummaryTile({ className, title, value, color }: DashboardSummaryTileProps) {
+export default function DashboardSummaryTile({ hideInMobile, title, value, color }: DashboardSummaryTileProps) {
   const tileClasses = clsx(
     'bg-gradient-to-r flex flex-col justify-between sm:h-[85px] shadow-xl border p-3 rounded-md',
     color === 'green' ? 'from-green-800 to-green-600 border-green-700' : color === 'red' ? 'from-red-700 to-red-400 border-red-700' : color === 'yellow' ? 'from-yellow-600 to-yellow-300 border-yellow-700' : '',
-    className
+    hideInMobile ? "hidden sm:flex" : ''
   );
   const titleClasses = clsx(
     'text-xs uppercase font-bold text-center',
