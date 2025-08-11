@@ -1,9 +1,20 @@
-import { Grid, Paper } from "@mui/material";
+'use client';
+
+import { Grid, Paper, styled } from "@mui/material";
 import { PropsWithChildren } from "react";
+
+const BackgroundGrid = styled(Grid)(({ theme }) => ({
+    background: theme.lighten(theme.palette.primary.main, 0.85)
+}));
 
 export default function LoginPaper({ children }: PropsWithChildren) {
     return (
-        <Grid container sx={{justifyContent:"center", alignItems:"center", minHeight: '100vh'}}>
+        <BackgroundGrid container sx={{
+            justifyContent:"center",
+            alignItems:"center",
+            minHeight: '100vh',
+            
+        }}>
             <Grid size="grow" sx={{
                 maxWidth: {
                     sm: 600,
@@ -15,6 +26,6 @@ export default function LoginPaper({ children }: PropsWithChildren) {
                     {children}
                 </Paper>
             </Grid>
-        </Grid>
+        </BackgroundGrid>
     );
 }
