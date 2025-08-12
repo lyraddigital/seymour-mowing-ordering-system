@@ -12,6 +12,7 @@ export default function PasswordInput() {
 
     return (
         <LoginOutlinedInput 
+            fieldName="password"
             label="Password *"
             endAdornment={
                 <InputAdornment position="end">
