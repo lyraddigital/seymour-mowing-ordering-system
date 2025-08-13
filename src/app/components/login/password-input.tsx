@@ -6,7 +6,11 @@ import { useState } from "react";
 
 import LoginOutlinedInput from "./login-input";
 
-export default function PasswordInput() {    
+type PasswordInput = {
+    error?: boolean;
+}
+
+export default function PasswordInput({ error }: PasswordInput) {    
     const [showPassword, setShowPassword] = useState<boolean>(false);
     const handleClickShowPassword = () => setShowPassword((show) => !show);
 
@@ -27,6 +31,7 @@ export default function PasswordInput() {
                     </IconButton>
                 </InputAdornment>
             }
+            error={error}
             type={showPassword ? 'text' : 'password'} 
         />
     );
