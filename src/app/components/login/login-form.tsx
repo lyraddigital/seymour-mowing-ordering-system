@@ -1,56 +1,49 @@
 'use client';
 
-import { Alert, Box, Button, Checkbox, FormControlLabel } from "@mui/material";
-import { useRouter } from "next/navigation";
-import { SyntheticEvent, useState } from "react";
+import { Box, Button, Checkbox, FormControlLabel } from "@mui/material";
+import { useActionState } from "react";
 
 import { signInWithCredentials } from "@/app/actions";
+import { FormActionAlerts } from "@/app/components/ui/forms";
+import { Credentials, FormActionState } from "@/app/types";
+import { validateSignIn } from "@/app/validators";
 
 import LoginInput from "./login-input";
 import PasswordInput from "./password-input";
 
-export default function LoginForm() {
-    const [isLoginFailure, setIsLoginFailure] = useState<boolean>(false);
-    const [loginPending, setLoginPending] = useState<boolean>(false);
-    const router = useRouter();
-    
-    const handleSignInWithCredentials = async(event: SyntheticEvent) => {
-        event.preventDefault();
+const handleSignInWithCredentials = async (prevState: FormActionState<Credentials> | undefined, formData: FormData): Promise<FormActionState<Credentials> | undefined> => {
+    const validationResult = validateSignIn(formData);    
 
-        const formData = new FormData(event.target as HTMLFormElement);
-
-        try {
-            setIsLoginFailure(false);
-            setLoginPending(true);
-
-            await signInWithCredentials(formData);
-            await router.replace('/');
-        } catch {
-            setIsLoginFailure(true);
-        } finally {
-            setLoginPending(false);
-        }
+    if (!validationResult.success) {
+        return {
+            data: validationResult.data,
+            validationResult: validationResult,
+        };
     }
 
+    return await signInWithCredentials(prevState, formData);
+};
+
+export default function LoginForm() {    
+    const [state, action, pending] = useActionState(handleSignInWithCredentials, undefined);
+
     return (
-        <Box component="form" onSubmit={handleSignInWithCredentials} noValidate autoComplete="off" sx={{ m: 1 }}>
-            {isLoginFailure && <Alert severity="error" sx={{ mb: 3 }}>
-                Could not log you in. Check your username and password and try again.
-            </Alert>}
+        <Box component="form" action={action} noValidate autoComplete="off" sx={{ m: 1 }}>
+            <FormActionAlerts state={state}></FormActionAlerts>            
             <Box sx={{mb: 1}}>
-                <LoginInput fieldName="username" error={isLoginFailure} label="Username *" />
+                <LoginInput fieldName="username" validationResult={state?.validationResult} label="Username *" defaultValue={state?.data?.username} />
             </Box>
             <Box sx={{mb: 1}}>
-                <PasswordInput error={isLoginFailure} />
+                <PasswordInput validationResult={state?.validationResult} defaultValue={state?.data?.password} />
             </Box>
             <Box sx={{mt: 2, mb: 3}}>
-                <FormControlLabel control={<Checkbox name="rememberMe" />} label="Remember me" />                
+                <FormControlLabel control={<Checkbox name="rememberMe" defaultValue={state?.data?.rememberMe} />} label="Remember me" />                
             </Box>
             <Box sx={{mx: { sm: 8 }}}>                
                 <Button 
                     type="submit"
-                    disabled={loginPending}
-                    loading={loginPending}
+                    disabled={pending}
+                    loading={pending}
                     loadingPosition="start"
                     variant="contained"
                     size="large" color="secondary"

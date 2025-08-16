@@ -1,17 +1,24 @@
 "use server";
 
-import { signIn } from "../auth";
-import { Credentials } from "../types";
+import { redirect } from "next/navigation";
 
-export default async function signInWithCredentials(formData: FormData) {
-  const credentials = {
-    username: formData.get("username"),
-    password: formData.get("password"),
-  } as Credentials;
+import { Credentials, FormActionState } from "@/app/types";
+import { validateSignIn } from "@/app/validators";
 
-  await signIn("credentials", {
-    username: credentials.username,
-    password: credentials.password,
-    redirect: false,
-  });
+export default async function signInWithCredentials(
+  _: FormActionState<Credentials> | undefined,
+  formData: FormData
+): Promise<FormActionState<Credentials> | undefined> {
+  const validationResult = validateSignIn(formData);
+
+  if (!validationResult.success) {
+    return {
+      data: validationResult.data,
+      validationResult: validationResult,
+    };
+  }
+
+  // Perform saving the session to DynamoDb here and catch an exception if it occurs.
+
+  redirect("/");
 }

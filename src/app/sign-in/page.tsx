@@ -1,12 +1,12 @@
-import { Box, Grid, Typography } from "@mui/material";
+import { Grid, Typography } from "@mui/material";
 
-import { LoginForm, LoginPaper } from "../components/login";
-import loginLogo from "../../../public/login-logo.svg";
+import { LoginForm, LoginPaper } from "@/app/components/login";
+import loginLogo from "@/../public/login-logo.svg";
 
 export default function SignIn() {
   return (
     <LoginPaper>
-      <Grid container sx={{ height: "55vh"}}>
+      <Grid container sx={{ minHeight: "55vh"}}>
         <Grid container sx={{          
           bgcolor: "primary.main",
           display: {

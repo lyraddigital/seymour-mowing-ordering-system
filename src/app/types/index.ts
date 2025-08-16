@@ -1,4 +1,4 @@
 import Credentials from "./credentials";
-import AdminUser from "./admin-user";
+import FormActionState from "./form-action-state";
 
-export type { Credentials, AdminUser };
+export type { Credentials, FormActionState };

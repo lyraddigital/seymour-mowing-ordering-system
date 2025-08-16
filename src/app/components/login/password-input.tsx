@@ -1,23 +1,28 @@
 'use client';
 
-import { IconButton, InputAdornment } from "@mui/material";
-import { Visibility, VisibilityOff, LockOutline } from '@mui/icons-material';
+import { IconButton, InputAdornment, useTheme } from "@mui/material";
+import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { useState } from "react";
 
+import { ValidationResult } from '@/app/validators'; 
 import LoginOutlinedInput from "./login-input";
 
-type PasswordInput = {
-    error?: boolean;
+type PasswordInput<T> = {
+    defaultValue?: string;
+    validationResult?: ValidationResult<T>;
 }
 
-export default function PasswordInput({ error }: PasswordInput) {    
+export default function PasswordInput<T>({ defaultValue, validationResult }: PasswordInput<T>) {
     const [showPassword, setShowPassword] = useState<boolean>(false);
     const handleClickShowPassword = () => setShowPassword((show) => !show);
+    const hasError = !!validationResult?.errors?.fields && !!validationResult.errors.fields.find(f => f === "password");
+    const visibilityColor = hasError ? "error": undefined;
 
     return (
         <LoginOutlinedInput 
             fieldName="password"
             label="Password *"
+            defaultValue={defaultValue}
             endAdornment={
                 <InputAdornment position="end">
                     <IconButton
@@ -27,11 +32,11 @@ export default function PasswordInput({ error }: PasswordInput) {
                         onClick={handleClickShowPassword}
                         edge="end"
                         >
-                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                        {showPassword ? <VisibilityOff color={visibilityColor} /> : <Visibility color={visibilityColor} />}
                     </IconButton>
                 </InputAdornment>
             }
-            error={error}
+            validationResult={validationResult}
             type={showPassword ? 'text' : 'password'} 
         />
     );
