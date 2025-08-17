@@ -14,3 +14,17 @@ export async function encrypt(
     .setExpirationTime(`${durationInDays}day`)
     .sign(key);
 }
+
+export async function decrypt(
+  decryptedValue: string
+): Promise<JWTPayload | undefined> {
+  try {
+    const { payload } = await jwtVerify(decryptedValue, key, {
+      algorithms: ["HS256"],
+    });
+
+    return payload;
+  } catch {
+    return undefined;
+  }
+}

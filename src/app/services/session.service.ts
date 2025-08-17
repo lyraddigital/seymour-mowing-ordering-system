@@ -6,7 +6,7 @@ import {
   DEFAULT_SESSION_EXPIRY_DURATION_IN_DAYS,
   REMEMBER_ME_SESSION_EXPIRY_DURATION_IN_DAYS,
 } from "@/app/configuration";
-import { convertFromDaysToMilliseconds, encrypt } from "@/app/lib";
+import { convertFromDaysToMilliseconds, decrypt, encrypt } from "@/app/lib";
 
 const cookieName = "smos-sesh";
 
@@ -35,9 +35,26 @@ export async function createSession(
   });
 }
 
-export function verifySession() {
-  try {
-  } catch {}
+export async function verifySession(): Promise<
+  { username: string } | undefined
+> {
+  const cookieStore = await cookies();
+  const sessionCookie = cookieStore.get(cookieName);
+
+  if (!sessionCookie?.value) {
+    return undefined;
+  }
+
+  const session = await decrypt(sessionCookie.value);
+
+  if (!session?.username) {
+    return undefined;
+  }
+
+  return { username: session.username as string };
 }
 
-export function deleteSession() {}
+export async function deleteSession(): Promise<void> {
+  const cookieStore = await cookies();
+  cookieStore.delete(cookieName);
+}
