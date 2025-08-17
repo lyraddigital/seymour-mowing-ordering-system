@@ -39,7 +39,7 @@ export default async function signInWithCredentials(
         throw new Error(serverErrorMessage);
       }
 
-      await createSession(user.username);
+      await createSession(user.username, credentials.rememberMe);
     }
   );
 }

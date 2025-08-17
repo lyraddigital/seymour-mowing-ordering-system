@@ -2,21 +2,35 @@ import "server-only";
 
 import { cookies } from "next/headers";
 
-import { encrypt } from "@/app/lib";
+import {
+  DEFAULT_SESSION_EXPIRY_DURATION_IN_DAYS,
+  REMEMBER_ME_SESSION_EXPIRY_DURATION_IN_DAYS,
+} from "@/app/configuration";
+import { convertFromDaysToMilliseconds, encrypt } from "@/app/lib";
 
-const cookie = {
-  name: "smos-sesh",
-  options: { httpOnly: true, secure: true, path: "/" }, // , sameSite: "lax"
-  duration: 24 * 60 * 60 * 1000,
-};
+const cookieName = "smos-sesh";
 
-export async function createSession(username: string) {
-  const expires = new Date(Date.now() + cookie.duration);
-  const sessionCookieDetails = await encrypt({ username, expires });
+export async function createSession(
+  username: string,
+  rememberMeFlag: string | undefined
+) {
+  const durationInDays =
+    rememberMeFlag === "on"
+      ? REMEMBER_ME_SESSION_EXPIRY_DURATION_IN_DAYS
+      : DEFAULT_SESSION_EXPIRY_DURATION_IN_DAYS;
+  const duration = convertFromDaysToMilliseconds(durationInDays);
+  const expires = new Date(Date.now() + duration);
+  const sessionCookieDetails = await encrypt(
+    { username, expires },
+    durationInDays
+  );
   const cookieStore = await cookies();
 
-  cookieStore.set(cookie.name, sessionCookieDetails, {
-    ...cookie.options,
+  cookieStore.set(cookieName, sessionCookieDetails, {
+    httpOnly: true,
+    secure: true,
+    path: "/",
+    sameSite: "lax",
     expires,
   });
 }

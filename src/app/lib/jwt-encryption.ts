@@ -1,11 +1,16 @@
 import { JWTPayload, SignJWT, jwtVerify } from "jose";
 
-const key = new TextEncoder().encode("fefe");
+import { JWT_SECRET_KEY } from "@/app/configuration";
 
-export async function encrypt(payload: JWTPayload): Promise<string> {
+const key = new TextEncoder().encode(JWT_SECRET_KEY);
+
+export async function encrypt(
+  payload: JWTPayload,
+  durationInDays: number
+): Promise<string> {
   return await new SignJWT(payload)
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
-    .setExpirationTime("1day") // Change this later.
+    .setExpirationTime(`${durationInDays}day`)
     .sign(key);
 }

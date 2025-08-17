@@ -1,4 +1,5 @@
 import { encrypt } from "./jwt-encryption";
-import checkPassword from "./password-hashing";
+import { convertFromDaysToMilliseconds } from "./math";
+import { checkPassword } from "./password-hashing";
 
-export { checkPassword, encrypt };
+export { checkPassword, convertFromDaysToMilliseconds, encrypt };
