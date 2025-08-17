@@ -8,7 +8,7 @@ import {
 } from "@/app/configuration";
 import { convertFromDaysToMilliseconds, decrypt, encrypt } from "@/app/lib";
 
-const cookieName = "smos-sesh";
+const cookieName = "smom-sesh";
 
 export async function createSession(
   username: string,
