@@ -1,6 +1,6 @@
 import { ValidationResult } from "@/app/validators";
 
-import Credentials from "./credentials";
+import Credentials from "../types/credentials";
 
 type FormActionState<T> = {
   hasServerError?: boolean;

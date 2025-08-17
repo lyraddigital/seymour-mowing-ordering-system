@@ -2,8 +2,8 @@
 
 import { redirect } from "next/navigation";
 
-import { Credentials, FormActionState } from "@/app/types";
-import { validateSignIn } from "@/app/validators";
+import { Credentials } from "@/app/types";
+import { FormActionState, validateSignIn } from "@/app/validators";
 
 export default async function signInWithCredentials(
   _: FormActionState<Credentials> | undefined,

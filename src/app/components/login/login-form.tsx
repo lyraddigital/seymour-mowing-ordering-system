@@ -1,31 +1,17 @@
 'use client';
 
 import { Box, Button, Checkbox, FormControlLabel } from "@mui/material";
-import { useActionState } from "react";
 
 import { signInWithCredentials } from "@/app/actions";
 import { FormActionAlerts } from "@/app/components/ui/forms";
-import { Credentials, FormActionState } from "@/app/types";
+import { useFormAction } from "@/app/hooks";
 import { validateSignIn } from "@/app/validators";
 
 import LoginInput from "./login-input";
 import PasswordInput from "./password-input";
 
-const handleSignInWithCredentials = async (prevState: FormActionState<Credentials> | undefined, formData: FormData): Promise<FormActionState<Credentials> | undefined> => {
-    const validationResult = validateSignIn(formData);    
-
-    if (!validationResult.success) {
-        return {
-            data: validationResult.data,
-            validationResult: validationResult,
-        };
-    }
-
-    return await signInWithCredentials(prevState, formData);
-};
-
-export default function LoginForm() {    
-    const [state, action, pending] = useActionState(handleSignInWithCredentials, undefined);
+export default function LoginForm() {
+    const [state, action, pending] = useFormAction(validateSignIn, signInWithCredentials);    
 
     return (
         <Box component="form" action={action} noValidate autoComplete="off" sx={{ m: 1 }}>
