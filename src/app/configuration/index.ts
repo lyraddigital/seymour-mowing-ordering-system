@@ -1,5 +1,2 @@
-export {
-  DEFAULT_SESSION_EXPIRY_DURATION_IN_DAYS,
-  JWT_SECRET_KEY,
-  REMEMBER_ME_SESSION_EXPIRY_DURATION_IN_DAYS,
-} from "./environment-variables";
+export * from "./constants";
+export * from "./environment-variables";

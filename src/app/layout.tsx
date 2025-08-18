@@ -2,7 +2,7 @@ import { CssBaseline } from '@mui/material';
 import { AppRouterCacheProvider } from '@mui/material-nextjs/v15-appRouter';
 import type { Metadata } from "next";
 
-import { MuiThemeProvider } from "./components/theme";
+import { MuiThemeProvider } from "@/app/core/components/theme";
 
 export const metadata: Metadata = {
   title: "Seymour Mowing and Maintenance - Invoice Management System",

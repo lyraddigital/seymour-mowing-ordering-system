@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { verifySession } from "@/app/services";
+import { pagePaths } from "@/app/configuration";
+import { verifySession } from "@/app/core/services";
 
 export default async function middleware(req: NextRequest) {
   const session = await verifySession();
 
   if (!session?.username) {
-    return NextResponse.redirect(new URL("/sign-in", req.nextUrl));
+    return NextResponse.redirect(new URL(pagePaths.signIn, req.nextUrl));
   }
 }
 

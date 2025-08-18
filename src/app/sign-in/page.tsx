@@ -1,7 +1,8 @@
 import { Grid, Typography } from "@mui/material";
 
-import { LoginForm, LoginPaper } from "@/app/components/login";
 import loginLogo from "@/../public/login-logo.svg";
+
+import { LoginForm, LoginPaper } from "./components";
 
 export default function SignIn() {
   return (
