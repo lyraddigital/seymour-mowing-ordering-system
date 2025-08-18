@@ -31,3 +31,21 @@ export default async function serverFormAction<T>(
     redirect(redirectPath);
   }
 }
+
+export async function emptyServerFormAction(
+  processingFn: () => Promise<void>,
+  redirectPath: string | undefined
+): Promise<FormActionState<void> | undefined> {
+  try {
+    await processingFn();
+  } catch (e) {
+    return {
+      hasServerError: true,
+      serverErrorMessage: (e as Error).message,
+    };
+  }
+
+  if (redirectPath) {
+    redirect(redirectPath);
+  }
+}
