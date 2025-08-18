@@ -1,5 +1,6 @@
-import { FormActionState, ValidatorFn } from "@/app/validators";
 import { redirect } from "next/navigation";
+
+import { FormActionState, ValidatorFn } from "@/app/validators";
 
 export default async function serverFormAction<T>(
   formData: FormData,
@@ -18,10 +19,10 @@ export default async function serverFormAction<T>(
 
   try {
     await processingFn(validationResult?.data);
-  } catch (e: any) {
+  } catch (e) {
     return {
       hasServerError: true,
-      serverErrorMessage: e.message,
+      serverErrorMessage: (e as { message: string }).message,
       data: validationResult?.data,
     };
   }

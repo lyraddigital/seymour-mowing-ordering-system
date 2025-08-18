@@ -1,7 +1,7 @@
 "use server";
 
 import { getUserByUsername } from "@/app/data";
-import { checkPassword } from "@/app/lib";
+import { checkPassword } from "@/app/lib/hashing";
 import { createSession } from "@/app/services";
 import { Credentials } from "@/app/types";
 import { FormActionState, validateSignIn } from "@/app/validators";

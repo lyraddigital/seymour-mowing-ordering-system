@@ -1,1 +1,1 @@
-export { createSession } from "./session.service";
+export { createSession, verifySession } from "./session.service";

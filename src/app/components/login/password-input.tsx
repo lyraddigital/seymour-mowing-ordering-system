@@ -1,6 +1,6 @@
 'use client';
 
-import { IconButton, InputAdornment, useTheme } from "@mui/material";
+import { IconButton, InputAdornment } from "@mui/material";
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { useState } from "react";
 

@@ -6,7 +6,8 @@ import {
   DEFAULT_SESSION_EXPIRY_DURATION_IN_DAYS,
   REMEMBER_ME_SESSION_EXPIRY_DURATION_IN_DAYS,
 } from "@/app/configuration";
-import { convertFromDaysToMilliseconds, decrypt, encrypt } from "@/app/lib";
+import { convertFromDaysToMilliseconds } from "@/app/lib/util";
+import { encrypt, decrypt } from "@/app/lib/jwt";
 
 const cookieName = "smom-sesh";
 
@@ -25,7 +26,6 @@ export async function createSession(
     durationInDays
   );
   const cookieStore = await cookies();
-
   cookieStore.set(cookieName, sessionCookieDetails, {
     httpOnly: true,
     secure: true,
