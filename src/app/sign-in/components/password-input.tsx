@@ -8,7 +8,7 @@ import { ValidationResult } from '@/app/core/validators';
 
 import { formFields } from "@/app/sign-in/constants";
 
-import LoginOutlinedInput from "./login-input";
+import SignInInput from "./sign-in-input";
 
 type PasswordInput<T> = {
     defaultValue?: string;
@@ -22,7 +22,7 @@ export default function PasswordInput<T>({ defaultValue, validationResult }: Pas
     const visibilityColor = hasError ? "error": undefined;
 
     return (
-        <LoginOutlinedInput 
+        <SignInInput 
             fieldName={formFields.password}
             label="Password *"
             defaultValue={defaultValue}

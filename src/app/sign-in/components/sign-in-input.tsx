@@ -5,7 +5,7 @@ import { HTMLInputTypeAttribute, JSX } from 'react';
 
 import { ValidationResult } from '@/app/core/validators';
 
-type LoginInputProps<T> = {
+type SignInInputProps<T> = {
     fieldName: string;
     endAdornment?: JSX.Element;
     validationResult?: ValidationResult<T>;
@@ -14,14 +14,14 @@ type LoginInputProps<T> = {
     type?: HTMLInputTypeAttribute;
 }
 
-export default function LoginInput<T>({
+export default function SignInInput<T>({
     defaultValue,
     endAdornment,
     validationResult,
     fieldName,
     label,
     type
-}: LoginInputProps<T>) {
+}: SignInInputProps<T>) {
     const hasError = !!validationResult?.errors?.fields && 
         !!validationResult.errors.fields.find(f => f === fieldName);
     

@@ -1,4 +1,5 @@
-import LoginForm from "./login-form";
-import LoginPaper from "./login-paper";
+import SignInPaper from "./sign-in-paper";
+import SignInSection from "./sign-in-section";
+import SignInSidePicture from "./sign-in-side-picture";
 
-export { LoginForm, LoginPaper };
+export { SignInPaper, SignInSection, SignInSidePicture };

@@ -9,17 +9,17 @@ import { signInWithCredentials } from "@/app/sign-in/actions";
 import { formFields } from "@/app/sign-in/constants";
 import { validateSignIn } from "@/app/sign-in/validators";
 
-import LoginInput from "./login-input";
+import SignInInput from "./sign-in-input";
 import PasswordInput from "./password-input";
 
-export default function LoginForm() {
+export default function SignInForm() {
     const [state, action, pending] = useFormAction(validateSignIn, signInWithCredentials);    
 
     return (
         <Box component="form" action={action} noValidate autoComplete="off" sx={{ m: 1 }}>
             <FormActionAlerts state={state}></FormActionAlerts>            
             <Box sx={{mb: 1}}>
-                <LoginInput fieldName={formFields.username} validationResult={state?.validationResult} label="Username *" defaultValue={state?.data?.username} />
+                <SignInInput fieldName={formFields.username} validationResult={state?.validationResult} label="Username *" defaultValue={state?.data?.username} />
             </Box>
             <Box sx={{mb: 1}}>
                 <PasswordInput validationResult={state?.validationResult} defaultValue={state?.data?.password} />

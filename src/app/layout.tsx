@@ -3,7 +3,6 @@ import { AppRouterCacheProvider } from '@mui/material-nextjs/v15-appRouter';
 import type { Metadata } from "next";
 import { PropsWithChildren } from 'react';
 
-import { SignOutForm } from '@/app/core/components/auth';
 import { MuiThemeProvider } from "@/app/core/components/theme";
 
 export const metadata: Metadata = {
@@ -18,7 +17,6 @@ export default function RootLayout({ children }: PropsWithChildren) {
         <AppRouterCacheProvider>
           <CssBaseline />
           <MuiThemeProvider>
-            <SignOutForm />
             {children}
           </MuiThemeProvider>
         </AppRouterCacheProvider>
