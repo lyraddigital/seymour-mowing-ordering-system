@@ -18,7 +18,7 @@ export default async function signInWithCredentials(
   return await serverFormAction(
     formData,
     validateSignIn,
-    pagePaths.home,
+    pagePaths.dashboard,
     async (credentials) => {
       if (!credentials) {
         throw new Error(pageErrors.genericError);
