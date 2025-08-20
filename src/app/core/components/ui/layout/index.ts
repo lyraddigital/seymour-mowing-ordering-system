@@ -1,4 +1,5 @@
-import SideBar from "./side-bar";
 import PageBackground from "./page-background";
+import SideBar from "./side-bar";
+import TopBar from "./top-bar";
 
-export { SideBar, PageBackground };
+export { PageBackground, SideBar, TopBar };
