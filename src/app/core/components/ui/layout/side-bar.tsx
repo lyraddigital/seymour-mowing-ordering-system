@@ -11,7 +11,7 @@ type SideBarProps = {
 
 export default function SideBar({ mobileOpen, setMobileOpen }: SideBarProps) {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
   return (
     isMobile && !mobileOpen ? null : (
@@ -20,10 +20,10 @@ export default function SideBar({ mobileOpen, setMobileOpen }: SideBarProps) {
         open={isMobile ? mobileOpen : false}
         onClose={() => setMobileOpen(false)}
         sx={{
-          width: 200,
+          width: 258,
           flexShrink: 0,
           '& .MuiDrawer-paper': {
-            width: 200,
+            width: 258,
             boxSizing: 'border-box',
             backgroundColor: (theme) => theme.palette.mode === 'light'
               ? theme.palette.primary.main: theme.palette.background.default,
@@ -34,7 +34,7 @@ export default function SideBar({ mobileOpen, setMobileOpen }: SideBarProps) {
       >
         <Toolbar sx={{
           justifyContent: 'flex-end',
-          backgroundColor: (theme) => theme.darken(theme.palette.primary.main, 0.2),
+          backgroundColor: (theme) => theme.darken(theme.palette.primary.main, 0.1),
           display: 'flex',
           flexDirection: 'row',
           alignItems: 'center',

@@ -18,10 +18,10 @@ export default function NavigationListItem({ text, href }: NavigationListItemPro
         selected={isActive}
         sx={{
           '&:hover': {
-            backgroundColor: (theme) => theme.palette.primary.dark,
+            backgroundColor: (theme) => theme.darken(theme.palette.primary.main, 0.1),
           },
           '&.Mui-selected, &.Mui-selected:hover': {
-            backgroundColor: (theme) => theme.palette.primary.dark,
+            backgroundColor: (theme) => theme.darken(theme.palette.primary.main, 0.1),
           },
         }}
       >

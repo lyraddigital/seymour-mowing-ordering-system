@@ -9,7 +9,7 @@ import { SideBar, PageBackground } from '@/app/core/components/ui/layout';
 
 export default function Layout({ children }: PropsWithChildren) {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
