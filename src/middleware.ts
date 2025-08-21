@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { pagePaths } from "@/app/configuration";
+import { pagePaths } from "@/app/core/configuration";
 import { verifySession } from "@/app/core/services";
 
 export default async function middleware(req: NextRequest) {

@@ -1,7 +1,7 @@
 "use server";
 
-import { pagePaths } from "@/app/configuration";
 import { serverFormAction } from "@/app/core/actions";
+import { pagePaths } from "@/app/core/configuration";
 import { getUserByUsername } from "@/app/core/data";
 import { FormActionState } from "@/app/core/validators";
 

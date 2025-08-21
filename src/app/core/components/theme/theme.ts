@@ -12,6 +12,11 @@ const theme = createTheme({
       main: orange[800],
     },
   },
+  typography: {
+    body1: {
+      fontSize: "13px",
+    },
+  },
 });
 
 export default theme;

@@ -1,16 +1,22 @@
 type PagePaths = {
   dashboard: string;
   signIn: string;
-  customers: string; // added
+  customers: string;
 };
 
 type CookieNames = {
   sessionCookie: string;
 };
 
+export enum IconType {
+  dashboard = "dashboard",
+  customers = "customers",
+}
+
 type NavLink = {
   text: string;
   href: string;
+  icon: IconType;
 };
 
 export const pagePaths: PagePaths = {
@@ -24,6 +30,14 @@ export const cookieNames: CookieNames = {
 };
 
 export const navLinks: NavLink[] = [
-  { text: "Dashboard", href: pagePaths.dashboard },
-  { text: "Customers", href: pagePaths.customers },
+  {
+    text: "Dashboard",
+    href: pagePaths.dashboard,
+    icon: IconType.dashboard,
+  },
+  {
+    text: "Customers",
+    href: pagePaths.customers,
+    icon: IconType.customers,
+  },
 ];

@@ -1,6 +1,6 @@
 "use server";
 
-import { pagePaths } from "@/app/configuration";
+import { pagePaths } from "@/app/core/configuration";
 import { deleteSession } from "@/app/core/services";
 
 import { emptyServerFormAction } from "./server-form.action";

@@ -6,7 +6,7 @@ import {
   cookieNames,
   DEFAULT_SESSION_EXPIRY_DURATION_IN_DAYS,
   REMEMBER_ME_SESSION_EXPIRY_DURATION_IN_DAYS,
-} from "@/app/configuration";
+} from "@/app/core/configuration";
 import { convertFromDaysToMilliseconds } from "@/app/core/lib/util";
 import { encrypt } from "@/app/core/lib/jwt";
 

@@ -1,6 +1,6 @@
 import { JWTPayload, SignJWT, jwtVerify } from "jose";
 
-import { JWT_SECRET_KEY } from "@/app/configuration";
+import { JWT_SECRET_KEY } from "@/app/core/configuration";
 
 const key = new TextEncoder().encode(JWT_SECRET_KEY);
 

@@ -2,7 +2,7 @@
 
 import { cookies } from "next/headers";
 
-import { cookieNames } from "@/app/configuration";
+import { cookieNames } from "@/app/core/configuration";
 import { decrypt } from "@/app/core/lib/jwt";
 
 export async function verifySession(): Promise<
