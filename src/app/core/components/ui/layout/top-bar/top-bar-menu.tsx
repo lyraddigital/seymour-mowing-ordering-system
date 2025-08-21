@@ -1,6 +1,8 @@
 import React from 'react';
 import { Button, Avatar, Menu, MenuItem, Typography, useTheme } from '@mui/material';
 
+import { signOut } from '@/app/core/actions';
+
 export default function TopBarMenu() {
   const theme = useTheme();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
@@ -13,6 +15,13 @@ export default function TopBarMenu() {
   const handleMenuClose = () => {
     setAnchorEl(null);
   };
+
+  const handleSignOut = async (e: React.MouseEvent<HTMLElement>) => {
+    e.preventDefault();
+    handleMenuClose();
+    
+    await signOut();
+  }
 
   return (
     <>
@@ -48,7 +57,7 @@ export default function TopBarMenu() {
           }
         }}
       >
-        <MenuItem onClick={handleMenuClose}>
+        <MenuItem onClick={handleSignOut}>
           <Typography variant="body1">Sign out</Typography>
         </MenuItem>
       </Menu>
