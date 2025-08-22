@@ -6,14 +6,16 @@ import React from "react";
 interface ActionButtonProps {
   text: string;
   icon?: React.ReactElement;
+  onClick?: () => void;
 }
 
-export default function ActionButton({ text, icon }: ActionButtonProps) {
+export default function ActionButton({ text, icon, onClick }: ActionButtonProps) {
   return (
     <Button
       variant="contained"
       color="primary"
       startIcon={icon}
+      onClick={onClick}
       sx={{
         textTransform: "none",
         "& .MuiButton-startIcon": { marginRight: 1 },
