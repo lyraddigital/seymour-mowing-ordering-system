@@ -12,6 +12,16 @@ const theme = createTheme({
       main: orange[800],
     },
   },
+  breakpoints: {
+    values: {
+      xs: 0,
+      sm: 600,
+      md: 900,
+      lg: 1280,
+      xl: 1536,
+    },
+  },
+  spacing: 4,
   typography: {
     body1: {
       fontSize: "13px",

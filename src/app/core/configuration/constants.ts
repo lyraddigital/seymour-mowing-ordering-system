@@ -1,23 +1,11 @@
-type PagePaths = {
-  dashboard: string;
-  signIn: string;
-  customers: string;
-};
+import { IconType } from "@/app/core/enums";
 
-type CookieNames = {
-  sessionCookie: string;
-};
-
-export enum IconType {
-  dashboard = "dashboard",
-  customers = "customers",
-}
-
-type NavLink = {
-  text: string;
-  href: string;
-  icon: IconType;
-};
+import {
+  PagePaths,
+  CookieNames,
+  NavItem,
+  BreadcrumbItem,
+} from "@/app/core/types";
 
 export const pagePaths: PagePaths = {
   dashboard: "/dashboard",
@@ -29,7 +17,7 @@ export const cookieNames: CookieNames = {
   sessionCookie: "smom-sesh",
 };
 
-export const navLinks: NavLink[] = [
+export const navItems: NavItem[] = [
   {
     text: "Dashboard",
     href: pagePaths.dashboard,
@@ -41,3 +29,10 @@ export const navLinks: NavLink[] = [
     icon: IconType.customers,
   },
 ];
+
+export const breadcrumbItems: { [key: string]: BreadcrumbItem[] } = {
+  customers: [
+    { text: "Home", href: pagePaths.dashboard },
+    { text: "Customers" },
+  ],
+};

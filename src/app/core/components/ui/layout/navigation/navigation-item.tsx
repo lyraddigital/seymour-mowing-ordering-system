@@ -1,16 +1,17 @@
+'use client';
+
 import { ListItem, ListItemButton, ListItemText, Box } from '@mui/material';
 import { usePathname } from 'next/navigation';
 
-import { IconType } from '@/app/core/configuration';
 import { IconRenderer } from '@/app/core/components/ui/icons';
+import { NavItem } from '@/app/core/types';
 
 type NavigationListItemProps = {
-  text: string;
-  href: string;
-  icon: IconType;
+  item: NavItem;
 };
 
-export default function NavigationListItem({ text, href, icon }: NavigationListItemProps) {
+export default function NavigationListItem({ item }: NavigationListItemProps) {
+  const { text, href, icon } = item;
   const pathname = usePathname();
   const isActive = pathname === href;
 

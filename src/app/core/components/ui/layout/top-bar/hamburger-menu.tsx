@@ -1,4 +1,5 @@
-import React from 'react';
+'use client';
+
 import { IconButton, useTheme, useMediaQuery } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 

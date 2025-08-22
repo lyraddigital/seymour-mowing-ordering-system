@@ -1,5 +1,7 @@
+import { PageHeader } from "@/app/core/components/ui/layout";
+
 export default function CustomersPage() {
   return (
-    <div>Customers Page</div>
+    <PageHeader title="Customers" breadcrumbsKey="customers" />
   );
 }

@@ -1,3 +1,5 @@
+'use client';
+
 import { Box, Drawer, IconButton, Toolbar, useTheme, useMediaQuery } from '@mui/material';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import { Dispatch, SetStateAction } from 'react';
@@ -5,20 +7,20 @@ import { Dispatch, SetStateAction } from 'react';
 import { SideNavigation } from '@/app/core/components/ui/layout/navigation';
 
 type SideBarProps = {
-  mobileOpen: boolean;
-  setMobileOpen: Dispatch<SetStateAction<boolean>>;
+  smallDeviceOpen: boolean;
+  setSmallDeviceOpen: Dispatch<SetStateAction<boolean>>;
 };
 
-export default function SideBar({ mobileOpen, setMobileOpen }: SideBarProps) {
+export default function SideBar({ smallDeviceOpen, setSmallDeviceOpen }: SideBarProps) {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isSmallDevice = useMediaQuery(theme.breakpoints.down('md'));
 
   return (
-    isMobile && !mobileOpen ? null : (
+    isSmallDevice && !smallDeviceOpen ? null : (
       <Drawer
-        variant={isMobile ? "temporary" : "permanent"}
-        open={isMobile ? mobileOpen : false}
-        onClose={() => setMobileOpen(false)}
+        variant={isSmallDevice ? "temporary" : "permanent"}
+        open={isSmallDevice ? smallDeviceOpen : false}
+        onClose={() => setSmallDeviceOpen(false)}
         sx={{
           width: 258,
           flexShrink: 0,
@@ -43,8 +45,8 @@ export default function SideBar({ mobileOpen, setMobileOpen }: SideBarProps) {
           minHeight: { xs: 56, sm: 64 }
         }}>
           <Box sx={{ flexGrow: 1 }} />
-          {isMobile && (
-            <IconButton onClick={() => setMobileOpen(false)} sx={{ color: theme.palette.primary.contrastText }}>
+          {isSmallDevice && (
+            <IconButton onClick={() => setSmallDeviceOpen(false)} sx={{ color: theme.palette.primary.contrastText }}>
               <ChevronLeftIcon />
             </IconButton>
           )}

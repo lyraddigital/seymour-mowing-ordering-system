@@ -2,7 +2,7 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import PeopleIcon from '@mui/icons-material/People';
 import { Theme } from '@mui/material';
 
-import { IconType } from '@/app/core/configuration';
+import { IconType } from '@/app/core/enums';
 
 const iconSx = { color: (theme: Theme) => theme.palette.primary.contrastText };
 

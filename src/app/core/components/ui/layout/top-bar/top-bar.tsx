@@ -5,17 +5,17 @@ import TopBarMenu from './top-bar-menu';
 import HamburgerMenu from './hamburger-menu';
 
 type TopBarProps = {
-  setMobileOpen: (open: boolean) => void;
+  setSmallDeviceOpen: (open: boolean) => void;
 };
 
-export default function TopBar({ setMobileOpen }: TopBarProps) {
+export default function TopBar({ setSmallDeviceOpen }: TopBarProps) {
   return (
     <>
       <AppBar position="fixed" sx={{
         boxShadow: 'none', backgroundColor: (theme) => theme.palette.background.default
       }}>
         <Toolbar>          
-          <HamburgerMenu setMobileOpen={setMobileOpen} />
+          <HamburgerMenu setMobileOpen={setSmallDeviceOpen} />
           <Box sx={{ ml: 'auto' }}>
             <TopBarMenu />
           </Box>

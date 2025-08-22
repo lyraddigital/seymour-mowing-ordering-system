@@ -1,5 +1,7 @@
-export default function Dashboard() {
+import { PageHeader } from "@/app/core/components/ui/layout";
+
+export default function Dashboard() {  
   return (
-    <div>Dashboard Page</div>
+    <PageHeader title="Dashboard" breadcrumbsKey="home" />
   );
 }

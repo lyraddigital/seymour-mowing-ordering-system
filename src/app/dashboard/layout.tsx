@@ -6,14 +6,14 @@ import { PropsWithChildren, useState } from 'react';
 import { SideBar, PageBackground, TopBar } from '@/app/core/components/ui/layout';
 
 export default function Layout({ children }: PropsWithChildren) { 
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const [smallDeviceOpen, setSmallDeviceOpen] = useState(false);
 
   return (
     <PageBackground>
-      <TopBar setMobileOpen={setMobileOpen} />
+      <TopBar setSmallDeviceOpen={setSmallDeviceOpen} />
       <Box sx={{ display: 'flex' }}>
-        <SideBar mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />
-        <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+        <SideBar smallDeviceOpen={smallDeviceOpen} setSmallDeviceOpen={setSmallDeviceOpen} />
+        <Box component="main" sx={{ flexGrow: 1, p: { xs: 5, lg: 12 } }}>
           {children}
         </Box>
       </Box>
