@@ -1,10 +1,12 @@
 import { NEXT_REDIRECT_EXCEPTION_MESSAGE } from "@/app/core/configuration";
+import { ApplicationError } from "@/app/core/interfaces";
 import { FormActionState, ValidatorFn } from "@/app/core/validators";
 
 export default async function serverFormAction<T>(
   formData: FormData,
   validatorFn: ValidatorFn<T>,
-  processingFn: (data?: T) => Promise<void>
+  processingFn: (data?: T) => Promise<void>,
+  unknownErrorMessage: string
 ): Promise<FormActionState<T> | undefined> {
   const validationResult = validatorFn(formData);
 
@@ -18,34 +20,46 @@ export default async function serverFormAction<T>(
   try {
     await processingFn(validationResult?.data);
   } catch (e) {
-    return handleServerFormError(e, {
+    return handleServerFormError(e, unknownErrorMessage, {
       hasServerError: true,
-      serverErrorMessage: (e as Error).message,
       data: validationResult?.data,
     });
   }
 }
 
 export async function emptyServerFormAction(
-  processingFn: () => Promise<void>
+  processingFn: () => Promise<void>,
+  unknownErrorMessage: string
 ): Promise<FormActionState<void> | undefined> {
   try {
     await processingFn();
   } catch (e) {
-    return handleServerFormError(e, {
+    return handleServerFormError(e, unknownErrorMessage, {
       hasServerError: true,
-      serverErrorMessage: (e as Error).message,
     });
   }
 }
 
 function handleServerFormError<T>(
   error: unknown,
+  unknownErrorMessage: string,
   formActionState: FormActionState<T>
 ): FormActionState<T> {
   if ((error as Error)?.message === NEXT_REDIRECT_EXCEPTION_MESSAGE) {
     throw error;
+  } else if (error instanceof ApplicationError) {
+    console.error("Application error occurred:", error);
+
+    return {
+      ...formActionState,
+      serverErrorMessage: (error as Error).message,
+    };
   }
 
-  return formActionState;
+  console.error("An unknown error occurred: ", error);
+
+  return {
+    ...formActionState,
+    serverErrorMessage: unknownErrorMessage,
+  };
 }

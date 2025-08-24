@@ -3,6 +3,9 @@ export const DEFAULT_SESSION_EXPIRY_DURATION_IN_DAYS = process.env
   ? parseInt(process.env.DEFAULT_SESSION_EXPIRY_DURATION_IN_DAYS, 10)
   : 1;
 
+export const DYNAMO_DB_REGION = process.env.DYNAMO_DB_REGION || "";
+export const DYNAMO_DB_TABLE_NAME = process.env.DYNAMO_DB_TABLE_NAME || "";
+
 export const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY || "";
 
 export const REMEMBER_ME_SESSION_EXPIRY_DURATION_IN_DAYS = process.env

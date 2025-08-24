@@ -1,3 +1,7 @@
+type CreateCustomerFeatureErrors = {
+  genericError: string;
+};
+
 type FormFields = {
   customerName: string;
   contactName: string;
@@ -12,4 +16,9 @@ export const formFields: FormFields = {
   contactEmail: "contactEmail",
   contactPhone: "contactPhone",
   profilePic: "profilePic",
+};
+
+export const createCustomerFeatureErrors: CreateCustomerFeatureErrors = {
+  genericError:
+    "Issue while trying to create a customer. Please try again later.",
 };

@@ -21,13 +21,13 @@ export default async function signInWithCredentials(
     validateSignIn,
     async (credentials) => {
       if (!credentials) {
-        throw new Error(pageErrors.genericError);
+        throw new Error("No credentials provided");
       }
 
       const user = await getUserByUsername(credentials.username);
 
       if (!user) {
-        throw new Error(pageErrors.genericError);
+        throw new Error("User not found");
       }
 
       const hasPasswordMatched = await checkPassword(
@@ -36,12 +36,13 @@ export default async function signInWithCredentials(
       );
 
       if (!hasPasswordMatched) {
-        throw new Error(pageErrors.genericError);
+        throw new Error("Invalid password");
       }
 
       await createSession(user.username, credentials.rememberMe);
 
       redirect(pagePaths.dashboard);
-    }
+    },
+    pageErrors.genericError
   );
 }
