@@ -1,5 +1,4 @@
-import FormActionState from "./form-action-state";
-import ValidationResult from "./validation-result";
+import { FormActionState, ValidationResult } from "@/app/core/types";
 
 export type ValidatorFn<T> = (formData: FormData) => ValidationResult<T>;
 export type ActionStateFn<T> = (

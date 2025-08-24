@@ -6,7 +6,7 @@ import { FormDialogWrapper } from "@/app/core/components/ui/dialogs";
 
 import AddCustomerForm, { AddCustomerFormHandle } from "./add-customer-form";
 
-interface AddCustomerDialogProps {
+type AddCustomerDialogProps = {
   open: boolean;
   cancelPressed: () => void;
 }

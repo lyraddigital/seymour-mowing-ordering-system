@@ -1,5 +1,5 @@
 import { Box, TextField, Avatar, Button } from "@mui/material";
-import React, { useRef, useImperativeHandle, forwardRef, useState, useEffect } from "react";
+import React, { useRef, useImperativeHandle, forwardRef, useState } from "react";
 
 import { useFormAction } from "@/app/core/hooks";
 
@@ -7,7 +7,7 @@ import { createCustomer } from "@/app/dashboard/customers/actions";
 import { formFields } from "@/app/dashboard/customers/constants";
 import { validateCustomerCreation } from "@/app/dashboard/customers/validators";
 
-export interface AddCustomerFormHandle {
+export type AddCustomerFormHandle = {
   submit: () => void;
 }
 
@@ -25,10 +25,6 @@ const AddCustomerForm = forwardRef<AddCustomerFormHandle, {}>((_, ref) => {
     }
   }));
 
-  useEffect(() => {
-    // Optionally clear image on unmount or dialog close
-  }, []);
-
   const handleProfilePicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -38,9 +34,7 @@ const AddCustomerForm = forwardRef<AddCustomerFormHandle, {}>((_, ref) => {
       };
       reader.readAsDataURL(file);
     }
-  };
-
-  // The form will submit via the action prop, so no need for custom handleSubmit
+  };  
 
   return (
     <Box
@@ -51,15 +45,15 @@ const AddCustomerForm = forwardRef<AddCustomerFormHandle, {}>((_, ref) => {
       autoComplete="off"
       sx={{ mt: 2 }}
     >
-      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 2 }}>
-        <Avatar src={profilePic} sx={{ width: 80, height: 80, mb: 3 }} />
+      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 4 }}>
+        <Avatar src={profilePic} sx={{ width: 120, height: 120, mb: 3 }} />
         <Button
-          variant="outlined"
+          variant="contained"
           size="small"
           onClick={() => fileInputRef.current?.click()}
           sx={{ mb: 1 }}
         >
-          Upload Profile Picture
+          Upload
         </Button>
         <input
           type="file"

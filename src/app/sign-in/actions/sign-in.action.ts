@@ -10,6 +10,7 @@ import { checkPassword } from "@/app/sign-in/lib";
 import { createSession } from "@/app/sign-in/services";
 import { Credentials } from "@/app/sign-in/types";
 import { validateSignIn } from "@/app/sign-in/validators";
+import { redirect } from "next/navigation";
 
 export default async function signInWithCredentials(
   _: FormActionState<Credentials> | undefined,
@@ -18,7 +19,6 @@ export default async function signInWithCredentials(
   return await serverFormAction(
     formData,
     validateSignIn,
-    pagePaths.dashboard,
     async (credentials) => {
       if (!credentials) {
         throw new Error(pageErrors.genericError);
@@ -40,6 +40,8 @@ export default async function signInWithCredentials(
       }
 
       await createSession(user.username, credentials.rememberMe);
+
+      redirect(pagePaths.dashboard);
     }
   );
 }

@@ -11,7 +11,6 @@ import { AddCustomerDialog } from "./components";
 export default function CustomersPage() {
   const [addCustomerDialogOpen, setAddCustomerDialogOpen] = useState(false);
   const handleCancelPressed = () => setAddCustomerDialogOpen(false);
-  const handleCreatePressed = () => setAddCustomerDialogOpen(false);
   
   const addButton = (
     <ActionButton
@@ -27,7 +26,6 @@ export default function CustomersPage() {
       <AddCustomerDialog
         open={addCustomerDialogOpen}
         cancelPressed={handleCancelPressed}
-        createPressed={handleCreatePressed}
       />
     </>
   );

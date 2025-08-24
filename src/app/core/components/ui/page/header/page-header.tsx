@@ -3,7 +3,7 @@ import { Breadcrumbs, Typography, Divider, Box } from "@mui/material";
 import { breadcrumbItems } from "@/app/core/configuration";
 import BreadcrumbEntry from "./breadcrumb-entry";
 
-interface PageHeaderProps {
+type PageHeaderProps = {
   title: string;
   breadcrumbsKey?: string;
   actionItem?: React.ReactElement;

@@ -3,7 +3,7 @@
 import { Button } from "@mui/material";
 import React from "react";
 
-interface ActionButtonProps {
+type ActionButtonProps = {
   text: string;
   icon?: React.ReactElement;
   onClick?: () => void;

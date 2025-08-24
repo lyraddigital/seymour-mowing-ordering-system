@@ -1,7 +1,7 @@
 import { Link, Typography } from "@mui/material";
 import { BreadcrumbItem } from "@/app/core/types";
 
-interface BreadcrumbEntryProps {
+type BreadcrumbEntryProps = {
   item: BreadcrumbItem;
 }
 

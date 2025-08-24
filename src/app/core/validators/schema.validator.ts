@@ -1,6 +1,6 @@
 import { treeifyError, ZodObject } from "zod";
 
-import ValidationResult from "./validation-result";
+import { ValidationResult } from "@/app/core/types";
 
 function validateSchema<T>(schema: ZodObject, data: T): ValidationResult<T> {
   const validationResult = schema.safeParse(data);

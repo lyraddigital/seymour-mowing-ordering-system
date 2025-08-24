@@ -1,3 +1,5 @@
-export type CookieNames = {
+type CookieNames = {
   sessionCookie: string;
 };
+
+export default CookieNames;

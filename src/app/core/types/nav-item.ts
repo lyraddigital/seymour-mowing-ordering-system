@@ -1,7 +1,9 @@
 import { IconType } from "./icon-type";
 
-export type NavItem = {
+type NavItem = {
   text: string;
   href: string;
   icon: IconType;
 };
+
+export default NavItem;

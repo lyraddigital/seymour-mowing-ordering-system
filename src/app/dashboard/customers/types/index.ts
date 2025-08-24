@@ -1,1 +1,3 @@
-export * from "./create-customer";
+import CreateCustomer from "./create-customer";
+
+export type { CreateCustomer };

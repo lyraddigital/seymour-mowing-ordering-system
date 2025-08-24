@@ -1,16 +1,15 @@
-import React from "react";
+import React, { PropsWithChildren } from "react";
 import { Button } from "@mui/material";
 import DialogWrapper from "./dialog-wrapper";
 
-interface FormDialogWrapperProps {
-  open: boolean;
-  title: React.ReactNode;
-  onClose: () => void;
-  formRef: React.Ref<{ submit: () => void }>;
-  submitLabel?: string;
-  cancelLabel?: string;
-  maxWidth?: string;
-  children: React.ReactNode;
+type FormDialogWrapperProps = PropsWithChildren & {
+    cancelLabel?: string;
+    formRef: React.Ref<{ submit: () => void }>;
+    maxWidth?: string;
+    onClose: () => void;
+    open: boolean;
+    submitLabel?: string;
+    title: React.ReactNode;
 }
 
 export default function FormDialogWrapper({

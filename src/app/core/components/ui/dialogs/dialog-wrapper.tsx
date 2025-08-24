@@ -1,15 +1,14 @@
 import { Dialog, DialogTitle, DialogContent, DialogActions, IconButton, Box } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import React from "react";
+import React, { PropsWithChildren } from "react";
 
-interface DialogWrapperProps {
-  open: boolean;
-  title: React.ReactNode;
-  onClose: () => void;
-  actions?: React.ReactNode;
-  children: React.ReactNode;
-  maxWidth?: string;
-}
+type DialogWrapperProps = PropsWithChildren & {
+    actions?: React.ReactNode;
+    maxWidth?: string;
+    onClose: () => void;
+    open: boolean;
+    title: React.ReactNode;
+};
 
 export default function DialogWrapper({
   open,
@@ -41,14 +40,12 @@ export default function DialogWrapper({
           pb: 0,
         }}
       >
-        <Box sx={{ pt: 0.5 }}>{title}</Box>
+        <Box component="span" sx={{ pt: 0.5 }}>{title}</Box>
         <IconButton
           aria-label="close"
           onClick={onClose}
-          edge="end"
           size="small"
           color="primary"
-          sx={{ mt: -1 }}
         >
           <CloseIcon color="primary" />
         </IconButton>

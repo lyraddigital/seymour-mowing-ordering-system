@@ -36,3 +36,5 @@ export const breadcrumbItems: { [key: string]: BreadcrumbItem[] } = {
     { text: "Customers" },
   ],
 };
+
+export const NEXT_REDIRECT_EXCEPTION_MESSAGE = "NEXT_REDIRECT";

@@ -1,11 +1,9 @@
-import { redirect } from "next/navigation";
-
+import { NEXT_REDIRECT_EXCEPTION_MESSAGE } from "@/app/core/configuration";
 import { FormActionState, ValidatorFn } from "@/app/core/validators";
 
 export default async function serverFormAction<T>(
   formData: FormData,
   validatorFn: ValidatorFn<T>,
-  redirectPath: string | undefined,
   processingFn: (data?: T) => Promise<void>
 ): Promise<FormActionState<T> | undefined> {
   const validationResult = validatorFn(formData);
@@ -20,32 +18,34 @@ export default async function serverFormAction<T>(
   try {
     await processingFn(validationResult?.data);
   } catch (e) {
-    return {
+    return handleServerFormError(e, {
       hasServerError: true,
       serverErrorMessage: (e as Error).message,
       data: validationResult?.data,
-    };
-  }
-
-  if (redirectPath) {
-    redirect(redirectPath);
+    });
   }
 }
 
 export async function emptyServerFormAction(
-  processingFn: () => Promise<void>,
-  redirectPath: string | undefined
+  processingFn: () => Promise<void>
 ): Promise<FormActionState<void> | undefined> {
   try {
     await processingFn();
   } catch (e) {
-    return {
+    return handleServerFormError(e, {
       hasServerError: true,
       serverErrorMessage: (e as Error).message,
-    };
+    });
+  }
+}
+
+function handleServerFormError<T>(
+  error: unknown,
+  formActionState: FormActionState<T>
+): FormActionState<T> {
+  if ((error as Error)?.message === NEXT_REDIRECT_EXCEPTION_MESSAGE) {
+    throw error;
   }
 
-  if (redirectPath) {
-    redirect(redirectPath);
-  }
+  return formActionState;
 }
