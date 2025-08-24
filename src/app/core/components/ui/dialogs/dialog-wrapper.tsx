@@ -3,11 +3,12 @@ import CloseIcon from "@mui/icons-material/Close";
 import React, { PropsWithChildren } from "react";
 
 type DialogWrapperProps = PropsWithChildren & {
-    actions?: React.ReactNode;
-    maxWidth?: string;
-    onClose: () => void;
-    open: boolean;
-    title: React.ReactNode;
+  actions?: React.ReactNode;
+  maxWidth?: string;
+  onClose: () => void;
+  open: boolean;
+  title: React.ReactNode;
+  closeDisabled?: boolean;
 };
 
 export default function DialogWrapper({
@@ -16,7 +17,8 @@ export default function DialogWrapper({
   onClose,
   actions,
   children,
-  maxWidth = "500px"
+  maxWidth = "500px",
+  closeDisabled = false
 }: DialogWrapperProps) {
   return (
     <Dialog
@@ -46,8 +48,9 @@ export default function DialogWrapper({
           onClick={onClose}
           size="small"
           color="primary"
+          disabled={closeDisabled}
         >
-          <CloseIcon color="primary" />
+          <CloseIcon color={closeDisabled ? "disabled" : "primary"} />
         </IconButton>
       </DialogTitle>
       <DialogContent>

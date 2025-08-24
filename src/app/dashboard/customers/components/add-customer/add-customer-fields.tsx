@@ -1,29 +1,18 @@
 import { Box, TextField, Avatar, Button } from "@mui/material";
-import React, { useRef, useImperativeHandle, forwardRef, useState } from "react";
+import React, { useRef, useState } from "react";
 
-import { useFormAction } from "@/app/core/hooks";
+import { FormActionState } from "@/app/core/types";
 
-import { createCustomer } from "@/app/dashboard/customers/actions";
 import { formFields } from "@/app/dashboard/customers/constants";
-import { validateCustomerCreation } from "@/app/dashboard/customers/validators";
+import { CreateCustomer } from "@/app/dashboard/customers/types";
 
-export type AddCustomerFormHandle = {
-  submit: () => void;
-}
+type AddCustomerFieldsProps = {
+  state?: FormActionState<CreateCustomer> | undefined;
+};
 
-const AddCustomerForm = forwardRef<AddCustomerFormHandle, {}>((_, ref) => {
-  const [state, action, pending] = useFormAction(validateCustomerCreation, createCustomer);
-  const formRef = useRef<HTMLFormElement>(null);
+const AddCustomerFields: React.FC<AddCustomerFieldsProps> = ({ state }) => {
   const [profilePic, setProfilePic] = useState<string | undefined>(undefined);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  useImperativeHandle(ref, () => ({
-    submit: () => {
-      if (formRef.current) {
-        formRef.current.requestSubmit();
-      }
-    }
-  }));
 
   const handleProfilePicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -34,17 +23,10 @@ const AddCustomerForm = forwardRef<AddCustomerFormHandle, {}>((_, ref) => {
       };
       reader.readAsDataURL(file);
     }
-  };  
+  };
 
   return (
-    <Box
-      component="form"
-      ref={formRef}
-      action={action}
-      noValidate
-      autoComplete="off"
-      sx={{ mt: 2 }}
-    >
+    <Box sx={{ mt: 2 }}>
       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 4 }}>
         <Avatar src={profilePic} sx={{ width: 120, height: 120, mb: 3 }} />
         <Button
@@ -68,9 +50,8 @@ const AddCustomerForm = forwardRef<AddCustomerFormHandle, {}>((_, ref) => {
       <TextField label="Contact Name" name={formFields.contactName} variant="outlined" fullWidth sx={{ mb: 2 }} defaultValue={state?.data?.contactName} />
       <TextField type="email" label="Contact Email" name={formFields.contactEmail} variant="outlined" fullWidth sx={{ mb: 2 }} defaultValue={state?.data?.contactEmail} />
       <TextField type="tel" label="Contact Phone" name={formFields.contactPhone} variant="outlined" fullWidth sx={{ mb: 2 }} defaultValue={state?.data?.contactPhone} />
-      {/* You can use pending to disable the dialog's Create button via props if needed */}
     </Box>
   );
-});
+};
 
-export default AddCustomerForm;
+export default AddCustomerFields;

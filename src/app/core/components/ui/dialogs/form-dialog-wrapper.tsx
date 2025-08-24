@@ -1,47 +1,68 @@
-import React, { PropsWithChildren } from "react";
-import { Button } from "@mui/material";
+import { Button, CircularProgress, Box } from "@mui/material";
+import React, { ReactElement } from "react";
+
+import { useFormAction } from "@/app/core/hooks";
+import { ActionStateFn, FormActionState, ValidatorFn } from "@/app/core/validators";
+
 import DialogWrapper from "./dialog-wrapper";
 
-type FormDialogWrapperProps = PropsWithChildren & {
-    cancelLabel?: string;
-    formRef: React.Ref<{ submit: () => void }>;
-    maxWidth?: string;
-    onClose: () => void;
-    open: boolean;
-    submitLabel?: string;
-    title: React.ReactNode;
+type FormDialogWrapperProps<T> = {
+  open: boolean;
+  title: React.ReactNode;
+  onClose: () => void;
+  submitLabel?: string;
+  cancelLabel?: string;
+  maxWidth?: string;
+  validateFn: ValidatorFn<T>;
+  actionFn: ActionStateFn<T>;
+  children: ReactElement<{ state: FormActionState<T> | undefined }>;
 }
 
-export default function FormDialogWrapper({
+export default function FormDialogWrapper<T>({
   open,
   title,
   onClose,
-  formRef,
-  submitLabel = "Submit",
+  submitLabel = "Save",
   cancelLabel = "Cancel",
   maxWidth = "500px",
+  validateFn,
+  actionFn,
   children,
-}: FormDialogWrapperProps) {
-  const handleSubmit = () => {
-    if (formRef && typeof formRef !== "function" && formRef.current?.submit) {
-      formRef.current.submit();
-    }
-  };
+}: FormDialogWrapperProps<T>) {
+  const [state, action, pending] = useFormAction<T>(validateFn, actionFn);
 
   return (
     <DialogWrapper
       open={open}
       title={title}
       onClose={onClose}
+      closeDisabled={pending}
       maxWidth={maxWidth}
       actions={
         <>
-          <Button onClick={onClose}>{cancelLabel}</Button>
-          <Button variant="contained" onClick={handleSubmit}>{submitLabel}</Button>
+          <Button onClick={onClose} disabled={pending}>{cancelLabel}</Button>
+          <Button
+            variant="contained"
+            type="submit"
+            form="dialog-form"
+            disabled={pending}
+            startIcon={pending ? <CircularProgress size={18} color="inherit" /> : null}
+          >
+            {submitLabel}
+          </Button>
         </>
       }
     >
-      {children}
+      <Box
+        component="form"
+        id="dialog-form"
+        action={action}
+        noValidate
+        autoComplete="off"
+        sx={{ mt: 2 }}
+      >
+        {React.cloneElement(children, { state })}
+      </Box>
     </DialogWrapper>
   );
 }
