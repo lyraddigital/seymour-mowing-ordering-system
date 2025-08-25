@@ -1,6 +1,9 @@
 "use server";
 
 import { serverFormAction } from "@/app/core/actions";
+import { saveCustomer } from "@/app/core/data";
+import { Customer } from "@/app/core/data/models";
+import { getNextUniqueCustomerNumber } from "@/app/core/services/customer-number.service";
 import { FormActionState } from "@/app/core/validators";
 
 import { createCustomerFeatureErrors } from "@/app/dashboard/customers/constants";
@@ -15,10 +18,23 @@ export default async function createCustomer(
     data,
     validateCustomerCreation,
     async (createCustomer) => {
-      // if (!customer) {
-      //   throw new Error(pageErrors.genericError);
-      // }
-      // await createCustomerInDB(customer);
+      if (!createCustomer) {
+        throw new Error("No create customer data provided");
+      }
+
+      const customerNumber = await getNextUniqueCustomerNumber();
+
+      const customer: Customer = {
+        customerNumber,
+        customerName: createCustomer.customerName!,
+        contactName: createCustomer.contactName!,
+        contactEmail: createCustomer.contactEmail!,
+        contactPhone: createCustomer.contactPhone!,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      await saveCustomer(customer);
     },
     createCustomerFeatureErrors.genericError
   );

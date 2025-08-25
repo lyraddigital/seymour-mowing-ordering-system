@@ -4,7 +4,7 @@ import { DYNAMO_DB_TABLE_NAME } from "@/app/core/configuration";
 import { dbClient } from "@/app/core/data/client";
 import { User } from "@/app/core/data/models";
 
-export default async function getUserByUsername(
+export async function getUserByUsername(
   username: string
 ): Promise<User | undefined> {
   const result = await dbClient.send(

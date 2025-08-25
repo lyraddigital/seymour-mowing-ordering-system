@@ -12,7 +12,7 @@ type AddCustomerFieldsProps = {
 
 const AddCustomerFields: React.FC<AddCustomerFieldsProps> = ({ state }) => {
   const [profilePic, setProfilePic] = useState<string | undefined>(undefined);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);  
 
   const handleProfilePicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

@@ -1,3 +1,4 @@
+import Customer from "./customer";
 import User from "./user";
 
-export type { User };
+export type { Customer, User };
