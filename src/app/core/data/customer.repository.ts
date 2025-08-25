@@ -3,6 +3,7 @@ import { GetCommand, TransactWriteCommand } from "@aws-sdk/lib-dynamodb";
 import { DYNAMO_DB_TABLE_NAME } from "@/app/core/configuration";
 import { dbClient } from "@/app/core/data/client";
 import { Customer } from "@/app/core/data/models";
+import { EntityType } from "@/app/core/data/entity-type";
 
 export async function getNextCustomerCounter(): Promise<number> {
   const counterResult = await dbClient.send(
@@ -28,6 +29,7 @@ export async function saveCustomer(customer: Customer): Promise<void> {
               pk: `CUSTOMER#${customer.customerNumber}`,
               sk: "PROFILE",
               ...customer,
+              entityType: EntityType.customer,
               createdAt: customer.createdAt.toISOString(),
               updatedAt: customer.updatedAt.toISOString(),
             },
@@ -37,8 +39,12 @@ export async function saveCustomer(customer: Customer): Promise<void> {
           Update: {
             TableName: DYNAMO_DB_TABLE_NAME,
             Key: { pk: "CUSTOMER_COUNTER", sk: "COUNTER" },
-            UpdateExpression: "SET currentValue = :newValue",
-            ExpressionAttributeValues: { ":newValue": customerNumber },
+            UpdateExpression:
+              "SET currentValue = :newValue, entityType = :entityType",
+            ExpressionAttributeValues: {
+              ":newValue": customerNumber,
+              ":entityType": EntityType.customerCounter,
+            },
           },
         },
       ],
