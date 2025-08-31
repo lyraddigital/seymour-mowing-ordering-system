@@ -5,6 +5,8 @@ export const DEFAULT_SESSION_EXPIRY_DURATION_IN_DAYS = process.env
 
 export const DYNAMO_DB_REGION = process.env.DYNAMO_DB_REGION || "";
 export const DYNAMO_DB_TABLE_NAME = process.env.DYNAMO_DB_TABLE_NAME || "";
+export const DYNAMODB_CUSTOMER_SEARCH_INDEX =
+  process.env.DYNAMODB_CUSTOMER_SEARCH_INDEX || "";
 
 export const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY || "";
 

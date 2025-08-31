@@ -1,32 +1,23 @@
-'use client';
-
-import AddIcon from "@mui/icons-material/Add";
-import { useState } from "react";
-
 import { PageHeader } from "@/app/core/components/ui/page/header";
-import { ActionButton } from "@/app/core/components/ui/forms/buttons";
+import { getCustomersPage } from "@/app/core/data/customer.repository";
 
-import { AddCustomerDialog } from "./components";
+import DataTableContainer from "@/app/core/components/ui/tables/data-table-container";
 
-export default function CustomersPage() {
-  const [addCustomerDialogOpen, setAddCustomerDialogOpen] = useState(false);
-  const handleCancelPressed = () => setAddCustomerDialogOpen(false);
-  
-  const addButton = (
-    <ActionButton
-      text="Add customer"
-      icon={<AddIcon />}
-      onClick={() => setAddCustomerDialogOpen(true)}
-    />
-  );
+import { AddCustomerDialog, CustomerTableBody } from "./components";
+
+export default async function CustomersPage() {
+  const pageSize = 1;  
+  const result = await getCustomersPage(pageSize);
 
   return (
     <>
-      <PageHeader title="Customers" breadcrumbsKey="customers" actionItem={addButton} />
-      <AddCustomerDialog
-        open={addCustomerDialogOpen}
-        cancelPressed={handleCancelPressed}
-      />
+      <PageHeader title="Customers" breadcrumbsKey="customers" actionItem={<AddCustomerDialog />} />
+      <DataTableContainer 
+        initialData={result}
+        headings={['Customer Number', 'Customer Name', 'Contact Name', 'Contact Email', 'Contact Phone', 'Profile Pic Url', 'Created At', 'Updated At']}
+        getPageDataRoute="/api/customers"
+        pageSize={pageSize}
+        tableDataEntryComponent={CustomerTableBody} />
     </>
   );
 }

@@ -1,9 +1,16 @@
-import { GetCommand, TransactWriteCommand } from "@aws-sdk/lib-dynamodb";
+import {
+  GetCommand,
+  TransactWriteCommand,
+  QueryCommand,
+} from "@aws-sdk/lib-dynamodb";
 
-import { DYNAMO_DB_TABLE_NAME } from "@/app/core/configuration";
+import {
+  DYNAMO_DB_TABLE_NAME,
+  DYNAMODB_CUSTOMER_SEARCH_INDEX,
+} from "@/app/core/configuration";
 import { dbClient } from "@/app/core/data/client";
-import { Customer } from "@/app/core/data/models";
 import { EntityType } from "@/app/core/data/entity-type";
+import { Customer, PagedData } from "@/app/core/data/models";
 
 export async function getNextCustomerCounter(): Promise<number> {
   const counterResult = await dbClient.send(
@@ -14,6 +21,32 @@ export async function getNextCustomerCounter(): Promise<number> {
   );
 
   return (counterResult.Item?.currentValue || 0) + 1;
+}
+
+export async function getCustomersPage(
+  limit: number = 30,
+  lastKey?: Record<string, unknown>
+): Promise<PagedData<Customer>> {
+  await new Promise((resolve) => setTimeout(resolve, 5000));
+
+  const result = await dbClient.send(
+    new QueryCommand({
+      TableName: DYNAMO_DB_TABLE_NAME,
+      IndexName: DYNAMODB_CUSTOMER_SEARCH_INDEX,
+      KeyConditionExpression: "entityType = :entityType",
+      ExpressionAttributeValues: {
+        ":entityType": EntityType.customer,
+      },
+      Limit: limit,
+      ExclusiveStartKey: lastKey,
+      ScanIndexForward: true,
+    })
+  );
+
+  return {
+    items: (result.Items ?? []) as Customer[],
+    lastEvaluatedKey: result.LastEvaluatedKey,
+  };
 }
 
 export async function saveCustomer(customer: Customer): Promise<void> {
