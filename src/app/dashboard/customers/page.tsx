@@ -4,6 +4,8 @@ import { getCustomersPage } from "@/app/core/data";
 
 import { AddCustomerDialog, CustomerTableBody } from "./components";
 
+export const dynamic = "force-dynamic";
+
 export default async function CustomersPage() {
   const pageSize = 10;  
   const result = await getCustomersPage(1, pageSize);
