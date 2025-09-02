@@ -8,11 +8,18 @@ function createCustomerNumber(id: number): string {
 }
 
 export async function getCustomersPage(
-  limit: number = 30,
-  lastKey?: Record<string, unknown>
+  pageNumber: number = 1,
+  pageSize: number = 30
 ): Promise<PagedData<Customer>> {
   const dbClient = await getDbClient();
-  const customers = await dbClient.customer.findMany();
+
+  const [customers, totalCount] = await dbClient.$transaction([
+    dbClient.customer.findMany({
+      skip: (pageNumber - 1) * pageSize,
+      take: pageSize
+    }),
+    dbClient.customer.count()
+  ]);
 
   return {
     items: customers.map<Customer>((customer) => ({
@@ -25,6 +32,7 @@ export async function getCustomersPage(
       createdAt: customer.createdAt,
       updatedAt: customer.updatedAt
     })),
+    totalCount
   };
 }
 

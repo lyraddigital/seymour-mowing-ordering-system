@@ -1,6 +1,6 @@
 type PagedData<T> = {
   items: T[];
-  lastEvaluatedKey?: Record<string, unknown>;
+  totalCount: number;
 };
 
 export default PagedData;

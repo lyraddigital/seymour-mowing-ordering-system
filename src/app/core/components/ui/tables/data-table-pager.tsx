@@ -1,56 +1,56 @@
+import { TablePagination } from "@mui/material";
 import { useState } from "react";
 
 import { DataTablePageResult } from "@/app/core/types";
 
 type DataTablePagerProps<T> = {
-  initialLastEvaluatedKey?: Record<string, unknown>;
   getPageDataRoute: string;
   pageSize: number;
+  totalCount: number;
   setData: (items: T[]) => void;
 };
 
-export default function DataTablePager<T>({ initialLastEvaluatedKey, getPageDataRoute, pageSize, setData }: DataTablePagerProps<T>) {
-  const [lastEvaluatedKey, setLastEvaluatedKey] = useState<Record<string, unknown> | undefined>(initialLastEvaluatedKey);
+export default function DataTablePager<T>({ getPageDataRoute, pageSize, totalCount, setData }: DataTablePagerProps<T>) {
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [prevKeys, setPrevKeys] = useState<Record<string, unknown>[]>([]);
+  const [pageNumber, setPageNumber] = useState<number>(1);
+  const [rowsPerPage, setRowsPerPage] = useState<number>(pageSize);
+  const [count, setCount] = useState<number>(totalCount);
 
-  const getPagedData = async (key: unknown): Promise<DataTablePageResult<T>> => {
-    const res = await fetch(`${getPageDataRoute}?pageSize=${pageSize}&key=${encodeURIComponent(JSON.stringify(key))}`);
-    return await res.json() as DataTablePageResult<T>;
-  };
-
-  const handleNext = async () => {
-    if (!lastEvaluatedKey) return;
-
+  const updatePagedData = async (newPageNumber: number, newRowsPerPage: number): Promise<void> => {
     setIsLoading(true);
-    const result = await getPagedData(lastEvaluatedKey);
+
+    const response = await fetch(`${getPageDataRoute}?pageNumber=${newPageNumber}&pageSize=${newRowsPerPage}`);
+    const result = await response.json() as DataTablePageResult<T>;
 
     setData(result.items);
-    setPrevKeys([...prevKeys, lastEvaluatedKey]);
-    setLastEvaluatedKey(result.lastEvaluatedKey);
+    setPageNumber(newPageNumber);
+    setRowsPerPage(newRowsPerPage);
+    setCount(result.totalCount);
     setIsLoading(false);
   };
 
-  const handlePrev = async () => {
-    if (prevKeys.length === 0) return;
-    
-    setIsLoading(true);
+  const handlePageChange = async (_: React.MouseEvent | null, newPageNumber: number) => {
+    await updatePagedData(newPageNumber + 1, rowsPerPage);
+  };
 
-    const prev = [...prevKeys];
-    const key = prev.pop();    
+  const handleRowsPerPageChange = async (
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ): Promise<void> => {
+    const newRowsPerPage = Number(event.target.value);
 
-    const result = await getPagedData(key);
-
-    setData(result.items);
-    setPrevKeys(prev);
-    setLastEvaluatedKey(result.lastEvaluatedKey);
-    setIsLoading(false);
+    await updatePagedData(1, newRowsPerPage);    
   };
 
   return (
-    <div style={{ display: "flex", justifyContent: "space-between", marginTop: 16 }}>
-      {prevKeys.length > 0 && <button onClick={handlePrev} disabled={isLoading}>Previous</button>}
-      {lastEvaluatedKey && <button onClick={handleNext} disabled={isLoading}>Next</button>}
-    </div>
+    <TablePagination 
+      color="primary"
+      component="div"
+      count={count}
+      disabled={isLoading}
+      onPageChange={handlePageChange}
+      onRowsPerPageChange={handleRowsPerPageChange}
+      page={pageNumber - 1}
+      rowsPerPage={rowsPerPage}
+    />
   );
 }

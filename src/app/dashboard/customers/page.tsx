@@ -6,8 +6,8 @@ import DataTableContainer from "@/app/core/components/ui/tables/data-table-conta
 import { AddCustomerDialog, CustomerTableBody } from "./components";
 
 export default async function CustomersPage() {
-  const pageSize = 1;  
-  const result = await getCustomersPage(pageSize);
+  const pageSize = 10;  
+  const result = await getCustomersPage(1, pageSize);
 
   return (
     <>

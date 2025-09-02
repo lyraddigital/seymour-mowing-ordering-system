@@ -35,7 +35,7 @@ function DataTableContainer<T>({ initialData, getPageDataRoute, pageSize, tableD
                 getPageDataRoute={getPageDataRoute}
                 setData={setData}
                 pageSize={pageSize}
-                initialLastEvaluatedKey={initialData.lastEvaluatedKey}
+                totalCount={initialData.totalCount}
             />
         </TableContainer>
     );
