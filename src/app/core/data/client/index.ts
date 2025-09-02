@@ -1,3 +1,3 @@
-import dbClient from "./db-client";
+import getDbClient from "./db-client";
 
-export { dbClient };
+export { getDbClient };

@@ -22,13 +22,13 @@ export default async function signInWithCredentials(
     async (credentials) => {
       if (!credentials) {
         throw new Error("No credentials provided");
-      }
+      }      
 
       const user = await getUserByUsername(credentials.username);
 
       if (!user) {
         throw new Error("User not found");
-      }
+      }      
 
       const hasPasswordMatched = await checkPassword(
         credentials.password,

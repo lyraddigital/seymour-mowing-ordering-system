@@ -1,4 +1,4 @@
-import { getNextCustomerCounter, saveCustomer } from "./customer.repository";
+import { saveCustomer } from "./customer.repository";
 import { getUserByUsername } from "./user.repository";
 
-export { getNextCustomerCounter, getUserByUsername, saveCustomer };
+export { getUserByUsername, saveCustomer };

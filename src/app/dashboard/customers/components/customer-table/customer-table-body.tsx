@@ -20,9 +20,7 @@ export default function CustomerTableBody({ data }: CustomerTableBodyProps) {
             {data.profilePicUrl ? (
                 <img src={data.profilePicUrl} alt="Profile" style={{ width: 40, height: 40, borderRadius: "50%" }} />
             ) : "-"}
-        </TableCell>
-        <TableCell>{data.createdAt instanceof Date ? data.createdAt.toLocaleString() : data.createdAt}</TableCell>
-        <TableCell>{data.updatedAt instanceof Date ? data.updatedAt.toLocaleString() : data.updatedAt}</TableCell>
+        </TableCell>        
     </>
   );
 }

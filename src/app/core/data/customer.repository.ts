@@ -1,86 +1,46 @@
-import {
-  GetCommand,
-  TransactWriteCommand,
-  QueryCommand,
-} from "@aws-sdk/lib-dynamodb";
+import { Prisma } from "@prisma/client";
 
-import {
-  DYNAMO_DB_TABLE_NAME,
-  DYNAMODB_CUSTOMER_SEARCH_INDEX,
-} from "@/app/core/configuration";
-import { dbClient } from "@/app/core/data/client";
-import { EntityType } from "@/app/core/data/entity-type";
+import { getDbClient } from "@/app/core/data/client";
 import { Customer, PagedData } from "@/app/core/data/models";
 
-export async function getNextCustomerCounter(): Promise<number> {
-  const counterResult = await dbClient.send(
-    new GetCommand({
-      TableName: DYNAMO_DB_TABLE_NAME,
-      Key: { pk: "CUSTOMER_COUNTER", sk: "COUNTER" },
-    })
-  );
-
-  return (counterResult.Item?.currentValue || 0) + 1;
+function createCustomerNumber(id: number): string {
+  return `C-${id.toString().padStart(7, '0')}`;
 }
 
 export async function getCustomersPage(
   limit: number = 30,
   lastKey?: Record<string, unknown>
 ): Promise<PagedData<Customer>> {
-  await new Promise((resolve) => setTimeout(resolve, 5000));
-
-  const result = await dbClient.send(
-    new QueryCommand({
-      TableName: DYNAMO_DB_TABLE_NAME,
-      IndexName: DYNAMODB_CUSTOMER_SEARCH_INDEX,
-      KeyConditionExpression: "entityType = :entityType",
-      ExpressionAttributeValues: {
-        ":entityType": EntityType.customer,
-      },
-      Limit: limit,
-      ExclusiveStartKey: lastKey,
-      ScanIndexForward: true,
-    })
-  );
+  const dbClient = await getDbClient();
+  const customers = await dbClient.customer.findMany();
 
   return {
-    items: (result.Items ?? []) as Customer[],
-    lastEvaluatedKey: result.LastEvaluatedKey,
+    items: customers.map<Customer>((customer) => ({
+      id: customer.id,
+      customerNumber: customer.customerNumber!,
+      customerName: customer.customerName,
+      contactName: customer.contactName,
+      contactEmail: customer.contactEmail,
+      contactPhone: customer.contactPhone,
+      createdAt: customer.createdAt,
+      updatedAt: customer.updatedAt
+    })),
   };
 }
 
-export async function saveCustomer(customer: Customer): Promise<void> {
-  const customerNumber = parseInt(customer.customerNumber.split("-")[1], 10);
+export async function saveCustomer(customer: Omit<Prisma.CustomerCreateInput, 'customerNumber' | 'id'>): Promise<void> {
+  const dbClient = await getDbClient();
 
-  await dbClient.send(
-    new TransactWriteCommand({
-      TransactItems: [
-        {
-          Put: {
-            TableName: DYNAMO_DB_TABLE_NAME,
-            Item: {
-              pk: `CUSTOMER#${customer.customerNumber}`,
-              sk: "PROFILE",
-              ...customer,
-              entityType: EntityType.customer,
-              createdAt: customer.createdAt.toISOString(),
-              updatedAt: customer.updatedAt.toISOString(),
-            },
-          },
-        },
-        {
-          Update: {
-            TableName: DYNAMO_DB_TABLE_NAME,
-            Key: { pk: "CUSTOMER_COUNTER", sk: "COUNTER" },
-            UpdateExpression:
-              "SET currentValue = :newValue, entityType = :entityType",
-            ExpressionAttributeValues: {
-              ":newValue": customerNumber,
-              ":entityType": EntityType.customerCounter,
-            },
-          },
-        },
-      ],
-    })
-  );
+  await dbClient.$transaction(async (tx) => {
+    const newCustomer = await tx.customer.create({
+      data: { ...customer }
+    });
+
+    const newCustomerNumber = createCustomerNumber(newCustomer.id);
+
+    await tx.customer.update({
+      where: { id: newCustomer.id },
+      data: { customerNumber: { set: newCustomerNumber } },
+    });
+  });  
 }

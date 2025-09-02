@@ -1,21 +1,19 @@
-import { GetCommand } from "@aws-sdk/lib-dynamodb";
+import { getDbClient } from "@/app/core/data/client";
 
-import { DYNAMO_DB_TABLE_NAME } from "@/app/core/configuration";
-import { dbClient } from "@/app/core/data/client";
 import { User } from "@/app/core/data/models";
 
 export async function getUserByUsername(
   username: string
 ): Promise<User | undefined> {
-  const result = await dbClient.send(
-    new GetCommand({
-      TableName: DYNAMO_DB_TABLE_NAME,
-      Key: {
-        pk: `USER#${username}`,
-        sk: "PROFILE",
-      },
-    })
-  );
+  const dbClient = await getDbClient();
+  const user = await dbClient.user.findUnique({ where: { username }});
 
-  return result.Item as User | undefined;
+  if (!user) {
+    return undefined;
+  }
+
+  return {
+    username: user.username,
+    hashedPassword: user.hashedPassword
+  };
 }

@@ -14,7 +14,7 @@ export default async function CustomersPage() {
       <PageHeader title="Customers" breadcrumbsKey="customers" actionItem={<AddCustomerDialog />} />
       <DataTableContainer 
         initialData={result}
-        headings={['Customer Number', 'Customer Name', 'Contact Name', 'Contact Email', 'Contact Phone', 'Profile Pic Url', 'Created At', 'Updated At']}
+        headings={['Customer Number', 'Customer Name', 'Contact Name', 'Contact Email', 'Contact Phone', 'Profile Pic Url']}
         getPageDataRoute="/api/customers"
         pageSize={pageSize}
         tableDataEntryComponent={CustomerTableBody} />
