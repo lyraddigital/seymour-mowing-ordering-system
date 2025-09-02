@@ -1,7 +1,6 @@
+import { DataTableContainer } from "@/app/core/components/ui/tables";
 import { PageHeader } from "@/app/core/components/ui/page/header";
-import { getCustomersPage } from "@/app/core/data/customer.repository";
-
-import DataTableContainer from "@/app/core/components/ui/tables/data-table-container";
+import { getCustomersPage } from "@/app/core/data";
 
 import { AddCustomerDialog, CustomerTableBody } from "./components";
 

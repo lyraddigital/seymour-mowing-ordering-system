@@ -1,1 +1,5 @@
-export * from "./data-table-container";
+import DataTableContainer from "./data-table-container";
+
+export {
+    DataTableContainer
+};

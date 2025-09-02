@@ -1,4 +1,5 @@
 import { Link, Typography } from "@mui/material";
+
 import { BreadcrumbItem } from "@/app/core/types";
 
 type BreadcrumbEntryProps = {

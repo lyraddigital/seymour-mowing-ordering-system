@@ -1,4 +1,4 @@
-import { IconType } from "./icon-type";
+import { IconType } from "@/app/core/enums";
 
 type NavItem = {
   text: string;

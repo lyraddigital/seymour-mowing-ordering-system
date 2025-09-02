@@ -1,10 +1,10 @@
-import FormActionState from "../types/form-action-state";
+import { FormActionState, ValidationResult } from "@/app/core/types";
+
 import validateAndSubmit, {
   ValidatorFn,
   ActionStateFn,
 } from "./form-validator";
 import validateSchema from "./schema.validator";
-import ValidationResult from "../types/validation-result";
 
 export {
   type ActionStateFn,

@@ -1,5 +1,7 @@
 "use server";
 
+import { redirect } from "next/navigation";
+
 import { serverFormAction } from "@/app/core/actions";
 import { pagePaths } from "@/app/core/configuration";
 import { getUserByUsername } from "@/app/core/data";
@@ -10,7 +12,6 @@ import { checkPassword } from "@/app/sign-in/lib";
 import { createSession } from "@/app/sign-in/services";
 import { Credentials } from "@/app/sign-in/types";
 import { validateSignIn } from "@/app/sign-in/validators";
-import { redirect } from "next/navigation";
 
 export default async function signInWithCredentials(
   _: FormActionState<Credentials> | undefined,

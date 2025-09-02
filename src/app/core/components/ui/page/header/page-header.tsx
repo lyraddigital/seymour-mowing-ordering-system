@@ -1,6 +1,7 @@
 import { Breadcrumbs, Typography, Divider, Box } from "@mui/material";
 
 import { breadcrumbItems } from "@/app/core/configuration";
+
 import BreadcrumbEntry from "./breadcrumb-entry";
 
 type PageHeaderProps = {

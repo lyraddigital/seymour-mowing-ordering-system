@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { getCustomersPage } from "@/app/core/data/customer.repository";
+import { getCustomersPage } from "@/app/core/data";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
