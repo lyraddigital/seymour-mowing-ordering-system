@@ -1,3 +1,3 @@
-import CustomerTableBody from "./customer-table-body";
+import CustomersTableAsync from "./customers-table-async";
 
-export { CustomerTableBody };
+export { CustomersTableAsync };
