@@ -2,19 +2,23 @@ import { TablePagination } from "@mui/material";
 import { useState } from "react";
 
 import { DataTablePageResult } from "@/app/core/types";
+import { useDataRefresh } from "@/app/core/hooks";
 
 type DataTablePagerProps<T> = {
   getPageDataRoute: string;
   pageSize: number;
   totalCount: number;
   setData: (items: T[]) => void;
+  setIsLoading: (isLoading: boolean) => void;
 };
 
-export default function DataTablePager<T>({ getPageDataRoute, pageSize, totalCount, setData }: DataTablePagerProps<T>) {
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+export default function DataTablePager<T>({ getPageDataRoute, pageSize, totalCount, setData, setIsLoading }: DataTablePagerProps<T>) {  
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [rowsPerPage, setRowsPerPage] = useState<number>(pageSize);
   const [count, setCount] = useState<number>(totalCount);
+  const { refreshKey } = useDataRefresh();
+
+  console.log(refreshKey);
 
   const updatePagedData = async (newPageNumber: number, newRowsPerPage: number): Promise<void> => {
     setIsLoading(true);
@@ -43,10 +47,9 @@ export default function DataTablePager<T>({ getPageDataRoute, pageSize, totalCou
 
   return (
     <TablePagination 
-      color="primary"
+      color="orange"
       component="div"
       count={count}
-      disabled={isLoading}
       onPageChange={handlePageChange}
       onRowsPerPageChange={handleRowsPerPageChange}
       page={pageNumber - 1}

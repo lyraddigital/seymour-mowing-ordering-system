@@ -10,7 +10,7 @@ export default async function CustomersTableAsync() {
   return (
     <DataTableContainer
       initialData={result}
-      headings={["Customer Number", "Customer Name", "Contact Name", "Contact Email", "Contact Phone", "Profile Pic Url"]}
+      headings={["ID", "Customer", "Active Jobs", "Invoices Pending", "Actions"]}
       getPageDataRoute="/api/customers"
       pageSize={pageSize}
       tableDataEntryComponent={CustomerTableBody}

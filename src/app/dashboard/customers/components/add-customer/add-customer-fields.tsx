@@ -1,9 +1,10 @@
 import { Box, TextField, Avatar, Button } from "@mui/material";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 import { FormActionState } from "@/app/core/types";
 
 import { formFields } from "@/app/dashboard/customers/constants";
+import { useDataRefresh } from "@/app/core/hooks";
 import { CreateCustomer } from "@/app/dashboard/customers/types";
 
 type AddCustomerFieldsProps = {
@@ -12,7 +13,8 @@ type AddCustomerFieldsProps = {
 
 const AddCustomerFields: React.FC<AddCustomerFieldsProps> = ({ state }) => {
   const [profilePic, setProfilePic] = useState<string | undefined>(undefined);
-  const fileInputRef = useRef<HTMLInputElement>(null);  
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { triggerRefresh } = useDataRefresh();
 
   const handleProfilePicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -24,6 +26,13 @@ const AddCustomerFields: React.FC<AddCustomerFieldsProps> = ({ state }) => {
       reader.readAsDataURL(file);
     }
   };
+
+  // Later on we'll find a way to include this outside of the component and make it close itself
+  useEffect(() => {
+    if (state?.validationResult?.success && !state?.hasServerError) {    
+      triggerRefresh();
+    }
+  }, [triggerRefresh, state]);
 
   return (
     <Box sx={{ mt: 2 }}>
