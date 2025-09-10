@@ -29,7 +29,7 @@ export default function CustomerDatasource({ data }: { data: PagedData<Customer>
         },
         {
             content: {
-                body: ({ data }) => <div>{12}</div>
+                body: () => <div>{12}</div>
             },
             header: {
                 text: "Active Jobs"
@@ -38,7 +38,7 @@ export default function CustomerDatasource({ data }: { data: PagedData<Customer>
         },
         {
             content: {
-                body: ({ data }) => <div>{1}</div>
+                body: () => <div>{1}</div>
             },
             header: {
                 text: "Invoices Pending"
@@ -47,7 +47,7 @@ export default function CustomerDatasource({ data }: { data: PagedData<Customer>
         },
         {
             content: {
-                body: ({ data }) => <div>Actions go here</div>
+                body: () => <div>Actions go here</div>
             },
             header: {
                 text: "Actions"

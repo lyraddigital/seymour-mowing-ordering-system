@@ -3,13 +3,13 @@ import { TableHead, TableRow, TableCell, LinearProgress } from "@mui/material";
 
 import { TableColumnHeadingOptions } from "@/app/core/types";
 
-interface DataTableHeaderProps<T> {
+interface DataTableHeaderProps {
   isLoading?: boolean;
   ref: React.Ref<HTMLTableSectionElement>;
-  headerConfigurations: TableColumnHeadingOptions<T>[];        
+  headerConfigurations: TableColumnHeadingOptions[];        
 };
 
-export default function DataTableHeader<T>({ isLoading, ref, headerConfigurations }: DataTableHeaderProps<T>) {
+export default function DataTableHeader({ isLoading, ref, headerConfigurations }: DataTableHeaderProps) {
   return (
     <TableHead ref={ref}>
       <TableRow sx={{

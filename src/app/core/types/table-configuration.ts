@@ -4,7 +4,7 @@ export type TableColumnContentOptions<T> = {
     body: ComponentType<{ data: T }>;
 }
 
-export type TableColumnHeadingOptions<T> = {
+export type TableColumnHeadingOptions = {
     text?: string;
 }
 
@@ -26,10 +26,8 @@ export type TableColumnWidthOptions = number | string | TableColumnWidthDimensio
 
 type TableColumnConfiguration<T> = {
     content: TableColumnContentOptions<T>;
-    header: TableColumnHeadingOptions<T>;
+    header: TableColumnHeadingOptions
     hidden?: TableColumnHiddenOptions;
-    maxWidth?: TableColumnWidthOptions;
-    minWidth?: TableColumnWidthOptions;
     width?: TableColumnWidthOptions;
 }
 

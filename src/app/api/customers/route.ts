@@ -7,7 +7,7 @@ export async function GET(request: Request) {
   const pageSize = Number(searchParams.get("pageSize")) || 10;
   const pageNumber = Number(searchParams.get("pageNumber")) || 1;
 
-  const data = await getCustomersPage(pageNumber, pageSize);
+  const data = await getCustomersPage({ paging: { pageNumber, pageSize }});
 
   return NextResponse.json(data);
 }

@@ -73,7 +73,7 @@ export default function DataTableCell<T>({
     const isLargeDevice = useMediaQuery(theme.breakpoints.between('lg', 'xl'));
     const isExtraLargeDevice = useMediaQuery(theme.breakpoints.up('xl'));
     const shouldHideColumn = isCellHidden(hiddenConfiguration, isMediumDevice, isLargeDevice, isExtraLargeDevice);
-    let sx: SxProps<Theme> = {
+    const sx: SxProps<Theme> = {
         width: getWidthValue(widthConfiguration, isMediumDevice, isLargeDevice, isExtraLargeDevice)
     };      
 
