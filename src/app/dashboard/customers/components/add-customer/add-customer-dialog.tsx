@@ -1,7 +1,7 @@
 'use client';
 
 import AddIcon from "@mui/icons-material/Add";
-import React from "react";
+import { useState } from "react";
 
 import { FormDialogWrapper } from "@/app/core/components/ui/dialogs";
 import { ActionButton } from "@/app/core/components/ui/forms/buttons";
@@ -12,7 +12,7 @@ import { createCustomer } from "@/app/dashboard/customers/actions";
 import AddCustomerFields from "./add-customer-fields";
 
 export default function AddCustomerDialog() {
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = useState<boolean>(false);
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 

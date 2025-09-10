@@ -1,0 +1,1 @@
+export { default as CustomerCellContent } from "./customer-cell-content";

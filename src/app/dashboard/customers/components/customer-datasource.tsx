@@ -1,8 +1,9 @@
 'use client';
 
-import { DataTableContainer } from "@/app/core/components/ui/tables";
+import { DataTableContainer, DataTableTextContent } from "@/app/core/components/ui/tables";
 import { Customer } from "@/app/core/data/models";
 import { PagedData } from "@/app/core/types";
+import { CustomerCellContent } from "./customer-table";
 
 export default function CustomerDatasource({ data }: { data: PagedData<Customer> }) {
   return (
@@ -13,7 +14,7 @@ export default function CustomerDatasource({ data }: { data: PagedData<Customer>
       tableConfiguration={{
         columns: [{
             content: {
-                body: ({ data }) => <div>{data.customerNumber}</div>
+                body: ({ data }) => <DataTableTextContent text={data.customerNumber} />
             },
             header: {
                 text: "ID"
@@ -21,7 +22,7 @@ export default function CustomerDatasource({ data }: { data: PagedData<Customer>
             width: 120
         }, {
             content: {
-                body: ({ data }) => <div>{data.customerName}</div>
+                body: ({ data }) => <CustomerCellContent customer={data} />
             },
             header: {
                 text: "Customer"
@@ -29,7 +30,7 @@ export default function CustomerDatasource({ data }: { data: PagedData<Customer>
         },
         {
             content: {
-                body: () => <div>{12}</div>
+                body: () => <DataTableTextContent text={"12"} />
             },
             header: {
                 text: "Active Jobs"
@@ -38,7 +39,7 @@ export default function CustomerDatasource({ data }: { data: PagedData<Customer>
         },
         {
             content: {
-                body: () => <div>{1}</div>
+                body: () => <DataTableTextContent text={"1"} />
             },
             header: {
                 text: "Invoices Pending"
@@ -47,7 +48,7 @@ export default function CustomerDatasource({ data }: { data: PagedData<Customer>
         },
         {
             content: {
-                body: () => <div>Actions go here</div>
+                body: () => <DataTableTextContent text={"Actions go here"} />
             },
             header: {
                 text: "Actions"
