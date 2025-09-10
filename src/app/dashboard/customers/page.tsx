@@ -1,10 +1,8 @@
-import { Box, CircularProgress } from "@mui/material";
-import { Suspense } from "react";
-
-import { DataRefreshProvider } from "@/app/core/components/providers";
+import { DataRefreshProvider, DatasourceProvider } from "@/app/core/components/providers";
 import { PageHeader } from "@/app/core/components/ui/page/header";
+import { getCustomersPage } from "@/app/core/data";
 
-import { AddCustomerDialog, CustomersTableAsync } from "./components";
+import { AddCustomerDialog, CustomerDatasource } from "./components";
 
 export const dynamic = "force-dynamic";
 
@@ -12,13 +10,7 @@ export default function CustomersPage() {
   return (
     <DataRefreshProvider>
       <PageHeader title="Customers" breadcrumbsKey="customers" actionItem={<AddCustomerDialog />} />
-      <Suspense fallback={(
-        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-          <CircularProgress />
-        </Box>
-      )}>
-        <CustomersTableAsync />
-      </Suspense>
+      <DatasourceProvider initialSourceFn={getCustomersPage} ResultComponent={CustomerDatasource} />              
     </DataRefreshProvider>
   );
 }

@@ -1,17 +1,36 @@
 import BreadcrumbItem from "./breadcrumb-item";
 import CookieNames from "./cookie-names";
-import DataTablePageResult from "./data-table-page-result";
+import DatasourceInitialAsyncFn from "./datasource-initial-async-fn";
+import DatasourcePageOptions from "./datasource-page-options";
 import FormActionState from "./form-action-state";
 import NavItem from "./nav-item";
 import PagePaths from "./page-paths";
+import PagedData from "./paged-data";
+import TableConfiguration, {
+  TableColumnHeadingOptions,
+  TableColumnContentOptions,
+  TableColumnHiddenDemensionOptions,
+  TableColumnHiddenOptions,
+  TableColumnWidthDimensionOptions,
+  TableColumnWidthOptions
+} from "./table-configuration";
 import ValidationResult from "./validation-result";
 
 export type {
   BreadcrumbItem,
   CookieNames,
-  DataTablePageResult,
+  DatasourceInitialAsyncFn,
+  DatasourcePageOptions,
   FormActionState,
   NavItem,
   PagePaths,
+  PagedData,
+  TableConfiguration,
+  TableColumnHeadingOptions,
+  TableColumnContentOptions,
+  TableColumnHiddenDemensionOptions,
+  TableColumnHiddenOptions,
+  TableColumnWidthDimensionOptions,
+  TableColumnWidthOptions,
   ValidationResult,
 };

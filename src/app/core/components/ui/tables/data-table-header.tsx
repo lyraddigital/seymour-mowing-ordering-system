@@ -1,13 +1,15 @@
 
 import { TableHead, TableRow, TableCell, LinearProgress } from "@mui/material";
 
-interface DataTableHeaderProps {
-  columns: string[];
+import { TableColumnHeadingOptions } from "@/app/core/types";
+
+interface DataTableHeaderProps<T> {
   isLoading?: boolean;
   ref: React.Ref<HTMLTableSectionElement>;
-}
+  headerConfigurations: TableColumnHeadingOptions<T>[];        
+};
 
-export default function DataTableHeader({ columns, isLoading, ref }: DataTableHeaderProps) {
+export default function DataTableHeader<T>({ isLoading, ref, headerConfigurations }: DataTableHeaderProps<T>) {
   return (
     <TableHead ref={ref}>
       <TableRow sx={{
@@ -16,13 +18,13 @@ export default function DataTableHeader({ columns, isLoading, ref }: DataTableHe
           color: 'primary.contrastText'
         }
       }}>
-        {columns.map((col, idx) => (
-          <TableCell key={idx}>{col}</TableCell>
+        {headerConfigurations.map((header, idx) => (
+          <TableCell key={idx}>{header?.text}</TableCell>
         ))}
       </TableRow>
       {isLoading && (
         <TableRow>
-          <TableCell colSpan={columns.length} sx={{ p: 0 }}>
+          <TableCell colSpan={headerConfigurations.length} sx={{ p: 0 }}>
             <LinearProgress color="secondary" />
           </TableCell>
         </TableRow>

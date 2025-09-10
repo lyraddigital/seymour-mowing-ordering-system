@@ -1,23 +1,23 @@
 'use client';
 
-import { Box, Paper, Table, TableBody, TableContainer, TableRow } from "@mui/material";
+import { Box, Paper, Table, TableContainer } from "@mui/material";
 import React, { useLayoutEffect, useRef, useState } from "react";
 
-import { DataTablePageResult } from "@/app/core/types";
+import { PagedData, TableConfiguration } from "@/app/core/types";
 
 import DataTableBackdrop from "./data-table-backdrop";
 import DataTableHeader from "./data-table-header";
+import DataTableBody from "./data-table-body";
 import DataTablePager from "./data-table-pager";
 
 type DataTableContainerProps<T> = {
     getPageDataRoute: string;
-    initialData: DataTablePageResult<T>;
-    headings: string[];
+    initialData: PagedData<T>;
     pageSize: number;
-    tableDataEntryComponent: React.ComponentType<{ data: T }>;
+    tableConfiguration: TableConfiguration<T>;
 };
 
-function DataTableContainer<T>({ initialData, getPageDataRoute, pageSize, tableDataEntryComponent: TableDataEntryComponent, headings }: DataTableContainerProps<T>) {
+function DataTableContainer<T>({ initialData, getPageDataRoute, pageSize, tableConfiguration }: DataTableContainerProps<T>) {
     const tableHeaderRef = useRef<HTMLTableSectionElement>(null);
     const [data, setData] = useState<T[]>(initialData.items);
     const [headerHeight, setHeaderHeight] = useState(0);
@@ -33,18 +33,17 @@ function DataTableContainer<T>({ initialData, getPageDataRoute, pageSize, tableD
         <TableContainer component={Paper} sx={{ mt: 4 }}>
             <Box sx={{ position: "relative" }}>
                 <Table>
-                    <DataTableHeader 
-                        columns={headings}
+                    <DataTableHeader
                         isLoading={isLoading}
                         ref={tableHeaderRef}
+                        headerConfigurations={tableConfiguration.columns.map(c => c.header)}                        
                      />
-                    <TableBody>
-                        {data.map((item, idx) => (
-                            <TableRow key={idx}>
-                                <TableDataEntryComponent data={item} />
-                            </TableRow>
-                        ))}
-                    </TableBody>
+                    <DataTableBody
+                        data={data}
+                        bodyConfiguration={tableConfiguration.columns.map(c => c.content)}
+                        hiddenConfiguration={tableConfiguration.columns.map(c => c.hidden)}
+                        widthConfiguration={tableConfiguration.columns.map(c => c.width)}
+                    />
                 </Table>
                 <DataTablePager
                     getPageDataRoute={getPageDataRoute}

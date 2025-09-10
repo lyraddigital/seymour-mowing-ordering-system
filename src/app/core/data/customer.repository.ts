@@ -1,17 +1,17 @@
 import { Prisma } from "@prisma/client";
 
 import { getDbClient } from "@/app/core/data/client";
-import { Customer, PagedData } from "@/app/core/data/models";
+import { Customer } from "@/app/core/data/models";
+import { DatasourcePageOptions, PagedData } from "@/app/core/types";
 
 function createCustomerNumber(id: number): string {
   return `C-${id.toString().padStart(7, '0')}`;
 }
 
-export async function getCustomersPage(
-  pageNumber: number = 1,
-  pageSize: number = 30
-): Promise<PagedData<Customer>> {
+export async function getCustomersPage(options?: { paging?: DatasourcePageOptions }): Promise<PagedData<Customer>> {
   const dbClient = await getDbClient();
+  const pageNumber = options?.paging?.pageNumber || 1;
+  const pageSize = options?.paging?.pageSize || 30;
 
   const [customers, totalCount] = await dbClient.$transaction([
     dbClient.customer.findMany({

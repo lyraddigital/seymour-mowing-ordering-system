@@ -1,2 +1,2 @@
 export * from "./add-customer";
-export * from "./customer-table";
+export { default as CustomerDatasource } from "./customer-datasource";

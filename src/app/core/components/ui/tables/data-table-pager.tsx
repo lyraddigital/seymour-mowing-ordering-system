@@ -1,8 +1,8 @@
 import { TablePagination } from "@mui/material";
 import { useState } from "react";
 
-import { DataTablePageResult } from "@/app/core/types";
 import { useDataRefresh } from "@/app/core/hooks";
+import { PagedData } from "@/app/core/types";
 
 type DataTablePagerProps<T> = {
   getPageDataRoute: string;
@@ -18,13 +18,11 @@ export default function DataTablePager<T>({ getPageDataRoute, pageSize, totalCou
   const [count, setCount] = useState<number>(totalCount);
   const { refreshKey } = useDataRefresh();
 
-  console.log(refreshKey);
-
   const updatePagedData = async (newPageNumber: number, newRowsPerPage: number): Promise<void> => {
     setIsLoading(true);
 
     const response = await fetch(`${getPageDataRoute}?pageNumber=${newPageNumber}&pageSize=${newRowsPerPage}`);
-    const result = await response.json() as DataTablePageResult<T>;
+    const result = await response.json() as PagedData<T>;
 
     setData(result.items);
     setPageNumber(newPageNumber);
