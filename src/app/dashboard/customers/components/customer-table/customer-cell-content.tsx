@@ -6,7 +6,7 @@ type CustomerCellContentProps = {
   customer: Customer;
 };
 
-export default function CustomerCellContent({ customer }: CustomerCellContentProps) {  
+export default function CustomerNameCellContent({ customer }: CustomerCellContentProps) {  
   return (
     <Grid container gap={3} flexWrap="nowrap">
         <Avatar sx={{

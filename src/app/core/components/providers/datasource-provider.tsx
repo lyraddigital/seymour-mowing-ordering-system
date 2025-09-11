@@ -9,7 +9,7 @@ type DatasourceProviderProps<T> = {
 };
 
 async function DatasourceAsync<T>({ initialSourceFn, ResultComponent }: DatasourceProviderProps<T>) {
-    const result = await initialSourceFn({ paging: { pageSize: 10, pageNumber: 1 } });
+    const result = await initialSourceFn({ paging: { pageSize: 5, pageNumber: 1 } });
 
     return <ResultComponent data={result} />;
 }

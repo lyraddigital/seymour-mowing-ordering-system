@@ -1,23 +1,33 @@
 'use client';
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { ConfirmDialog } from "@/app/core/components/ui/dialogs";
 import { DataTableContainer, DataTableTextContent } from "@/app/core/components/ui/tables";
+import { pagePaths } from "@/app/core/configuration";
 import { Customer } from "@/app/core/data/models";
 import { PagedData } from "@/app/core/types";
 
-import { CustomerCellContent } from "./customer-table";
+import {
+    CustomerNameCellContent,
+    CustomerActionsCellContent
+} from "./customer-table";
 
 export default function CustomerDatasource({ data }: { data: PagedData<Customer> }) {
     const [showDeleteDialog, setShowDeleteDialog] = useState<boolean>(false);
+    const router = useRouter();
+
+    const redirectToViewScreen = (customerNumber: string) => {
+        router.push(`${pagePaths.customers}/${customerNumber}`);
+    };
 
     return (
         <>
             <DataTableContainer
                 initialData={data}
                 getPageDataRoute="/api/customers"
-                pageSize={10}
+                pageSize={5}
                 tableConfiguration={{
                     columns: [
                         {
@@ -31,7 +41,7 @@ export default function CustomerDatasource({ data }: { data: PagedData<Customer>
                         },
                         {
                             content: {
-                                body: ({ data }) => <CustomerCellContent customer={data} />
+                                body: ({ data }) => <CustomerNameCellContent customer={data} />
                             },
                             header: {
                                 text: "Customer"
@@ -63,7 +73,12 @@ export default function CustomerDatasource({ data }: { data: PagedData<Customer>
                         },
                         {
                             content: {
-                                body: () => <DataTableTextContent text={"Actions go here"} />
+                                body: ({ data }) => (
+                                    <CustomerActionsCellContent
+                                        onDeletePressed={() => setShowDeleteDialog(true)}
+                                        onViewPressed={() => redirectToViewScreen(data.customerNumber)}
+                                    />
+                                ),
                             },
                             header: {
                                 text: "Actions"
