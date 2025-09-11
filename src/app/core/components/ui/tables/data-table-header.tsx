@@ -1,15 +1,37 @@
+import { TableHead, TableRow, TableCell, LinearProgress, useTheme, useMediaQuery } from "@mui/material";
 
-import { TableHead, TableRow, TableCell, LinearProgress } from "@mui/material";
-
-import { TableColumnHeadingOptions } from "@/app/core/types";
+import {
+  TableColumnHeadingOptions,
+  TableColumnHiddenOptions
+} from "@/app/core/types";
+import { isCellHidden } from "@/app/core/lib/util/table-helpers";
 
 interface DataTableHeaderProps {
   isLoading?: boolean;
   ref: React.Ref<HTMLTableSectionElement>;
   headerConfigurations: TableColumnHeadingOptions[];        
+  hiddenConfiguration?: (TableColumnHiddenOptions | undefined)[];
 };
 
-export default function DataTableHeader({ isLoading, ref, headerConfigurations }: DataTableHeaderProps) {
+export default function DataTableHeader({
+  isLoading,
+  ref,
+  headerConfigurations,
+  hiddenConfiguration
+}: DataTableHeaderProps) {
+  const theme = useTheme();
+  const isMediumDevice = useMediaQuery(theme.breakpoints.between('md', 'lg'));
+  const isLargeDevice = useMediaQuery(theme.breakpoints.between('lg', 'xl'));
+  const isExtraLargeDevice = useMediaQuery(theme.breakpoints.up('xl'));
+  const headersToDisplay = headerConfigurations.filter((hc, idx) => {
+    return !hiddenConfiguration || !isCellHidden(
+      hiddenConfiguration[idx],
+      isMediumDevice,
+      isLargeDevice,
+      isExtraLargeDevice
+    );
+  });
+
   return (
     <TableHead ref={ref}>
       <TableRow sx={{
@@ -18,13 +40,13 @@ export default function DataTableHeader({ isLoading, ref, headerConfigurations }
           color: 'primary.contrastText'
         }
       }}>
-        {headerConfigurations.map((header, idx) => (
-          <TableCell key={idx}>{header?.text}</TableCell>
-        ))}
+        {headersToDisplay.map((header, idx) => (
+            <TableCell key={idx}>{header?.text}</TableCell>
+          ))}
       </TableRow>
       {isLoading && (
         <TableRow>
-          <TableCell colSpan={headerConfigurations.length} sx={{ p: 0 }}>
+          <TableCell colSpan={headersToDisplay.length} sx={{ p: 0 }}>
             <LinearProgress color="secondary" />
           </TableCell>
         </TableRow>

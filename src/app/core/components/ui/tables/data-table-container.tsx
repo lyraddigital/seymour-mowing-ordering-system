@@ -1,6 +1,6 @@
 'use client';
 
-import { Box, Paper, Table, TableContainer } from "@mui/material";
+import { Box, Paper, Table, TableContainer, useMediaQuery, useTheme } from "@mui/material";
 import React, { useLayoutEffect, useRef, useState } from "react";
 
 import { PagedData, TableConfiguration } from "@/app/core/types";
@@ -22,6 +22,8 @@ function DataTableContainer<T>({ initialData, getPageDataRoute, pageSize, tableC
     const [data, setData] = useState<T[]>(initialData.items);
     const [headerHeight, setHeaderHeight] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
+    const theme = useTheme();
+    const isSmallDevice = useMediaQuery(theme.breakpoints.down('md'));
 
     useLayoutEffect(() => {
         if (tableHeaderRef.current) {
@@ -29,14 +31,15 @@ function DataTableContainer<T>({ initialData, getPageDataRoute, pageSize, tableC
         }
     }, []);
 
-    return (
+    return !isSmallDevice && (
         <TableContainer component={Paper} sx={{ mt: 4 }}>
             <Box sx={{ position: "relative" }}>
                 <Table>
                     <DataTableHeader
                         isLoading={isLoading}
                         ref={tableHeaderRef}
-                        headerConfigurations={tableConfiguration.columns.map(c => c.header)}                        
+                        headerConfigurations={tableConfiguration.columns.map(c => c.header)}
+                        hiddenConfiguration={tableConfiguration.columns.map(c => c.hidden)}
                      />
                     <DataTableBody
                         data={data}

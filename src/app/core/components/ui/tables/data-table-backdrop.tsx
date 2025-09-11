@@ -1,5 +1,3 @@
-'use client';
-
 import { Backdrop } from "@mui/material";
 
 type DataTableBackdropProps = {
