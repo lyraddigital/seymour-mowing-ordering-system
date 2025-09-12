@@ -1,6 +1,7 @@
 
 import { TableBody, TableRow } from "@mui/material";
 
+import { useData } from "@/app/core/hooks";
 import {
   TableColumnContentOptions,
   TableColumnHiddenOptions,
@@ -9,8 +10,7 @@ import {
 
 import DataTableCell from "./data-table-cell";
 
-interface DataTableBodyProps<T> {  
-  data: T[];
+interface DataTableBodyProps<T> {
   bodyConfiguration: TableColumnContentOptions<T>[];
   hiddenConfiguration?: (TableColumnHiddenOptions | undefined)[];
   widthConfiguration?: (TableColumnWidthOptions | undefined)[]
@@ -18,10 +18,11 @@ interface DataTableBodyProps<T> {
 
 export default function DataTableBody<T>({
   bodyConfiguration,
-  data,
   hiddenConfiguration,
   widthConfiguration
-}: DataTableBodyProps<T>) {    
+}: DataTableBodyProps<T>) {
+  const data = useData<T>();
+
   return (
     <TableBody>
       {data.map((item, rowIdx) => (

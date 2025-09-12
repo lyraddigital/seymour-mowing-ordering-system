@@ -1,5 +1,6 @@
 import { TableHead, TableRow, TableCell, LinearProgress, useTheme, useMediaQuery } from "@mui/material";
 
+import { useDataLoading } from "@/app/core/hooks";
 import {
   TableColumnHeadingOptions,
   TableColumnHiddenOptions
@@ -7,19 +8,18 @@ import {
 import { isCellHidden } from "@/app/core/lib/util/table-helpers";
 
 interface DataTableHeaderProps {
-  isLoading?: boolean;
   ref: React.Ref<HTMLTableSectionElement>;
   headerConfigurations: TableColumnHeadingOptions[];        
   hiddenConfiguration?: (TableColumnHiddenOptions | undefined)[];
 };
 
 export default function DataTableHeader({
-  isLoading,
   ref,
   headerConfigurations,
   hiddenConfiguration
 }: DataTableHeaderProps) {
   const theme = useTheme();
+  const isDataLoading = useDataLoading();
   const isMediumDevice = useMediaQuery(theme.breakpoints.between('md', 'lg'));
   const isLargeDevice = useMediaQuery(theme.breakpoints.between('lg', 'xl'));
   const isExtraLargeDevice = useMediaQuery(theme.breakpoints.up('xl'));
@@ -44,7 +44,7 @@ export default function DataTableHeader({
             <TableCell key={idx}>{header?.text}</TableCell>
           ))}
       </TableRow>
-      {isLoading && (
+      {isDataLoading && (
         <TableRow>
           <TableCell colSpan={headersToDisplay.length} sx={{ p: 0 }}>
             <LinearProgress color="secondary" />

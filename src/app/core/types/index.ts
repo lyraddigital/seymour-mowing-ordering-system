@@ -6,6 +6,7 @@ import FormActionState from "./form-action-state";
 import NavItem from "./nav-item";
 import PagePaths from "./page-paths";
 import PagedData from "./paged-data";
+import SearchParams from "./search-params";
 import TableConfiguration, {
   TableColumnHeadingOptions,
   TableColumnContentOptions,
@@ -25,6 +26,7 @@ export type {
   NavItem,
   PagePaths,
   PagedData,
+  SearchParams,
   TableConfiguration,
   TableColumnHeadingOptions,
   TableColumnContentOptions,

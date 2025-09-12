@@ -6,15 +6,14 @@ import { useState } from "react";
 import { ConfirmDialog } from "@/app/core/components/ui/dialogs";
 import { DataTableContainer, DataTableTextContent } from "@/app/core/components/ui/tables";
 import { pagePaths } from "@/app/core/configuration";
-import { Customer } from "@/app/core/data/models";
-import { PagedData } from "@/app/core/types";
 
 import {
     CustomerNameCellContent,
     CustomerActionsCellContent
 } from "./customer-table";
+import { Customer } from "@/app/core/data/models";
 
-export default function CustomerDatasource({ data }: { data: PagedData<Customer> }) {
+export default function CustomerDatasource() {
     const [showDeleteDialog, setShowDeleteDialog] = useState<boolean>(false);
     const router = useRouter();
 
@@ -24,15 +23,12 @@ export default function CustomerDatasource({ data }: { data: PagedData<Customer>
 
     return (
         <>
-            <DataTableContainer
-                initialData={data}
-                getPageDataRoute="/api/customers"
-                pageSize={5}
+            <DataTableContainer               
                 tableConfiguration={{
                     columns: [
                         {
                             content: {
-                                body: ({ data }) => <DataTableTextContent text={data.customerNumber} />
+                                body: ({ data }: { data: Customer }) => <DataTableTextContent text={data.customerNumber} />
                             },
                             header: {
                                 text: "ID"
@@ -41,7 +37,7 @@ export default function CustomerDatasource({ data }: { data: PagedData<Customer>
                         },
                         {
                             content: {
-                                body: ({ data }) => <CustomerNameCellContent customer={data} />
+                                body: ({ data }: { data: Customer }) => <CustomerNameCellContent customer={data} />
                             },
                             header: {
                                 text: "Customer"
@@ -73,7 +69,7 @@ export default function CustomerDatasource({ data }: { data: PagedData<Customer>
                         },
                         {
                             content: {
-                                body: ({ data }) => (
+                                body: ({ data }: { data: Customer }) => (
                                     <CustomerActionsCellContent
                                         onDeletePressed={() => setShowDeleteDialog(true)}
                                         onViewPressed={() => redirectToViewScreen(data.customerNumber)}

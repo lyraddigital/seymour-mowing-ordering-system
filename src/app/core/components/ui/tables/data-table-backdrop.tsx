@@ -1,14 +1,17 @@
 import { Backdrop } from "@mui/material";
 
+import { useDataLoading } from "@/app/core/hooks";
+
 type DataTableBackdropProps = {
-  isLoading: boolean;
   height: number;
 };
 
-export default function DataTableBackdrop({ isLoading, height }: DataTableBackdropProps) {
+export default function DataTableBackdrop({ height }: DataTableBackdropProps) {
+  const isDataLoading = useDataLoading();
+
   return (
     <Backdrop
-        open={isLoading}
+        open={isDataLoading}
         sx={{
             position: "absolute",
             top: `${height}px`,

@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from "react";
+import { PropsWithChildren, useState } from "react";
 
 import { DataRefreshContext } from "@/app/core/contexts";
 
-export default function DataRefreshProvider({ children }: { children: React.ReactNode }) {
+export default function DataRefreshProvider({ children }: PropsWithChildren) {
   const [refreshKey, setRefreshKey] = useState<number>(0);
 
   const triggerRefresh = () => {
