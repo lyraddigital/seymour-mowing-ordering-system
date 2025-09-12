@@ -34,15 +34,17 @@ export default function DataFilteringProvider<T>({ children, getPageDataRoute, i
   }
 
   const updatePageNumber = async (newPageNumber: number) => {
-    updateQueryString('pageNumber', newPageNumber);
+    updateQueryString({ key: 'pageNumber', value: newPageNumber });
     setPageNumber(newPageNumber);
 
     await fetchNewData(newPageNumber, pageSize);
   }
 
-  const updatePageSize = async (newPageSize: number) => {    
-    updateQueryString('pageSize', newPageSize);
-    updateQueryString('pageNumber', 1);
+  const updatePageSize = async (newPageSize: number) => {
+    updateQueryString(
+      { key: 'pageSize', value: newPageSize },
+      { key: 'pageNumber', value: 1 }
+    );
 
     setPageSize(newPageSize);
     setPageNumber(1);
@@ -57,7 +59,7 @@ export default function DataFilteringProvider<T>({ children, getPageDataRoute, i
       setPageSize: updatePageSize,
       isDataLoading,
       totalCount: count,
-      data: initialData
+      data
     }}>
       {children}
     </DataFilteringContext.Provider>

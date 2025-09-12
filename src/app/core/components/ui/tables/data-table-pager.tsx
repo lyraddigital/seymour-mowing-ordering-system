@@ -26,6 +26,7 @@ export default function DataTablePager() {
       onRowsPerPageChange={handleRowsPerPageChange}
       page={pageNumber - 1}
       rowsPerPage={pageSize}
+      rowsPerPageOptions={[5, 10, 25]}
     />
   );
 }
