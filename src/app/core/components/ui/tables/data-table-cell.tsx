@@ -3,6 +3,7 @@ import { TableCell, SxProps, Theme, useTheme, useMediaQuery } from "@mui/materia
 
 import { getWidthValue, isCellHidden } from "@/app/core/lib/util";
 import {
+  TableColumnAlignmentOptions,
   TableColumnContentOptions,
   TableColumnHiddenOptions,
   TableColumnWidthOptions
@@ -11,13 +12,15 @@ import {
 interface DataTableCellProps<T> {  
   data: T;
   content: TableColumnContentOptions<T>;
-  hiddenConfiguration: TableColumnHiddenOptions | undefined;
-  widthConfiguration: TableColumnWidthOptions | undefined;
+  alignmentConfiguration: TableColumnAlignmentOptions;
+  hiddenConfiguration: TableColumnHiddenOptions;
+  widthConfiguration: TableColumnWidthOptions;
 };
 
 export default function DataTableCell<T>({
   content,
   data,
+  alignmentConfiguration,
   hiddenConfiguration,
   widthConfiguration
 }: DataTableCellProps<T>) {
@@ -31,7 +34,7 @@ export default function DataTableCell<T>({
     };      
 
     return !shouldHideColumn && (    
-        <TableCell sx={sx}>
+        <TableCell sx={sx} align={alignmentConfiguration}>
             {<content.body data={data} />}
         </TableCell>
     );

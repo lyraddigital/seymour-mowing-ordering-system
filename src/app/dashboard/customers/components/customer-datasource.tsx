@@ -68,6 +68,7 @@ export default function CustomerDatasource() {
                             width: 160
                         },
                         {
+                            alignment: 'right',
                             content: {
                                 body: ({ data }: { data: Customer }) => (
                                     <CustomerActionsCellContent

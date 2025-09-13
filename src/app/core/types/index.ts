@@ -8,6 +8,7 @@ import PagePaths from "./page-paths";
 import PagedData from "./paged-data";
 import SearchParams from "./search-params";
 import TableConfiguration, {
+  TableColumnAlignmentOptions,
   TableColumnHeadingOptions,
   TableColumnContentOptions,
   TableColumnHiddenDemensionOptions,
@@ -28,6 +29,7 @@ export type {
   PagedData,
   SearchParams,
   TableConfiguration,
+  TableColumnAlignmentOptions,
   TableColumnHeadingOptions,
   TableColumnContentOptions,
   TableColumnHiddenDemensionOptions,

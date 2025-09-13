@@ -32,13 +32,15 @@ function DataTableContainer<T>({ tableConfiguration }: DataTableContainerProps<T
                 <Table>
                     <DataTableHeader
                         ref={tableHeaderRef}
+                        alignmentConfigurations={tableConfiguration.columns.map(c => c.alignment)}
                         headerConfigurations={tableConfiguration.columns.map(c => c.header)}
-                        hiddenConfiguration={tableConfiguration.columns.map(c => c.hidden)}
+                        hiddenConfigurations={tableConfiguration.columns.map(c => c.hidden)}
                      />
                     <DataTableBody
-                        bodyConfiguration={tableConfiguration.columns.map(c => c.content)}
-                        hiddenConfiguration={tableConfiguration.columns.map(c => c.hidden)}
-                        widthConfiguration={tableConfiguration.columns.map(c => c.width)}
+                        alignmentConfigurations={tableConfiguration.columns.map(c => c.alignment)}
+                        contentConfigurations={tableConfiguration.columns.map(c => c.content)}
+                        hiddenConfigurations={tableConfiguration.columns.map(c => c.hidden)}
+                        widthConfigurations={tableConfiguration.columns.map(c => c.width)}
                     />
                 </Table>
                 <DataTablePager />

@@ -1,5 +1,7 @@
 import { ComponentType } from "react";
 
+export type TableColumnAlignmentOptions = "left" | "right" | "center" | undefined;
+
 export type TableColumnContentOptions<T> = {
     body: ComponentType<{ data: T }>;
 }
@@ -20,11 +22,12 @@ export type TableColumnWidthDimensionOptions = {
     xl?: number | string;
 }
 
-export type TableColumnHiddenOptions = boolean | TableColumnHiddenDemensionOptions;
+export type TableColumnHiddenOptions = boolean | TableColumnHiddenDemensionOptions | undefined;
 
-export type TableColumnWidthOptions = number | string | TableColumnWidthDimensionOptions;
+export type TableColumnWidthOptions = number | string | TableColumnWidthDimensionOptions | undefined;
 
 type TableColumnConfiguration<T> = {
+    alignment?: TableColumnAlignmentOptions;
     content: TableColumnContentOptions<T>;
     header: TableColumnHeadingOptions
     hidden?: TableColumnHiddenOptions;

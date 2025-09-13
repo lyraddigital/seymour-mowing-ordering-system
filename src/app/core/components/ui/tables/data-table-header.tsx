@@ -2,6 +2,7 @@ import { TableHead, TableRow, TableCell, LinearProgress, useTheme, useMediaQuery
 
 import { useDataLoading } from "@/app/core/hooks";
 import {
+  TableColumnAlignmentOptions,
   TableColumnHeadingOptions,
   TableColumnHiddenOptions
 } from "@/app/core/types";
@@ -10,22 +11,24 @@ import { isCellHidden } from "@/app/core/lib/util/table-helpers";
 interface DataTableHeaderProps {
   ref: React.Ref<HTMLTableSectionElement>;
   headerConfigurations: TableColumnHeadingOptions[];        
-  hiddenConfiguration?: (TableColumnHiddenOptions | undefined)[];
+  alignmentConfigurations?: TableColumnAlignmentOptions[];
+  hiddenConfigurations?: TableColumnHiddenOptions[];
 };
 
 export default function DataTableHeader({
   ref,
+  alignmentConfigurations,
   headerConfigurations,
-  hiddenConfiguration
+  hiddenConfigurations
 }: DataTableHeaderProps) {
   const theme = useTheme();
   const isDataLoading = useDataLoading();
   const isMediumDevice = useMediaQuery(theme.breakpoints.between('md', 'lg'));
   const isLargeDevice = useMediaQuery(theme.breakpoints.between('lg', 'xl'));
   const isExtraLargeDevice = useMediaQuery(theme.breakpoints.up('xl'));
-  const headersToDisplay = headerConfigurations.filter((hc, idx) => {
-    return !hiddenConfiguration || !isCellHidden(
-      hiddenConfiguration[idx],
+  const headersToDisplay = headerConfigurations.filter((_, idx) => {
+    return !hiddenConfigurations || !isCellHidden(
+      hiddenConfigurations[idx],
       isMediumDevice,
       isLargeDevice,
       isExtraLargeDevice
@@ -40,9 +43,16 @@ export default function DataTableHeader({
           color: 'primary.contrastText'
         }
       }}>
-        {headersToDisplay.map((header, idx) => (
-            <TableCell key={idx}>{header?.text}</TableCell>
-          ))}
+        {headersToDisplay.map((header, idx) => {
+          const alignment = !!alignmentConfigurations && 
+            alignmentConfigurations[idx] ? alignmentConfigurations[idx]: 'left';
+
+          return (
+            <TableCell key={idx} align={alignment}>
+              {header?.text}
+            </TableCell>
+          );
+        })}
       </TableRow>
       {isDataLoading && (
         <TableRow>
