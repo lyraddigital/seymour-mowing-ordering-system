@@ -1,8 +1,8 @@
 import { useActionState } from "react";
 
+import { FormActionState } from "@/app/core/types";
 import {
   ActionStateFn,
-  FormActionState,
   validateAndSubmit,
   ValidatorFn,
 } from "@/app/core/validators";

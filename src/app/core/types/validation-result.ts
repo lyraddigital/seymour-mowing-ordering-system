@@ -1,6 +1,5 @@
-type ValidationResult<T> = {
+type ValidationResult = {
   success: boolean;
-  data?: T;
   errors?: {
     messages: string[];
     fields: string[];

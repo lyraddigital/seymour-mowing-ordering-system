@@ -2,18 +2,18 @@ import { IconButton, InputAdornment } from "@mui/material";
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { useState } from "react";
 
-import { ValidationResult } from '@/app/core/validators';
+import { ValidationResult } from '@/app/core/types';
 
 import { formFields } from "@/app/sign-in/constants";
 
 import SignInInput from "./sign-in-input";
 
-type PasswordInput<T> = {
+type PasswordInput = {
     defaultValue?: string;
-    validationResult?: ValidationResult<T>;
+    validationResult?: ValidationResult;
 }
 
-export default function PasswordInput<T>({ defaultValue, validationResult }: PasswordInput<T>) {
+export default function PasswordInput({ defaultValue, validationResult }: PasswordInput) {
     const [showPassword, setShowPassword] = useState<boolean>(false);
     const handleClickShowPassword = () => setShowPassword((show) => !show);
     const hasError = !!validationResult?.errors?.fields && !!validationResult.errors.fields.find(f => f === "password");

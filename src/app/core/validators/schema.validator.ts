@@ -1,8 +1,8 @@
 import { treeifyError, ZodObject } from "zod";
 
-import { ValidationResult } from "@/app/core/types";
+import { ValidationResponse } from "@/app/core/types";
 
-function validateSchema<T>(schema: ZodObject, data: T): ValidationResult<T> {
+function validateSchema<T>(schema: ZodObject, data: T): ValidationResponse<T> {
   const validationResult = schema.safeParse(data);
 
   if (!validationResult.success) {
@@ -17,15 +17,19 @@ function validateSchema<T>(schema: ZodObject, data: T): ValidationResult<T> {
       : [];
 
     return {
-      success: validationResult.success,
       data,
-      errors: { fields, messages },
-    } as ValidationResult<T>;
+      validationResult: {
+        success: validationResult.success,      
+        errors: { fields, messages },
+      }
+    };
   }
 
   return {
-    success: validationResult.success,
     data,
+    validationResult: {
+      success: validationResult.success    
+    }
   };
 }
 

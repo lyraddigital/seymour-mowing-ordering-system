@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { serverFormAction } from "@/app/core/actions";
 import { pagePaths } from "@/app/core/configuration";
 import { getUserByUsername } from "@/app/core/data";
-import { FormActionState } from "@/app/core/validators";
+import { FormActionState } from "@/app/core/types";
 
 import { pageErrors } from "@/app/sign-in/constants";
 import { checkPassword } from "@/app/sign-in/lib";

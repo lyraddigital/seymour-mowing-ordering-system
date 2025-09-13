@@ -5,9 +5,6 @@ export type DataRefresh = {
   triggerRefresh: () => void;
 }
 
-const DataRefreshContext = createContext<DataRefresh>({
-  refreshKey: 0,
-  triggerRefresh: () => {},
-});
+const DataRefreshContext = createContext<DataRefresh | undefined>(undefined);
 
 export default DataRefreshContext;

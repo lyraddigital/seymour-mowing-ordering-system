@@ -1,6 +1,6 @@
 import { Alert, Box } from "@mui/material";
 
-import { FormActionState } from "@/app/core/validators";
+import { FormActionState } from "@/app/core/types";
 
 type FormActionAlertsProps<T> = {    
     state?: FormActionState<T>;

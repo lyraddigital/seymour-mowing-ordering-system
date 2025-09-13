@@ -1,25 +1,25 @@
 import { TextField } from '@mui/material';
 import { HTMLInputTypeAttribute, JSX } from 'react';
 
-import { ValidationResult } from '@/app/core/validators';
+import { ValidationResult } from '@/app/core/types';
 
-type SignInInputProps<T> = {
+type SignInInputProps = {
     fieldName: string;
     endAdornment?: JSX.Element;
-    validationResult?: ValidationResult<T>;
+    validationResult?: ValidationResult;
     defaultValue?: string;
     label?: string;
     type?: HTMLInputTypeAttribute;
 }
 
-export default function SignInInput<T>({
+export default function SignInInput({
     defaultValue,
     endAdornment,
     validationResult,
     fieldName,
     label,
     type
-}: SignInInputProps<T>) {
+}: SignInInputProps) {
     const hasError = !!validationResult?.errors?.fields && 
         !!validationResult.errors.fields.find(f => f === fieldName);
     

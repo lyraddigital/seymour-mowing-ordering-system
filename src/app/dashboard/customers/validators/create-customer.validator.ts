@@ -1,6 +1,7 @@
 import { object, string } from "zod";
 
-import { validateSchema, ValidationResult } from "@/app/core/validators";
+import { ValidationResponse } from "@/app/core/types";
+import { validateSchema } from "@/app/core/validators";
 
 import { formFields } from "@/app/dashboard/customers/constants";
 import { CreateCustomer } from "@/app/dashboard/customers/types";
@@ -15,7 +16,7 @@ const CreateCustomerSchema = object({
 
 function validateCustomerCreation(
   formData: FormData
-): ValidationResult<CreateCustomer> {
+): ValidationResponse<CreateCustomer> {
   return validateSchema(CreateCustomerSchema, {
     customerName: formData.get(formFields.customerName),
     contactName: formData.get(formFields.contactName),

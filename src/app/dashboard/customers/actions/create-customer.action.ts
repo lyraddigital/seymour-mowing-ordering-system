@@ -2,7 +2,7 @@
 
 import { serverFormAction } from "@/app/core/actions";
 import { saveCustomer } from "@/app/core/data";
-import { FormActionState } from "@/app/core/validators";
+import { FormActionState } from "@/app/core/types";
 
 import { createCustomerFeatureErrors } from "@/app/dashboard/customers/constants";
 import { CreateCustomer } from "@/app/dashboard/customers/types";

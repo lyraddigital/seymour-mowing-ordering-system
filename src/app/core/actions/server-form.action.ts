@@ -1,6 +1,7 @@
 import { NEXT_REDIRECT_EXCEPTION_MESSAGE } from "@/app/core/configuration";
 import { ApplicationError } from "@/app/core/interfaces";
-import { FormActionState, ValidatorFn } from "@/app/core/validators";
+import { FormActionState } from "@/app/core/types";
+import { ValidatorFn } from "@/app/core/validators";
 
 export default async function serverFormAction<T>(
   formData: FormData,
@@ -8,21 +9,21 @@ export default async function serverFormAction<T>(
   processingFn: (data?: T) => Promise<void>,
   unknownErrorMessage: string
 ): Promise<FormActionState<T> | undefined> {
-  const validationResult = validatorFn(formData);
+  const { data, validationResult } = validatorFn(formData);
 
   if (!validationResult.success) {
     return {
-      data: validationResult?.data,
+      data,
       validationResult: validationResult,
     };
   }
 
   try {
-    await processingFn(validationResult?.data);
+    await processingFn(data);
   } catch (e) {
     return handleServerFormError(e, unknownErrorMessage, {
       hasServerError: true,
-      data: validationResult?.data,
+      data,
     });
   }
 }

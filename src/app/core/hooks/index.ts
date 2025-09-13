@@ -2,8 +2,9 @@ import useFormAction from "./use-form-action";
 import useData from "./use-data";
 import useDataLoading from "./use-data-loading";
 import useDataPaging from "./use-data-paging";
-import useDataRefresh from "./use-data-refresh";
+import useDataRefreshKey from "./use-data-refresh-key";
 import useDataTotalCount from "./use-data-total-count";
+import useDataTriggerRefresh from "./use-data-trigger-refresh";
 import useUpdateQueryString from "./use-update-query-string";
 
 export {
@@ -11,7 +12,8 @@ export {
     useData,
     useDataLoading,
     useDataPaging,
-    useDataRefresh,
+    useDataRefreshKey,
     useDataTotalCount,
+    useDataTriggerRefresh,
     useUpdateQueryString
 };

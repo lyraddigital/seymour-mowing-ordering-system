@@ -1,10 +1,10 @@
 import ValidationResult from "./validation-result";
 
 type FormActionState<T> = {
-  hasServerError?: boolean;
   data?: T;
+  hasServerError?: boolean;
   serverErrorMessage?: string;
-  validationResult?: ValidationResult<T>;
+  validationResult?: ValidationResult;
 };
 
 export default FormActionState;

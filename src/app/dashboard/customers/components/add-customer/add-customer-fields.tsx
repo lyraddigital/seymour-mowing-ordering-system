@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { FormActionState } from "@/app/core/types";
 
 import { formFields } from "@/app/dashboard/customers/constants";
-import { useDataRefresh } from "@/app/core/hooks";
+import { useDataTriggerRefresh } from "@/app/core/hooks";
 import { CreateCustomer } from "@/app/dashboard/customers/types";
 
 type AddCustomerFieldsProps = {
@@ -14,7 +14,7 @@ type AddCustomerFieldsProps = {
 const AddCustomerFields: React.FC<AddCustomerFieldsProps> = ({ state }) => {
   const [profilePic, setProfilePic] = useState<string | undefined>(undefined);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { triggerRefresh } = useDataRefresh();
+  const triggerRefresh = useDataTriggerRefresh();
 
   const handleProfilePicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -27,9 +27,14 @@ const AddCustomerFields: React.FC<AddCustomerFieldsProps> = ({ state }) => {
     }
   };
 
+  console.log('state: ', state);
+
   // Later on we'll find a way to include this outside of the component and make it close itself
   useEffect(() => {
-    if (state?.validationResult?.success && !state?.hasServerError) {    
+    console.log('triggerRefresh: ', triggerRefresh);
+    // console.log('state: ', state);
+
+    if (state?.validationResult?.success && !state?.hasServerError && triggerRefresh) {    
       triggerRefresh();
     }
   }, [triggerRefresh, state]);

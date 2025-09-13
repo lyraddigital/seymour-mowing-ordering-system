@@ -16,6 +16,7 @@ import TableConfiguration, {
   TableColumnWidthDimensionOptions,
   TableColumnWidthOptions
 } from "./table-configuration";
+import ValidationResponse from "./validation-response";
 import ValidationResult from "./validation-result";
 
 export type {
@@ -36,5 +37,6 @@ export type {
   TableColumnHiddenOptions,
   TableColumnWidthDimensionOptions,
   TableColumnWidthOptions,
+  ValidationResponse,
   ValidationResult,
 };

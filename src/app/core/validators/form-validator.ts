@@ -1,6 +1,6 @@
-import { FormActionState, ValidationResult } from "@/app/core/types";
+import { FormActionState, ValidationResponse } from "@/app/core/types";
 
-export type ValidatorFn<T> = (formData: FormData) => ValidationResult<T>;
+export type ValidatorFn<T> = (formData: FormData) => ValidationResponse<T>;
 export type ActionStateFn<T> = (
   prevState: FormActionState<T> | undefined,
   formData: FormData
@@ -11,11 +11,11 @@ export default function validateAndSubmit<T>(
   serverFn?: ActionStateFn<T>
 ): ActionStateFn<T> {
   return async (prevState, formData) => {
-    const validationResult = validatorFn(formData);
+    const { data, validationResult } = validatorFn(formData);
 
     if (!validationResult.success) {
       return {
-        data: validationResult.data,
+        data,
         validationResult: validationResult,
       } as FormActionState<T>;
     }

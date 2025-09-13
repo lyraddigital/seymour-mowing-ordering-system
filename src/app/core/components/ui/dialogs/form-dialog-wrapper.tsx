@@ -2,7 +2,8 @@ import { Button, CircularProgress, Box } from "@mui/material";
 import React, { ReactElement } from "react";
 
 import { useFormAction } from "@/app/core/hooks";
-import { ActionStateFn, FormActionState, ValidatorFn } from "@/app/core/validators";
+import { FormActionState } from "@/app/core/types";
+import { ActionStateFn, ValidatorFn } from "@/app/core/validators";
 
 import DialogWrapper from "./dialog-wrapper";
 
