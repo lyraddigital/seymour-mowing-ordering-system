@@ -6,20 +6,27 @@ import { useState } from "react";
 import { ConfirmDialog } from "@/app/core/components/ui/dialogs";
 import { DataTableContainer, DataTableTextContent } from "@/app/core/components/ui/tables";
 import { pagePaths } from "@/app/core/configuration";
+import { useDataTriggerRefresh } from "@/app/core/hooks";
+import { Customer } from "@/app/core/data/models";
 
 import {
     CustomerNameCellContent,
     CustomerActionsCellContent
 } from "./customer-table";
-import { Customer } from "@/app/core/data/models";
 
 export default function CustomerDatasource() {
+    const triggerRefresh = useDataTriggerRefresh();
     const [showDeleteDialog, setShowDeleteDialog] = useState<boolean>(false);
     const router = useRouter();
 
     const redirectToViewScreen = (customerNumber: string) => {
         router.push(`${pagePaths.customers}/${customerNumber}`);
     };
+
+    const deleteCustomer = async (): Promise<void> => {
+        setShowDeleteDialog(false);
+        triggerRefresh?.();
+    }
 
     return (
         <>
@@ -89,9 +96,9 @@ export default function CustomerDatasource() {
                 open={showDeleteDialog}
                 title="Delete Customer"
                 message="Are you sure you want to delete this customer?"
-                confirmLabel="Delete"
-                cancelLabel="Cancel"
-                onConfirm={() => {}}
+                confirmLabel="Yes"
+                cancelLabel="No"
+                onConfirm={deleteCustomer}
                 onCancel={() => setShowDeleteDialog(false)}
             />
         </>

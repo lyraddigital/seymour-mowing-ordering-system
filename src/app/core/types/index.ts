@@ -17,7 +17,7 @@ import TableConfiguration, {
   TableColumnWidthOptions
 } from "./table-configuration";
 import ValidationResponse from "./validation-response";
-import ValidationResult from "./validation-result";
+import ValidationResult, { ValidationResultErrors } from "./validation-result";
 
 export type {
   BreadcrumbItem,
@@ -39,4 +39,5 @@ export type {
   TableColumnWidthOptions,
   ValidationResponse,
   ValidationResult,
+  ValidationResultErrors
 };

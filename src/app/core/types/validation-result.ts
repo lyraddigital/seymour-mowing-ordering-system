@@ -1,9 +1,11 @@
+export type ValidationResultErrors = {
+  messages: string[];
+  fields: string[];
+}
+
 type ValidationResult = {
   success: boolean;
-  errors?: {
-    messages: string[];
-    fields: string[];
-  };
+  errors?: ValidationResultErrors;
 };
 
 export default ValidationResult;

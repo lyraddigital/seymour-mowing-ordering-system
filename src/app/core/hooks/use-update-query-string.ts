@@ -1,16 +1,18 @@
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
+import { useCallback } from 'react';
 
 export default function useUpdateQueryString() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+  const router = useRouter();  
 
-  return (...queryStringUpdates: { key: string; value: string | number }[]) => {
-    const params = new URLSearchParams(searchParams.toString());
+  return useCallback((...queryStringUpdates: { key: string; value: string | number }[]) => {
+    if (typeof window === "undefined") return;
+
+    const params = new URLSearchParams(window.location.search);    
 
     queryStringUpdates.forEach(({ key, value }) => {
       params.set(key, String(value));
     });
 
     router.replace(`?${params.toString()}`, { scroll: false });
-  }
+  }, [router]);
 }

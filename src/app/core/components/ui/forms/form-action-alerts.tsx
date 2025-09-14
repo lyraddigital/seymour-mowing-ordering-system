@@ -1,25 +1,28 @@
 import { Alert, Box } from "@mui/material";
 
-import { FormActionState } from "@/app/core/types";
+import { FormActionState, ValidationResultErrors } from "@/app/core/types";
 
 type FormActionAlertsProps<T> = {    
     state?: FormActionState<T>;
 };
 
 export default function FormActionAlerts<T>({ state }: FormActionAlertsProps<T>) {
-    const isServerError = !!state?.hasServerError;
-    const hasValidationErrorMessages = !!state?.validationResult?.errors?.messages;    
+    const hasError = !!state?.error;
+    const isServerError = hasError && typeof state.error === 'string';
+    const isValidationError = hasError && !isServerError;
+    const serverErrorMessage = isServerError ? state.error as string : undefined;
+    const validationErrors = isValidationError ? (state.error as ValidationResultErrors).messages : undefined;
 
     return (
         <>
             {isServerError && <Alert severity="error" sx={{ mb: 3 }}>
-                { state?.serverErrorMessage }
+                { serverErrorMessage }
             </Alert>}
-            {hasValidationErrorMessages && <Alert severity="error" sx={{ mb: 3 }}>
+            {validationErrors && <Alert severity="error" sx={{ mb: 3 }}>
                 <Box sx={{ mb: 1 }}>Could not submit form. Please address the following issues.</Box>
                 <Box component="ul" sx={{ m: 0 }}>
-                    {state?.validationResult?.errors?.messages.map((m, i) => (
-                        <li key={i}>{m}</li>
+                    {validationErrors.map((e, i) => (
+                        <li key={i}>{e}</li>
                     ))}
                 </Box>
             </Alert>}

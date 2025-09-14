@@ -1,6 +1,6 @@
 import { useActionState } from "react";
 
-import { FormActionState } from "@/app/core/types";
+import { FormActionState } from "@/app/core/types"
 import {
   ActionStateFn,
   validateAndSubmit,
@@ -16,5 +16,5 @@ export default function useFormAction<T>(
   boolean
 ] {
   const formActionFn = validateAndSubmit(validateFn, serverFn);
-  return useActionState(formActionFn, undefined);
+  return useActionState(formActionFn, undefined,);
 }

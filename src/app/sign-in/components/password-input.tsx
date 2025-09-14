@@ -2,7 +2,7 @@ import { IconButton, InputAdornment } from "@mui/material";
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { useState } from "react";
 
-import { ValidationResult } from '@/app/core/types';
+import { ValidationResultErrors } from '@/app/core/types';
 
 import { formFields } from "@/app/sign-in/constants";
 
@@ -10,13 +10,13 @@ import SignInInput from "./sign-in-input";
 
 type PasswordInput = {
     defaultValue?: string;
-    validationResult?: ValidationResult;
+    errors?: ValidationResultErrors;
 }
 
-export default function PasswordInput({ defaultValue, validationResult }: PasswordInput) {
+export default function PasswordInput({ defaultValue, errors }: PasswordInput) {
     const [showPassword, setShowPassword] = useState<boolean>(false);
     const handleClickShowPassword = () => setShowPassword((show) => !show);
-    const hasError = !!validationResult?.errors?.fields && !!validationResult.errors.fields.find(f => f === "password");
+    const hasError = !!errors?.fields && !!errors.fields.find(f => f === "password");
     const visibilityColor = hasError ? "error": undefined;
 
     return (
@@ -37,7 +37,7 @@ export default function PasswordInput({ defaultValue, validationResult }: Passwo
                     </IconButton>
                 </InputAdornment>
             }
-            validationResult={validationResult}
+            errors={errors}
             type={showPassword ? 'text' : 'password'} 
         />
     );

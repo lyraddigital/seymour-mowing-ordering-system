@@ -1,10 +1,9 @@
-import ValidationResult from "./validation-result";
+import { ValidationResultErrors } from "./validation-result";
 
-type FormActionState<T> = {
+ type FormActionState<T> = {
+  isSuccessful: boolean;
   data?: T;
-  hasServerError?: boolean;
-  serverErrorMessage?: string;
-  validationResult?: ValidationResult;
+  error?: string | ValidationResultErrors;
 };
 
 export default FormActionState;

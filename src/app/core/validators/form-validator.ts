@@ -15,13 +15,16 @@ export default function validateAndSubmit<T>(
 
     if (!validationResult.success) {
       return {
+        isSuccessful: false,
         data,
-        validationResult: validationResult,
-      } as FormActionState<T>;
+        error: validationResult.errors,
+      };
     }
 
     if (serverFn) {
       return await serverFn(prevState, formData);
     }
+
+    return { isSuccessful: true, data };
   };
 }

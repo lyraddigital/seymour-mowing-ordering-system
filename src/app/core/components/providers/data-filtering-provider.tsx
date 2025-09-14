@@ -51,15 +51,17 @@ export default function DataFilteringProvider<T>({ children, getPageDataRoute, i
     setPageNumber(1);
     
     await fetchNewData(1, newPageSize);
-  }, [updateQueryString, setPageSize, setPageNumber, fetchNewData]);
+  }, [updateQueryString, setPageSize, setPageNumber, fetchNewData]);  
 
-  useEffect(() => {
+  /* eslint-disable react-hooks/exhaustive-deps */
+  useEffect(() => {        
     if (refreshKey) {
-      (async () => {        
+      (async () => {
         await updatePageNumber(1);
       })();
-    }    
-  }, [refreshKey, updatePageNumber]);
+    }
+  }, [refreshKey]);
+  /* eslint-disable react-hooks/exhaustive-deps */
 
   return (
     <DataFilteringContext.Provider value={{

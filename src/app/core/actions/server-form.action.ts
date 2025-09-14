@@ -13,16 +13,20 @@ export default async function serverFormAction<T>(
 
   if (!validationResult.success) {
     return {
+      isSuccessful: false,
       data,
-      validationResult: validationResult,
+      error: validationResult.errors,
     };
   }
 
   try {
     await processingFn(data);
+
+    return {
+      isSuccessful: true
+    };
   } catch (e) {
     return handleServerFormError(e, unknownErrorMessage, {
-      hasServerError: true,
       data,
     });
   }
@@ -35,16 +39,14 @@ export async function emptyServerFormAction(
   try {
     await processingFn();
   } catch (e) {
-    return handleServerFormError(e, unknownErrorMessage, {
-      hasServerError: true,
-    });
+    return handleServerFormError(e, unknownErrorMessage);
   }
 }
 
 function handleServerFormError<T>(
   error: unknown,
   unknownErrorMessage: string,
-  formActionState: FormActionState<T>
+  formActionState?: Omit<FormActionState<T>, 'error' | 'isSuccessful'>
 ): FormActionState<T> {
   if ((error as Error)?.message === NEXT_REDIRECT_EXCEPTION_MESSAGE) {
     throw error;
@@ -52,15 +54,17 @@ function handleServerFormError<T>(
     console.error("Application error occurred:", error);
 
     return {
-      ...formActionState,
-      serverErrorMessage: (error as Error).message,
+      ...(formActionState || {}),
+      isSuccessful: false,
+      error: (error as Error).message,
     };
   }
 
   console.error("An unknown error occurred: ", error);
 
   return {
-    ...formActionState,
-    serverErrorMessage: unknownErrorMessage,
+    ...(formActionState || {}),
+    isSuccessful: false,
+    error: unknownErrorMessage,
   };
 }

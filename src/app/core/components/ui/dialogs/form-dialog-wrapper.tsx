@@ -1,5 +1,5 @@
 import { Button, CircularProgress, Box } from "@mui/material";
-import React, { ReactElement } from "react";
+import React, { ReactElement, useCallback, useEffect } from "react";
 
 import { useFormAction } from "@/app/core/hooks";
 import { FormActionState } from "@/app/core/types";
@@ -8,9 +8,8 @@ import { ActionStateFn, ValidatorFn } from "@/app/core/validators";
 import DialogWrapper from "./dialog-wrapper";
 
 type FormDialogWrapperProps<T> = {
-  open: boolean;
   title: React.ReactNode;
-  onClose: () => void;
+  onClose: (isSuccessfulSubmission: boolean) => void;
   submitLabel?: string;
   cancelLabel?: string;
   maxWidth?: string;
@@ -20,7 +19,6 @@ type FormDialogWrapperProps<T> = {
 }
 
 export default function FormDialogWrapper<T>({
-  open,
   title,
   onClose,
   submitLabel = "Save",
@@ -32,16 +30,26 @@ export default function FormDialogWrapper<T>({
 }: FormDialogWrapperProps<T>) {
   const [state, action, pending] = useFormAction<T>(validateFn, actionFn);
 
+  useEffect(() => {
+    if (!pending && state?.isSuccessful) {
+      onClose(true);
+    }
+  }, [state, pending, onClose]);
+
+  const onDialogClose = useCallback(() => {
+    onClose(false);
+  }, [onClose]);
+
   return (
     <DialogWrapper
-      open={open}
+      open={true}
       title={title}
-      onClose={onClose}
+      onClose={onDialogClose}
       closeDisabled={pending}
       maxWidth={maxWidth}
       actions={
         <>
-          <Button onClick={onClose} disabled={pending}>{cancelLabel}</Button>
+          <Button onClick={onDialogClose} disabled={pending}>{cancelLabel}</Button>
           <Button
             variant="contained"
             type="submit"
