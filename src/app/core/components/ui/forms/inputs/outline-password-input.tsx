@@ -4,24 +4,26 @@ import { useState } from "react";
 
 import { ValidationResultErrors } from '@/app/core/types';
 
-import { formFields } from "@/app/sign-in/constants";
+import OutlineInput from "./outline-input";
 
-import SignInInput from "./sign-in-input";
-
-type PasswordInput = {
+type OutlinePasswordInputProps = {
     defaultValue?: string;
-    errors?: ValidationResultErrors;
+    errors: string | ValidationResultErrors | undefined;
+    fieldName: string;
 }
 
-export default function PasswordInput({ defaultValue, errors }: PasswordInput) {
+export default function OutlinePasswordInput({ defaultValue, errors, fieldName }: OutlinePasswordInputProps) {
     const [showPassword, setShowPassword] = useState<boolean>(false);
     const handleClickShowPassword = () => setShowPassword((show) => !show);
-    const hasError = !!errors?.fields && !!errors.fields.find(f => f === "password");
+    const hasValidationErrors = !!errors && typeof errors !== 'string';
+    const validationErrors = hasValidationErrors ? errors as ValidationResultErrors : undefined;
+    const hasError = !!validationErrors?.fields && 
+        !!validationErrors.fields.find(f => f === fieldName);
     const visibilityColor = hasError ? "error": undefined;
 
     return (
-        <SignInInput 
-            fieldName={formFields.password}
+        <OutlineInput 
+            fieldName={fieldName}
             label="Password *"
             defaultValue={defaultValue}
             endAdornment={

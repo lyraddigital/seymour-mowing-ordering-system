@@ -1,17 +1,17 @@
 import { Alert, Box } from "@mui/material";
 
-import { FormActionState, ValidationResultErrors } from "@/app/core/types";
+import { ValidationResultErrors } from "@/app/core/types";
 
 type FormActionAlertsProps<T> = {    
-    state?: FormActionState<T>;
+    error: string | ValidationResultErrors | undefined;
 };
 
-export default function FormActionAlerts<T>({ state }: FormActionAlertsProps<T>) {
-    const hasError = !!state?.error;
-    const isServerError = hasError && typeof state.error === 'string';
+export default function FormActionAlerts<T>({ error }: FormActionAlertsProps<T>) {
+    const hasError = !!error;
+    const isServerError = hasError && typeof error === 'string';
     const isValidationError = hasError && !isServerError;
-    const serverErrorMessage = isServerError ? state.error as string : undefined;
-    const validationErrors = isValidationError ? (state.error as ValidationResultErrors).messages : undefined;
+    const serverErrorMessage = isServerError ? error as string : undefined;
+    const validationErrors = isValidationError ? (error as ValidationResultErrors).messages : undefined;
 
     return (
         <>

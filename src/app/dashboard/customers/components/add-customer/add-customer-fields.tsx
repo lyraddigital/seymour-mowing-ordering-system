@@ -1,6 +1,7 @@
-import { Box, TextField, Avatar, Button } from "@mui/material";
-import React, { useRef, useState } from "react";
+import { Box } from "@mui/material";
+import { FC } from "react";
 
+import { OutlineInput, PicUploader } from "@/app/core/components/ui/forms/inputs";
 import { FormActionState } from "@/app/core/types";
 
 import { formFields } from "@/app/dashboard/customers/constants";
@@ -10,46 +11,24 @@ type AddCustomerFieldsProps = {
   state?: FormActionState<CreateCustomer>;
 };
 
-const AddCustomerFields: React.FC<AddCustomerFieldsProps> = ({ state }) => {
-  const [profilePic, setProfilePic] = useState<string | undefined>(undefined);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleProfilePicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        setProfilePic(ev.target?.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
+const AddCustomerFields: FC<AddCustomerFieldsProps> = ({ state }) => {
   return (
     <Box sx={{ mt: 2 }}>
       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 4 }}>
-        <Avatar src={profilePic} sx={{ width: 120, height: 120, mb: 3 }} />
-        <Button
-          variant="contained"
-          size="small"
-          onClick={() => fileInputRef.current?.click()}
-          sx={{ mb: 1 }}
-        >
-          Upload
-        </Button>
-        <input
-          type="file"
-          name={formFields.profilePic}
-          accept="image/*"
-          ref={fileInputRef}
-          style={{ display: 'none' }}
-          onChange={handleProfilePicChange}
-        />
+        <PicUploader fieldName={formFields.profilePic} />
       </Box>
-      <TextField label="Customer Name" name={formFields.customerName} variant="outlined" fullWidth sx={{ mb: 2 }} defaultValue={state?.data?.customerName} />
-      <TextField label="Contact Name" name={formFields.contactName} variant="outlined" fullWidth sx={{ mb: 2 }} defaultValue={state?.data?.contactName} />
-      <TextField type="email" label="Contact Email" name={formFields.contactEmail} variant="outlined" fullWidth sx={{ mb: 2 }} defaultValue={state?.data?.contactEmail} />
-      <TextField type="tel" label="Contact Phone" name={formFields.contactPhone} variant="outlined" fullWidth sx={{ mb: 2 }} defaultValue={state?.data?.contactPhone} />
+      <Box>
+        <OutlineInput fieldName={formFields.customerName} errors={state?.error} label="Customer Name" defaultValue={state?.data?.customerName} />
+      </Box>
+      <Box sx={{mt: 2}}>
+        <OutlineInput fieldName={formFields.contactName} errors={state?.error} label="Contact Name" defaultValue={state?.data?.contactName} />
+      </Box>
+      <Box sx={{mt: 2}}>
+        <OutlineInput fieldName={formFields.contactEmail} errors={state?.error} label="Contact Email" defaultValue={state?.data?.contactEmail} />
+      </Box>
+      <Box sx={{mt: 2}}>
+        <OutlineInput fieldName={formFields.contactPhone} errors={state?.error} label="Contact Phone" defaultValue={state?.data?.contactPhone} />
+      </Box>
     </Box>
   );
 };
