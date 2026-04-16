@@ -1,4 +1,10 @@
 import Link from "next/link";
+import type {
+  CompletedJobPeriod,
+  InvoiceAgingState,
+  ScheduledJobPeriod,
+  UnpaidInvoiceFilter
+} from "@shared";
 import { getDashboard } from "@/lib/api/dashboard";
 import { formatCurrency } from "@/lib/format/currency";
 import { formatDate } from "@/lib/format/date";
@@ -24,9 +30,27 @@ const unpaidInvoiceFilterOptions = [
   { value: "Late7PlusDays", label: "Late 7+ Days" }
 ] as const;
 
-function getAgingLabel(
-  agingState: "NotDue" | "DueToday" | "LateUnder7Days" | "Late7PlusDays"
-): string {
+type HomePageProps = {
+  searchParams: Promise<{
+    scheduledPeriod?: string;
+    completedPeriod?: string;
+    invoiceFilter?: string;
+  }>;
+};
+
+function isScheduledJobPeriod(value: string | undefined): value is ScheduledJobPeriod {
+  return scheduledJobPeriodOptions.some((option) => option.value === value);
+}
+
+function isCompletedJobPeriod(value: string | undefined): value is CompletedJobPeriod {
+  return completedJobPeriodOptions.some((option) => option.value === value);
+}
+
+function isUnpaidInvoiceFilter(value: string | undefined): value is UnpaidInvoiceFilter {
+  return unpaidInvoiceFilterOptions.some((option) => option.value === value);
+}
+
+function getAgingLabel(agingState: InvoiceAgingState): string {
   switch (agingState) {
     case "NotDue":
       return "Not due";
@@ -39,9 +63,7 @@ function getAgingLabel(
   }
 }
 
-function getAgingStyle(
-  agingState: "NotDue" | "DueToday" | "LateUnder7Days" | "Late7PlusDays"
-): React.CSSProperties {
+function getAgingStyle(agingState: InvoiceAgingState): React.CSSProperties {
   switch (agingState) {
     case "NotDue":
       return {
@@ -78,8 +100,49 @@ function getAgingStyle(
   }
 }
 
-export default async function HomePage() {
-  const dashboard = await getDashboard();
+function buildDashboardHref(filters: {
+  scheduledPeriod?: ScheduledJobPeriod;
+  completedPeriod?: CompletedJobPeriod;
+  invoiceFilter?: UnpaidInvoiceFilter;
+}): string {
+  const params = new URLSearchParams();
+
+  if (filters.scheduledPeriod) {
+    params.set("scheduledPeriod", filters.scheduledPeriod);
+  }
+
+  if (filters.completedPeriod) {
+    params.set("completedPeriod", filters.completedPeriod);
+  }
+
+  if (filters.invoiceFilter) {
+    params.set("invoiceFilter", filters.invoiceFilter);
+  }
+
+  const query = params.toString();
+  return query ? `/?${query}` : "/";
+}
+
+export default async function HomePage({ searchParams }: HomePageProps) {
+  const resolvedSearchParams = await searchParams;
+
+  const scheduledPeriod = isScheduledJobPeriod(resolvedSearchParams.scheduledPeriod)
+    ? resolvedSearchParams.scheduledPeriod
+    : undefined;
+
+  const completedPeriod = isCompletedJobPeriod(resolvedSearchParams.completedPeriod)
+    ? resolvedSearchParams.completedPeriod
+    : undefined;
+
+  const invoiceFilter = isUnpaidInvoiceFilter(resolvedSearchParams.invoiceFilter)
+    ? resolvedSearchParams.invoiceFilter
+    : undefined;
+
+  const dashboard = await getDashboard({
+    scheduledPeriod,
+    completedPeriod,
+    invoiceFilter
+  });
 
   return (
     <main style={{ padding: "24px", fontFamily: "Arial, sans-serif" }}>
@@ -131,16 +194,32 @@ export default async function HomePage() {
         >
           <h2 style={{ margin: 0 }}>Scheduled jobs</h2>
 
-          <label>
-            <span style={{ marginRight: "8px" }}>Period</span>
-            <select value={dashboard.scheduledJobsDefaultPeriod} disabled>
-              {scheduledJobPeriodOptions.map((option) => (
-                <option key={option.value} value={option.value}>
+          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+            {scheduledJobPeriodOptions.map((option) => {
+              const isActive = option.value === dashboard.scheduledJobsDefaultPeriod;
+
+              return (
+                <Link
+                  key={option.value}
+                  href={buildDashboardHref({
+                    scheduledPeriod: option.value,
+                    completedPeriod: dashboard.completedJobsDefaultPeriod,
+                    invoiceFilter: dashboard.unpaidInvoicesDefaultFilter
+                  })}
+                  style={{
+                    padding: "6px 10px",
+                    border: "1px solid #ccc",
+                    borderRadius: "6px",
+                    textDecoration: "none",
+                    color: "#111827",
+                    backgroundColor: isActive ? "#e5e7eb" : "#ffffff"
+                  }}
+                >
                   {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
+                </Link>
+              );
+            })}
+          </div>
         </div>
 
         <table style={{ borderCollapse: "collapse", width: "100%" }}>
@@ -192,16 +271,32 @@ export default async function HomePage() {
         >
           <h2 style={{ margin: 0 }}>Recently completed jobs</h2>
 
-          <label>
-            <span style={{ marginRight: "8px" }}>Period</span>
-            <select value={dashboard.completedJobsDefaultPeriod} disabled>
-              {completedJobPeriodOptions.map((option) => (
-                <option key={option.value} value={option.value}>
+          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+            {completedJobPeriodOptions.map((option) => {
+              const isActive = option.value === dashboard.completedJobsDefaultPeriod;
+
+              return (
+                <Link
+                  key={option.value}
+                  href={buildDashboardHref({
+                    scheduledPeriod: dashboard.scheduledJobsDefaultPeriod,
+                    completedPeriod: option.value,
+                    invoiceFilter: dashboard.unpaidInvoicesDefaultFilter
+                  })}
+                  style={{
+                    padding: "6px 10px",
+                    border: "1px solid #ccc",
+                    borderRadius: "6px",
+                    textDecoration: "none",
+                    color: "#111827",
+                    backgroundColor: isActive ? "#e5e7eb" : "#ffffff"
+                  }}
+                >
                   {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
+                </Link>
+              );
+            })}
+          </div>
         </div>
 
         <table style={{ borderCollapse: "collapse", width: "100%" }}>
@@ -253,16 +348,32 @@ export default async function HomePage() {
         >
           <h2 style={{ margin: 0 }}>Unpaid invoices</h2>
 
-          <label>
-            <span style={{ marginRight: "8px" }}>Filter</span>
-            <select value={dashboard.unpaidInvoicesDefaultFilter} disabled>
-              {unpaidInvoiceFilterOptions.map((option) => (
-                <option key={option.value} value={option.value}>
+          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+            {unpaidInvoiceFilterOptions.map((option) => {
+              const isActive = option.value === dashboard.unpaidInvoicesDefaultFilter;
+
+              return (
+                <Link
+                  key={option.value}
+                  href={buildDashboardHref({
+                    scheduledPeriod: dashboard.scheduledJobsDefaultPeriod,
+                    completedPeriod: dashboard.completedJobsDefaultPeriod,
+                    invoiceFilter: option.value
+                  })}
+                  style={{
+                    padding: "6px 10px",
+                    border: "1px solid #ccc",
+                    borderRadius: "6px",
+                    textDecoration: "none",
+                    color: "#111827",
+                    backgroundColor: isActive ? "#e5e7eb" : "#ffffff"
+                  }}
+                >
                   {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
+                </Link>
+              );
+            })}
+          </div>
         </div>
 
         <table style={{ borderCollapse: "collapse", width: "100%" }}>

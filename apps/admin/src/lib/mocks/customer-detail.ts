@@ -19,7 +19,8 @@ const customerDetails: Record<string, CustomerDetailDto> = {
         balanceDue: 220,
         issueDate: "2026-04-10",
         dueDate: "2026-04-24",
-        status: "Sent"
+        status: "Sent",
+        agingState: "NotDue"
       }
     ],
     recentJobs: [
@@ -50,7 +51,8 @@ const customerDetails: Record<string, CustomerDetailDto> = {
         balanceDue: 0,
         issueDate: "2026-04-09",
         dueDate: "2026-04-23",
-        status: "Paid"
+        status: "Paid",
+        agingState: "NotDue"
       }
     ],
     recentJobs: [
@@ -73,7 +75,7 @@ const customerDetails: Record<string, CustomerDetailDto> = {
     suburb: "Greenvale",
     notes: "Invoice to accounts email. Work outside pick-up hours when possible.",
     recentInvoices: [
-      {
+    {
         id: "inv-3",
         invoiceNumber: "INV-1003",
         customerName: "Greenvale Childcare",
@@ -81,7 +83,8 @@ const customerDetails: Record<string, CustomerDetailDto> = {
         balanceDue: 495,
         issueDate: "2026-04-12",
         dueDate: "2026-04-26",
-        status: "Overdue"
+        status: "Overdue",
+        agingState: "LateUnder7Days"
       }
     ],
     recentJobs: [
@@ -104,7 +107,7 @@ const customerDetails: Record<string, CustomerDetailDto> = {
     suburb: "Craigieburn",
     notes: "Monthly hedge work.",
     recentInvoices: [
-      {
+    {
         id: "inv-4",
         invoiceNumber: "INV-1004",
         customerName: "Brown Family Home",
@@ -112,7 +115,8 @@ const customerDetails: Record<string, CustomerDetailDto> = {
         balanceDue: 150,
         issueDate: "2026-04-14",
         dueDate: "2026-04-28",
-        status: "Draft"
+        status: "Draft",
+        agingState: "NotDue"
       }
     ],
     recentJobs: [

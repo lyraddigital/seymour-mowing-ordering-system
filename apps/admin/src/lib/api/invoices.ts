@@ -1,11 +1,18 @@
-import type { InvoiceListDto } from "@shared";
-import { mockInvoices } from "@/lib/mocks/invoices";
+import type { InvoiceListDto, InvoiceListFilter } from "@shared";
+import { getMockInvoices } from "@/lib/mocks/invoices";
 
-export async function getInvoices(): Promise<InvoiceListDto> {
+export type GetInvoicesParams = {
+  filter?: InvoiceListFilter;
+};
+
+export async function getInvoices(
+  params: GetInvoicesParams = {}
+): Promise<InvoiceListDto> {
   const mode = process.env.NEXT_PUBLIC_API_MODE;
 
   if (mode === "mock") {
-    return mockInvoices;
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    return getMockInvoices(params);
   }
 
   const baseUrl = process.env.API_BASE_URL;
@@ -14,7 +21,13 @@ export async function getInvoices(): Promise<InvoiceListDto> {
     throw new Error("API_BASE_URL is not configured");
   }
 
-  const response = await fetch(`${baseUrl}/invoices`, {
+  const searchParams = new URLSearchParams();
+
+  if (params.filter) {
+    searchParams.set("filter", params.filter);
+  }
+
+  const response = await fetch(`${baseUrl}/invoices?${searchParams.toString()}`, {
     cache: "no-store"
   });
 

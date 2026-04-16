@@ -1,5 +1,18 @@
 export type InvoiceStatus = "Draft" | "Sent" | "Paid" | "Overdue";
 
+export type InvoiceAgingState =
+  | "NotDue"
+  | "DueToday"
+  | "LateUnder7Days"
+  | "Late7PlusDays";
+
+export type InvoiceListFilter =
+  | "AllUnpaid"
+  | "DueThisWeek"
+  | "LateOnly"
+  | "LateUnder7Days"
+  | "Late7PlusDays";
+
 export type InvoiceSummaryDto = {
   id: string;
   invoiceNumber: string;
@@ -9,9 +22,11 @@ export type InvoiceSummaryDto = {
   issueDate: string;
   dueDate: string;
   status: InvoiceStatus;
+  agingState: InvoiceAgingState;
 };
 
 export type InvoiceListDto = {
+  defaultFilter: InvoiceListFilter;
   items: InvoiceSummaryDto[];
 };
 
