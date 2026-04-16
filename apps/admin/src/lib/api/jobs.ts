@@ -1,11 +1,18 @@
-import type { JobListDto } from "@shared";
-import { mockJobs } from "@/lib/mocks/jobs";
+import type { JobListDto, JobListFilter } from "@shared";
+import { getMockJobs } from "@/lib/mocks/jobs";
 
-export async function getJobs(): Promise<JobListDto> {
+export type GetJobsParams = {
+  filter?: JobListFilter;
+};
+
+export async function getJobs(
+  params: GetJobsParams = {}
+): Promise<JobListDto> {
   const mode = process.env.NEXT_PUBLIC_API_MODE;
 
   if (mode === "mock") {
-    return mockJobs;
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    return getMockJobs(params);
   }
 
   const baseUrl = process.env.API_BASE_URL;
@@ -14,7 +21,13 @@ export async function getJobs(): Promise<JobListDto> {
     throw new Error("API_BASE_URL is not configured");
   }
 
-  const response = await fetch(`${baseUrl}/jobs`, {
+  const searchParams = new URLSearchParams();
+
+  if (params.filter) {
+    searchParams.set("filter", params.filter);
+  }
+
+  const response = await fetch(`${baseUrl}/jobs?${searchParams.toString()}`, {
     cache: "no-store"
   });
 

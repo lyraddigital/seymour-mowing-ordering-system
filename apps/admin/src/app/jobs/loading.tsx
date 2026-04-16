@@ -33,30 +33,20 @@ export default function Loading() {
           marginBottom: "16px"
         }}
       >
-        <div className="skeleton" style={skeletonStyle({ width: "140px", height: "36px" })} />
+        <div className="skeleton" style={skeletonStyle({ width: "100px", height: "36px" })} />
 
         <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
           <div className="skeleton" style={skeletonStyle({ width: "90px", height: "32px", borderRadius: "6px" })} />
           <div className="skeleton" style={skeletonStyle({ width: "90px", height: "32px", borderRadius: "6px" })} />
           <div className="skeleton" style={skeletonStyle({ width: "90px", height: "32px", borderRadius: "6px" })} />
-          <div className="skeleton" style={skeletonStyle({ width: "110px", height: "32px", borderRadius: "6px" })} />
-          <div className="skeleton" style={skeletonStyle({ width: "110px", height: "32px", borderRadius: "6px" })} />
+          <div className="skeleton" style={skeletonStyle({ width: "70px", height: "32px", borderRadius: "6px" })} />
         </div>
       </div>
 
       <table style={{ borderCollapse: "collapse", width: "100%", marginTop: "24px" }}>
         <thead>
           <tr>
-            {[
-              "Invoice",
-              "Customer",
-              "Issue date",
-              "Due date",
-              "Total",
-              "Balance due",
-              "Status",
-              "Aging"
-            ].map((column) => (
+            {["Customer", "Service date", "Service type", "Status"].map((column) => (
               <th
                 key={column}
                 style={{
@@ -73,7 +63,7 @@ export default function Loading() {
         <tbody>
           {Array.from({ length: 5 }).map((_, rowIndex) => (
             <tr key={rowIndex}>
-              {Array.from({ length: 8 }).map((_, columnIndex) => (
+              {Array.from({ length: 4 }).map((_, columnIndex) => (
                 <td
                   key={`${rowIndex}-${columnIndex}`}
                   style={{ padding: "8px", borderBottom: "1px solid #eee" }}

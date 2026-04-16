@@ -1,5 +1,7 @@
 export type JobStatus = "Scheduled" | "Completed" | "Invoiced";
 
+export type JobListFilter = "Scheduled" | "Completed" | "Invoiced" | "All";
+
 export type JobSummaryDto = {
   id: string;
   customerName: string;
@@ -9,6 +11,7 @@ export type JobSummaryDto = {
 };
 
 export type JobListDto = {
+  defaultFilter: JobListFilter;
   items: JobSummaryDto[];
 };
 
