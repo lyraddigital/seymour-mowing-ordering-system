@@ -55,7 +55,7 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   return (
     <main className="error-page">
       <h1>{message}</h1>
-      <p>{details}</p>      
+      <p>{details}</p>
       {stack && (
         <pre>
           <code>{stack}</code>
