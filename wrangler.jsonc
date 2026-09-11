@@ -23,16 +23,6 @@
       "migrations_dir": "drizzle/migrations",
       "migrations_pattern": "drizzle/migrations/*/migration.sql",
     },
-    {
-      "binding": "seymour_staging",
-      "database_name": "seymour-staging",
-      "database_id": "658f6569-13e9-416d-b4fc-0954ab733949",
-    },
-    {
-      "binding": "seymour_production",
-      "database_name": "seymour-production",
-      "database_id": "5d412c21-9a36-46e8-a15a-fc797975ff81",
-    },
   ],
   "env": {
     "staging": {
