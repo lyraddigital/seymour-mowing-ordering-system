@@ -1,38 +1,53 @@
-/**
- * For more details on how to configure Wrangler, refer to:
- * https://developers.cloudflare.com/workers/wrangler/configuration/
- */
 {
-	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "seymour-mowing-ordering-system",
-	"compatibility_date": "2026-09-07",
-	"main": "./workers/app.ts",
-	"vars": {
-		"VALUE_FROM_CLOUDFLARE": "Hello from Cloudflare"
-	},
-	"observability": {
-		"enabled": true
-	},
-	"upload_source_maps": true
-	/**
-	 * Smart Placement
-	 * https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
-	 */
-	// "placement": {  "mode": "smart" }
-	/**
-	 * Bindings
-	 * Bindings allow your Worker to interact with resources on the Cloudflare Developer Platform, including
-	 * databases, object storage, AI inference, real-time communication and more.
-	 * https://developers.cloudflare.com/workers/runtime-apis/bindings/
-	 */
-	/**
-	 * Static Assets
-	 * https://developers.cloudflare.com/workers/static-assets/binding/
-	 */
-	// "assets": {  "directory": "./public/",  "binding": "ASSETS" }
-	/**
-	 * Service Bindings (communicate between multiple Workers)
-	 * https://developers.cloudflare.com/workers/wrangler/configuration/#service-bindings
-	 */
-	// "services": [  {   "binding": "MY_SERVICE",   "service": "my-service"  } ]
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "seymour-local",
+  "main": "./workers/app.ts",
+  "compatibility_date": "2026-09-11",
+  "compatibility_flags": ["nodejs_compat"],
+  "upload_source_maps": true,
+  "observability": {
+    "enabled": true,
+    "traces": { "enabled": true, "head_sampling_rate": 0.01 },
+  },
+  "vars": { "APP_ENV": "local" },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "seymour-local",
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "drizzle/migrations",
+      "migrations_pattern": "drizzle/migrations/*/migration.sql",
+    },
+  ],
+  "env": {
+    "staging": {
+      "name": "seymour-staging",
+      "vars": { "APP_ENV": "staging" },
+      // Replace this placeholder with the staging D1 UUID before deployment.
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "seymour-staging",
+          "database_id": "11111111-1111-1111-1111-111111111111",
+          "migrations_dir": "drizzle/migrations",
+      "migrations_pattern": "drizzle/migrations/*/migration.sql",
+        },
+      ],
+    },
+    "production": {
+      "name": "seymour",
+      "vars": { "APP_ENV": "production" },
+      // Replace this placeholder with the production D1 UUID before deployment.
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "seymour-production",
+          "database_id": "22222222-2222-2222-2222-222222222222",
+          "migrations_dir": "drizzle/migrations",
+      "migrations_pattern": "drizzle/migrations/*/migration.sql",
+        },
+      ],
+    },
+  },
 }
+

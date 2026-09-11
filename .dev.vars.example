@@ -1,0 +1,2 @@
+# No secrets are required for the scaffold.
+# Copy to .dev.vars when adding local secrets; never commit actual values.
