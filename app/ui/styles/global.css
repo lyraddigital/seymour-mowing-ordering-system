@@ -87,10 +87,6 @@ a:focus-visible {
   padding-top: 24px;
   overflow-wrap: anywhere;
 }
-.account a {
-  margin-top: 8px;
-  font-size: 14px;
-}
 .role {
   text-transform: capitalize;
   color: #65745f;
@@ -160,12 +156,6 @@ pre {
   .sidebar-nav {
     margin: 24px 0;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .account {
-    grid-template-columns: 1fr auto;
-  }
-  .account a {
-    grid-column: 1/-1;
   }
   .workspace {
     padding: 32px 24px;

@@ -31,8 +31,8 @@ export default function AppShell({ currentUser }: AppShellProps) {
         </nav>
         <div className="account">
           <strong>{currentUser.displayName}</strong>
+          <span>{currentUser.email}</span>
           <span className="role">{currentUser.role}</span>
-          <a href="/cdn-cgi/access/logout">Sign out</a>
         </div>
       </aside>
       <main id="main-content" className="workspace">
