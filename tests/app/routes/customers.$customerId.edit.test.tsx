@@ -118,3 +118,13 @@ it("returns 403 from loader and direct action without permission", async () => {
     status: 403,
   });
 });
+
+it("redirects archived edit loads and rejects direct update POSTs", async () => {
+  await createDb(env.DB).update(customers).set({ archivedAt: 3 });
+  await expect(
+    loader(args() as Parameters<typeof loader>[0]),
+  ).rejects.toMatchObject({ status: 302 });
+  await expect(submit({ name: "Changed" })).rejects.toMatchObject({
+    status: 409,
+  });
+});

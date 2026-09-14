@@ -1,3 +1,4 @@
+import { CustomerStateConflictError } from "../server/features/customers/errors/customer-state-conflict-error";
 import { getCustomerById } from "../server/features/customers/queries/get-customer-by-id.server";
 import { CustomerNotFoundError } from "../server/features/customers/errors/customer-not-found-error";
 import type { UpdateCustomerInput } from "../server/features/customers/types/update-customer-input";
@@ -23,6 +24,9 @@ export async function loader({ context, params }: Route.LoaderArgs) {
     );
     if (!customer) {
       throw new Response("Customer not found", { status: 404 });
+    }
+    if (customer.archivedAt !== null) {
+      throw redirect(`/customers/${params.customerId}`);
     }
     return { customer };
   } catch (error) {
@@ -58,6 +62,9 @@ export async function action({ request, context, params }: Route.ActionArgs) {
       values,
     );
   } catch (error) {
+    if (error instanceof CustomerStateConflictError) {
+      throw new Response(error.message, { status: 409 });
+    }
     if (error instanceof CustomerNotFoundError) {
       throw new Response("Customer not found", { status: 404 });
     }

@@ -20,30 +20,6 @@
   line-height: 1.6;
 }
 
-.primaryAction {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 44px;
-  padding: 11px 18px;
-  border: 1px solid #365941;
-  border-radius: 6px;
-  color: #fffefa;
-  background: #365941;
-  font: inherit;
-  font-size: 14px;
-  font-weight: 600;
-  text-decoration: none;
-  line-height: 1.4;
-  cursor: pointer;
-  flex-shrink: 0;
-}
-
-.primaryAction:hover {
-  background: #284632;
-  border-color: #284632;
-}
-
 .page a:focus-visible {
   outline: 3px solid #62793d;
   outline-offset: 3px;

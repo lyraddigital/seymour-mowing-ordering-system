@@ -1,5 +1,6 @@
 export interface CustomerDetails {
   id: string;
+  archivedAt: number | null;
   name: string;
   email: string | null;
   phone: string | null;

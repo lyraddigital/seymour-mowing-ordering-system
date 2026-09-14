@@ -9,6 +9,15 @@ export default [
     index("routes/index.ts"),
     route("dashboard", "routes/dashboard.tsx"),
     route("customers", "routes/customers.tsx"),
+    route(
+      "customers/:customerId/archive",
+      "routes/customers.$customerId.archive.tsx",
+    ),
+    route(
+      "customers/:customerId/restore",
+      "routes/customers.$customerId.restore.tsx",
+    ),
+    route("customers/archived", "routes/customers.archived.tsx"),
     route("customers/new", "routes/customers.new.tsx"),
     route(
       "customers/:customerId/edit",

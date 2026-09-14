@@ -1,3 +1,4 @@
+import { CustomerStateConflictError } from "../../../../../../app/server/features/customers/errors/customer-state-conflict-error";
 import { env } from "cloudflare:workers";
 import { beforeEach, expect, it } from "vitest";
 import { createDb } from "../../../../../../app/server/db/client/create-db.server";
@@ -18,7 +19,7 @@ const original = {
   name: "Original",
   createdAt: 1,
   updatedAt: 2,
-  archivedAt: 3,
+  archivedAt: null,
 };
 beforeEach(async () => {
   await createDb(env.DB).delete(customers);
@@ -112,4 +113,15 @@ it("enforces permission before updating", async () => {
   expect(await createDb(env.DB).select().from(customers).get()).toMatchObject(
     original,
   );
+});
+
+it("requires restoration before editing archived customers", async () => {
+  await createDb(env.DB).update(customers).set({ archivedAt: 3 });
+  await expect(
+    updateCustomer(env.DB, user, original.id, { name: "Changed" }),
+  ).rejects.toBeInstanceOf(CustomerStateConflictError);
+  expect(await createDb(env.DB).select().from(customers).get()).toMatchObject({
+    ...original,
+    archivedAt: 3,
+  });
 });

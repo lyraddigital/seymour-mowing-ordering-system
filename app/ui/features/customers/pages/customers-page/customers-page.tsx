@@ -24,6 +24,10 @@ export default function CustomersPage({
         </Link>
       </header>
 
+      <Link className={styles.archivedLink} to="/customers/archived">
+        Archived customers
+      </Link>
+
       {customers.length ? (
         <CustomerList customers={customers} />
       ) : (

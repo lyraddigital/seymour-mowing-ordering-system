@@ -1,6 +1,6 @@
 import { expect, it } from "vitest";
 
-import { getRouteErrorPresentation } from "../../../app/ui/errors/get-route-error-presentation";
+import { getRouteErrorPresentation } from "../../../../app/ui/errors/get-route-error-presentation";
 
 const routeError = (status: number, code?: string) => ({
   status,

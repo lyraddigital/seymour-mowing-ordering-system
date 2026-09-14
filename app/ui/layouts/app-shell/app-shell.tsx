@@ -1,13 +1,10 @@
 import type { PropsWithChildren } from "react";
-import { NavLink, Outlet } from "react-router";
-
 import type { CurrentUser } from "~/server/auth/principal/types/current-user";
+import { NavLink } from "react-router";
 
-type AppShellProps = PropsWithChildren<{
-  currentUser: CurrentUser;
-}>;
+type AppShellProps = PropsWithChildren<{ currentUser: CurrentUser }>;
 
-export default function AppShell({ currentUser }: AppShellProps) {
+export default function AppShell({ currentUser, children }: AppShellProps) {
   return (
     <div className="app-shell">
       <a className="skip-link" href="#main-content">
@@ -37,7 +34,7 @@ export default function AppShell({ currentUser }: AppShellProps) {
         </div>
       </aside>
       <main id="main-content" className="workspace">
-        <Outlet />
+        {children}
       </main>
     </div>
   );

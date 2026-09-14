@@ -1,25 +1,20 @@
-import { eq } from "drizzle-orm";
-
-import { PermissionDeniedError } from "../../../auth/authorization/errors/permission-denied-error";
 import { can } from "../../../auth/authorization/policies/can";
+import { PermissionDeniedError } from "../../../auth/authorization/errors/permission-denied-error";
 import type { CurrentUser } from "../../../auth/principal/types/current-user";
 import { createDb } from "../../../db/client/create-db.server";
 import { customers } from "../../../db/schema/customers";
-import type { CustomerDetails } from "../types/customer-details";
-
-export async function getCustomerById(
+import { asc, isNotNull } from "drizzle-orm";
+import type { CustomerSummary } from "../types/customer-summary";
+export async function listArchivedCustomers(
   binding: Env["DB"],
   user: CurrentUser,
-  customerId: string,
-): Promise<CustomerDetails | null> {
+): Promise<CustomerSummary[]> {
   if (!can(user, "customers.read")) {
     throw new PermissionDeniedError();
   }
-
-  const customer = await createDb(binding)
+  return createDb(binding)
     .select({
       id: customers.id,
-      archivedAt: customers.archivedAt,
       name: customers.name,
       email: customers.email,
       phone: customers.phone,
@@ -28,11 +23,8 @@ export async function getCustomerById(
       suburb: customers.suburb,
       state: customers.state,
       postcode: customers.postcode,
-      notes: customers.notes,
     })
     .from(customers)
-    .where(eq(customers.id, customerId))
-    .get();
-
-  return customer ?? null;
+    .where(isNotNull(customers.archivedAt))
+    .orderBy(asc(customers.name), asc(customers.id));
 }

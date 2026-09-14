@@ -5,11 +5,13 @@ import styles from "./customer-list.module.css";
 
 export default function CustomerList({
   customers,
+  label = "Active customers",
 }: {
   customers: CustomerSummary[];
+  label?: string;
 }) {
   return (
-    <ul className={styles.list} aria-label="Active customers">
+    <ul className={styles.list} aria-label={label}>
       {customers.map((customer) => {
         const locality = [customer.suburb, customer.state, customer.postcode]
           .filter(Boolean)

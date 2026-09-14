@@ -158,3 +158,12 @@
   outline: 3px solid #62793d;
   outline-offset: 3px;
 }
+
+.archivedStatus {
+  color: #596955;
+  font-weight: 600;
+  line-height: 1.6;
+}
+.restoreAction {
+  margin-bottom: 24px;
+}

@@ -126,6 +126,59 @@ app/ui/...
 
 Do not put D1 queries, JWT verification, large forms, or large page layouts directly in route modules.
 
+## Mutation routes are command-oriented
+
+Seymour is a server-rendered web application, not a public REST API.
+
+Prefer explicit command-style POST routes for business mutations:
+
+```text
+POST /customers/:customerId/archive
+POST /customers/:customerId/restore
+POST /invoices/:invoiceId/issue
+POST /invoices/:invoiceId/void
+POST /payments/:paymentId/void
+```
+
+Use one route action for one business operation.
+
+Preferred:
+
+```text
+app/routes/customers.$customerId.archive.tsx
+  -> action
+  -> archiveCustomer(...)
+```
+
+Avoid one route action that dispatches several business commands using form payloads such as:
+
+```text
+intent=archive
+intent=restore
+intent=issue
+intent=void
+```
+
+Do not add switch statements over mutation intent when separate routes can express the operations directly.
+
+UI forms should post explicitly to the command route they invoke:
+
+```tsx
+<Form method="post" action={`/customers/${customer.id}/archive`}>
+```
+
+For command routes:
+
+- use `POST` unless a different method has a concrete application need
+- explicitly reject unsupported methods with `405 Method Not Allowed` when the action could otherwise receive them
+- do not add a loader unless the route genuinely reads/renders something
+- keep the action thin
+- call one server-side business operation
+- translate known domain/application errors at the route boundary
+- redirect on success when navigation is expected
+
+A read/detail route should not also become a dispatcher for several independent business commands.
+
 ---
 
 # 3. Root route
@@ -245,6 +298,63 @@ services.ts
 Private helpers may remain in the owning file when they only exist to implement that one public operation.
 
 If a helper becomes independently meaningful, reused, separately testable, or a separate reason to change, move it into its own appropriately named file/folder.
+
+## Type ownership
+
+Types should live with the concept that owns them.
+
+For React components, pages, and layouts, keep a props type in the same file as the component when that type is used only by that component.
+
+Preferred:
+
+```tsx
+type CustomerArchiveActionsProps = {
+  customerId: string;
+  archived: boolean;
+};
+
+export function CustomerArchiveActions({
+  customerId,
+  archived,
+}: CustomerArchiveActionsProps) {
+  // ...
+}
+```
+
+A component and its private props contract are one concept for the purposes of the one-concept-per-file rule.
+
+Do not create dedicated files such as:
+
+```text
+customer-archive-actions-props.ts
+customer-page-props.ts
+app-shell-props.ts
+```
+
+when the type is private to one component.
+
+Extract a type into its own appropriately named file only when it has independent meaning, for example when:
+
+- it is reused by multiple files
+- it represents a domain/application concept rather than a component-only contract
+- it is large enough that keeping it inline materially harms readability
+- it changes for reasons independent of the component
+- it is independently tested or otherwise has its own ownership boundary
+
+Server/domain/application types with independent meaning should continue to live in their own files under the owning feature/kind.
+
+Do not create central catch-all type modules such as:
+
+```text
+types.ts
+props.ts
+models.ts
+interfaces.ts
+```
+
+Generated React Router `Route.*` types remain generated framework concerns.
+
+The goal is one concept per file, not one declaration per file.
 
 ---
 
@@ -477,6 +587,24 @@ Do not put the whole shell implementation in `app/routes/app-layout.tsx`.
 
 The route module wires loader/middleware data into the UI layout.
 
+Prefer layout presentation components to render the children passed by their route adapter.
+
+Example:
+
+```tsx
+export default function AppLayoutRoute({ loaderData }: Route.ComponentProps) {
+  return (
+    <AppShell currentUser={loaderData.currentUser}>
+      <Outlet />
+    </AppShell>
+  );
+}
+```
+
+`AppShell` should render its `children`; it should not independently import/render another `Outlet` when the route adapter already owns that framework concern.
+
+This keeps React Router composition in `app/routes/` and presentation composition in `app/ui/`.
+
 ## Document, errors, and global styles
 
 Keep application-wide presentation concerns outside individual features:
@@ -690,6 +818,20 @@ Configure Access to:
 - explicitly allow approved emails
 - deny by default
 
+## Session and sign-out behaviour
+
+Cloudflare Access owns the deployed authentication session.
+
+For the current application:
+
+- do not implement a Seymour session-expiry mechanism
+- do not automatically call `/cdn-cgi/access/logout`
+- do not show a Seymour sign-out action unless the product explicitly requires one
+- allow Access session expiry to trigger authentication again
+- with Google as the sole IdP and Instant Authentication enabled, re-authentication should flow back through Google
+
+The authenticated shell may display the current Seymour user's identity, but it does not own the Access session lifecycle.
+
 ---
 
 # 11. Cloudflare Access trust boundary
@@ -803,7 +945,7 @@ Use route modules as framework adapters.
 Use:
 
 - loaders for reads
-- actions for mutations
+- actions for mutations; an action should normally own one mutation/business command
 - `<Form>` for navigation-changing submissions
 - `useFetcher`/`fetcher.Form` for in-place submissions
 - middleware for request-wide authenticated route concerns
@@ -957,6 +1099,24 @@ Corresponding UI test, when one is warranted:
 ```text
 tests/app/ui/features/customers/components/customer-form/customer-form.test.tsx
 ```
+
+Command mutation routes mirror in tests as well.
+
+Example source:
+
+```text
+app/routes/customers.$customerId.archive.tsx
+app/routes/customers.$customerId.restore.tsx
+```
+
+Tests:
+
+```text
+tests/app/routes/customers.$customerId.archive.test.tsx
+tests/app/routes/customers.$customerId.restore.test.tsx
+```
+
+Do not keep archive/restore route behaviour hidden inside the detail-route test when they are separate route concepts.
 
 Worker tests mirror:
 
@@ -1286,6 +1446,62 @@ Before deploy:
 
 Production must deploy the same source revision tested in staging.
 
+## GitHub Actions ownership
+
+Keep the Actions workflow list focused on user-meaningful workflows.
+
+Current preferred structure:
+
+```text
+.github/
+  workflows/
+    ci.yml
+    release.yml
+
+  actions/
+    setup-node-project/
+      action.yml
+
+    deploy-environment/
+      action.yml
+
+  scripts/
+    smoke-access.sh
+    validate-deploy-config.ts
+```
+
+Use:
+
+- `.github/workflows/` for top-level CI/release orchestration
+- `.github/actions/` for reusable step sequences/composite actions
+- `.github/scripts/` for workflow-only helper programs/scripts
+
+Do not create extra reusable workflows merely to split one release pipeline into more files when they add noise to the Actions UI without a real reuse boundary.
+
+Release branch convention:
+
+```text
+release/<major>.<minor>.<patch>
+```
+
+Example:
+
+```text
+release/0.1.0
+```
+
+The release flow is:
+
+```text
+check
+  -> staging
+  -> production approval
+  -> production
+  -> publish immutable tag/GitHub Release
+```
+
+The `production` GitHub Environment must retain its required-reviewer protection rule.
+
 ---
 
 # 25. Generated/local files
@@ -1322,6 +1538,10 @@ For ongoing feature work:
 12. Avoid unrelated refactors while implementing a feature slice.
 13. Preserve existing business behaviour during structural moves.
 14. Add shared UI primitives only after genuine cross-feature reuse is demonstrated.
+15. Prefer one POST command route/action per business mutation; do not multiplex business commands with form `intent` switches.
+16. Keep read/detail routes focused on reading/rendering; archive/restore/issue/void operations get their own mutation routes.
+17. Keep component-local props types beside the component; extract types only when they have independent meaning or genuine reuse.
+18. Keep React Router `Outlet` ownership in route adapters and let presentation layouts render passed children.
 
 Do not reintroduce the old flat `app/ui/pages/` convention for new feature work.
 
