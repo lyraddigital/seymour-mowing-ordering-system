@@ -14,20 +14,80 @@ concurrency:
 
 jobs:
   check:
-    name: Check
-    uses: ./.github/workflows/release-check.yml
+    name: Check release candidate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    outputs:
+      version: ${{ steps.release.outputs.version }}
+      tag: ${{ steps.release.outputs.tag }}
+
+    steps:
+      - name: Checkout release commit
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Determine release version
+        id: release
+        shell: bash
+        run: |
+          VERSION="${GITHUB_REF_NAME#release/}"
+
+          if [[ "$VERSION" == "$GITHUB_REF_NAME" ]]; then
+            echo "::error::Release branches must be named release/<version>."
+            exit 1
+          fi
+
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Release branch must be named release/<major>.<minor>.<patch>."
+            exit 1
+          fi
+
+          TAG="v${VERSION}"
+
+          git fetch --tags
+
+          if git rev-parse --verify --quiet "refs/tags/${TAG}" >/dev/null; then
+            echo "::error::Tag ${TAG} already exists."
+            exit 1
+          fi
+
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+
+      - name: Set up project
+        uses: ./.github/actions/setup-node-project
+
+      - name: Run checks
+        run: npm run check
 
   staging:
     name: Staging
     needs: check
 
-    uses: ./.github/workflows/deploy.yml
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
 
-    with:
-      environment: staging
-      ref: ${{ github.sha }}
+    environment:
+      name: staging
+      url: ${{ vars.APP_URL }}
 
-    secrets: inherit
+    steps:
+      - name: Checkout release commit
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Deploy staging
+        uses: ./.github/actions/deploy-environment
+        with:
+          environment: staging
+          app-url: ${{ vars.APP_URL }}
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
   production:
     name: Production
@@ -35,26 +95,98 @@ jobs:
       - check
       - staging
 
-    uses: ./.github/workflows/deploy.yml
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
 
-    with:
-      environment: production
-      ref: ${{ github.sha }}
+    environment:
+      name: production
+      url: ${{ vars.APP_URL }}
 
-    secrets: inherit
+    steps:
+      - name: Checkout release commit
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Deploy production
+        uses: ./.github/actions/deploy-environment
+        with:
+          environment: production
+          app-url: ${{ vars.APP_URL }}
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
   publish:
-    name: Publish
+    name: Publish ${{ needs.check.outputs.tag }}
     needs:
       - check
       - production
 
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
     permissions:
       contents: write
 
-    uses: ./.github/workflows/publish.yml
+    steps:
+      - name: Checkout production commit
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
 
-    with:
-      ref: ${{ github.sha }}
-      version: ${{ needs.check.outputs.version }}
-      tag: ${{ needs.check.outputs.tag }}
+      - name: Verify tag does not already exist
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ needs.check.outputs.tag }}
+        run: |
+          git fetch --tags
+
+          if git rev-parse --verify --quiet "refs/tags/${RELEASE_TAG}" >/dev/null; then
+            echo "::error::Tag ${RELEASE_TAG} already exists."
+            exit 1
+          fi
+
+      - name: Create release tag
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ needs.check.outputs.tag }}
+          RELEASE_VERSION: ${{ needs.check.outputs.version }}
+          RELEASE_SHA: ${{ github.sha }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git tag \
+            --annotate "$RELEASE_TAG" \
+            "$RELEASE_SHA" \
+            --message "Seymour ${RELEASE_VERSION}"
+
+          git push origin "$RELEASE_TAG"
+
+      - name: Create GitHub Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.check.outputs.tag }}
+        run: |
+          gh release create "$RELEASE_TAG" \
+            --verify-tag \
+            --title "Seymour ${RELEASE_TAG}" \
+            --generate-notes
+
+      - name: Release summary
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ needs.check.outputs.tag }}
+          RELEASE_SHA: ${{ github.sha }}
+        run: |
+          {
+            echo "## Release published"
+            echo ""
+            echo "- Tag: \`${RELEASE_TAG}\`"
+            echo "- Commit: \`${RELEASE_SHA}\`"
+            echo ""
+            echo "If release-only fixes were made, merge the release branch back into main before deleting it."
+          } >> "$GITHUB_STEP_SUMMARY"

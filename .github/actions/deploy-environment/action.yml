@@ -1,0 +1,41 @@
+name: Deploy Environment
+
+description: Build, migrate, deploy, and smoke test a Seymour environment.
+
+inputs:
+  environment:
+    description: Cloudflare environment to deploy
+    required: true
+
+  app-url:
+    description: Deployed application URL
+    required: true
+
+runs:
+  using: composite
+
+  steps:
+    - name: Set up project
+      uses: ./.github/actions/setup-node-project
+
+    - name: Validate Access configuration
+      shell: bash
+      run: npm run validate:access -- ${{ inputs.environment }}
+
+    - name: Build
+      shell: bash
+      run: npm run build:${{ inputs.environment }}
+
+    - name: Apply D1 migrations
+      shell: bash
+      run: npx wrangler d1 migrations apply DB --remote --env ${{ inputs.environment }}
+
+    - name: Deploy
+      shell: bash
+      run: npx wrangler deploy
+
+    - name: Smoke test
+      shell: bash
+      env:
+        APP_URL: ${{ inputs.app-url }}
+      run: bash .github/scripts/smoke-access.sh
