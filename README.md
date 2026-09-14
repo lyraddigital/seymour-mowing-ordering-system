@@ -1,66 +1,54 @@
 # Seymour
 
-A minimal Seymour login shell, scaffolded with the official Cloudflare C3 React Router v8 Framework Mode template on 11 September 2026. SSR runs in Workers locally and after deployment. No authentication or business-domain tables are implemented.
+Seymour is an internal turf-management administration app using React Router v8 Framework Mode, TypeScript, SSR on Cloudflare Workers, and D1 with Drizzle.
 
-## Development
+Cloudflare Access with Google authenticates people. Seymour resolves the validated email to an active internal user and applies its role permissions. Seymour owns no passwords, authentication sessions, MFA codes, login cookies, or authentication email delivery.
 
-Use Node 22.22+ and npm (Node 24 LTS recommended) (see `.nvmrc`).
+## Local development
+
+Use Node 22.22+ (Node 24 recommended) and npm:
 
 ```sh
 npm ci
+npm run db:migrate:local
+npm run db:seed:local
 npm run dev
 ```
 
-Open http://localhost:5173; `/` redirects to `/login`. The Vite plugin runs server code in the Workers runtime and emulates D1 locally. No account or secrets are needed. `npm ci` generates Worker types through `postinstall`.
+Open http://localhost:5173. The root redirects to `/dashboard`; the app shell shows the local admin account. The default Wrangler environment explicitly sets `DEV_AUTH_EMAIL=developer@example.test`, matching the fictional local SQL seed. This bypass is accepted only when `APP_ENV=local` and cannot be enabled by a request header. The seed script uses `--local` and never writes to staging or production. If changing the local identity, create its matching local user too. The seed is idempotent and does not reactivate or change existing users.
 
-## Commands
+## Authentication and authorization
 
-| Command                         | Purpose                                                 |
-| ------------------------------- | ------------------------------------------------------- |
-| `npm run check`                 | Formatting, ESLint, generated types, TypeScript, Vitest |
-| `npm run format`                | Format source and configuration                         |
-| `npm run test:watch`            | Watch behavioral tests                                  |
-| `npm run build`                 | Build the local Worker configuration                    |
-| `npm run build:staging`         | Build the staging Worker configuration                  |
-| `npm run build:production`      | Build the production Worker configuration               |
-| `npm run preview`               | Run the most recently built Worker locally              |
-| `npx wrangler deploy --dry-run` | Validate packaging of the most recent build             |
-| `npm run cf-typegen`            | Regenerate Wrangler binding/runtime declarations        |
-| `npm run db:generate`           | Generate SQL from the Drizzle schema offline            |
-| `npm run db:migrate:local`      | Apply migrations to local D1 only                       |
+The internal `users` table stores UUID, normalized unique email, display name, role, active state, and UTC epoch-millisecond timestamps. D1 enforces normalized non-empty emails, valid roles and booleans. Users are deactivated/reactivated, not hard-deleted by application behavior.
 
-Vitest uses its own config. The D1 integration test uses disposable Miniflare storage and runs an actual Drizzle query without creating tables.
+`admin` has every defined permission. `operator` can manage Customers and Jobs and read Invoices and Payments. Permission checks are centralized. The sidebar is ready for those modules; only the dashboard foundation is implemented. Sign out goes to Cloudflare Access logout.
 
-## Environments
+Complete [Cloudflare Access + Google setup](docs/cloudflare-access.md) before release. Both the Access email allow-list and an active Seymour user must permit the request. Missing Access configuration fails closed outside local development.
 
-| Environment | Worker            | D1 database                | Selection                   |
-| ----------- | ----------------- | -------------------------- | --------------------------- |
-| Local       | `seymour-local`   | `seymour-local` (emulated) | Default                     |
-| Staging     | `seymour-staging` | `seymour-staging`          | `CLOUDFLARE_ENV=staging`    |
-| Production  | `seymour`         | `seymour-production`       | `CLOUDFLARE_ENV=production` |
+## Environments and releases
 
-The npm environment scripts use `cross-env` so they also work on Windows. `dev:staging` and `dev:production` select those configurations while keeping bindings locally emulated. No binding is marked `remote: true`.
+| Environment | Worker                                 | D1 database              |
+| ----------- | -------------------------------------- | ------------------------ |
+| Local       | seymour-local                          | seymour-local (emulated) |
+| Staging     | seymour-staging-mowing-ordering-system | seymour-staging          |
+| Production  | seymour-mowing-ordering-system         | seymour-production       |
 
-Remote D1 IDs in `wrangler.jsonc` are explicit placeholders, not provisioned resources. Before a first deployment, authenticate with Wrangler, verify the intended account, create separate databases with `npx wrangler d1 create seymour-staging` and `npx wrangler d1 create seymour-production`, then replace only the corresponding IDs. The all-zero local ID is for emulation only. No remote resources have been created by this scaffold.
+Remote D1 IDs are already configured. Keep them environment-specific. The Access team-domain/AUD placeholders still need the real values from each Access application. Google OAuth secrets belong exclusively in Cloudflare Zero Trust.
 
-Deploy with `npm run deploy:staging` or `npm run deploy:production`. These scripts build the selected environment before deploying. The Cloudflare Vite plugin writes a flattened configuration into `build/server/wrangler.json`; an environment flag passed only at deployment cannot change that artifact. `preview` always uses the last build, too.
+Select staging/production with the existing `CLOUDFLARE_ENV` build scripts. Deploy the generated flattened Worker config without retargeting it with `--env`. Staging and production releases remain manual, and their workflows own remote migrations. Their unauthenticated smoke checks verify the Access redirect only; manually test staging through Google before production approval.
 
-No secrets are required yet. When needed, copy `.dev.vars.example` to the ignored `.dev.vars`. Use `.dev.vars.staging` or `.dev.vars.production` for local environment-specific secrets; each file must contain that environment's complete set. Set real deployed secrets through Wrangler separately for the intended environment. Never expose secrets via `VITE_*` variables.
+## Commands and checks
 
-## Database
+- `npm run format`: format source and configuration.
+- `npm run check`: formatting, ESLint, generated types, TypeScript, Vitest.
+- `npm run build`: build the local Workers configuration.
+- `npm run build:staging` / `npm run build:production`: build the selected environment.
+- `npm run cf-typegen`: regenerate Wrangler binding/runtime declarations.
+- `npm run db:generate`: generate SQL from Drizzle offline.
+- `npm run db:migrate:local` / `npm run db:seed:local`: prepare local D1.
 
-`app/db/client.server.ts` wraps the D1 binding with Drizzle. Server loaders/actions may import `env` from `cloudflare:workers` and call `createDb(env.DB)` within the request. Browser components must not import this module.
+Drizzle Kit currently emits flat SQL. Place each generated `<name>.sql` unchanged at `drizzle/migrations/<name>/migration.sql`, matching the existing Wrangler migration pattern. Retain generated snapshots/journal under `drizzle/migrations/meta`, review and commit them with the SQL. Do not edit snapshots by hand. The initial user migration replaces the unshipped custom-auth migration; disposable local databases with the old schema need recreation.
 
-`app/db/schema.ts` is intentionally empty. Drizzle Kit uses the SQLite dialect to generate migrations offline; Wrangler applies the generated SQL from `drizzle/migrations`. An empty schema produces no migration. Once a feature adds schema, run `npm run db:generate`, review and commit the generated files, then apply locally. Remote application is explicit: `npm run db:migrate:staging` or `npm run db:migrate:production`. Do not run these against placeholder IDs.
+Vitest uses the supported Cloudflare plugin and applies checked-in nested migrations to isolated test D1. JWT tests use locally generated keys and never call Cloudflare or Google. Tests do not reuse development or remote databases.
 
-## Architecture and sources
-
-See [AGENTS.md](AGENTS.md) for project constraints.
-
-- [Cloudflare React Router guide](https://developers.cloudflare.com/workers/framework-guides/web-apps/react-router/)
-- [Cloudflare Vite environment selection](https://developers.cloudflare.com/workers/vite-plugin/reference/cloudflare-environments/)
-- [Drizzle D1 driver](https://orm.drizzle.team/docs/sqlite/connect-cloudflare-d1)
-
-The template was generated with `create-cloudflare@2.72.6` and `create-react-router@8.3.1`. Keep exact resolved dependencies in the lockfile. Source maps, Worker logs, and sampled traces are enabled. Runtime types, route types, build output, secrets, and local D1 state are ignored by Git.
-
-The D1 test runtime matches Wrangler's current Miniflare 5 alpha dependency and uses its exported v4-options converter. The scoped npm override for `@esbuild-kit/core-utils` replaces its vulnerable esbuild dependency; Drizzle Kit configuration loading and SQL generation are verified with that override.
+See [AGENTS.md](AGENTS.md) for engineering and domain rules. Keep runtime/route types, build output, secrets and local emulator state out of Git.

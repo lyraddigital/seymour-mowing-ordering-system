@@ -14,15 +14,44 @@ export default tseslint.config(
       "coverage/**",
     ],
   },
+
   js.configs.recommended,
+
   ...tseslint.configs.recommended,
+
   {
     files: ["**/*.{ts,tsx,js}"],
-    languageOptions: { globals: { ...globals.browser, ...globals.node } },
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+      },
+    },
   },
+
+  {
+    files: ["scripts/**/*.{js,mjs,cjs}"],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      },
+    },
+  },
+
   {
     files: ["app/**/*.{ts,tsx}"],
-    plugins: { "react-hooks": reactHooks },
+    plugins: {
+      "react-hooks": reactHooks,
+    },
     rules: reactHooks.configs.recommended.rules,
+  },
+
+  {
+    files: [".github/scripts/**/*.{ts,js,mjs,cjs}"],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      },
+    },
   },
 );
