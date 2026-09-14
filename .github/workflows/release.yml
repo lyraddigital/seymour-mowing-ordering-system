@@ -27,6 +27,8 @@ jobs:
       environment: staging
       ref: ${{ github.sha }}
 
+    secrets: inherit
+
   production:
     name: Production
     needs:
@@ -38,6 +40,8 @@ jobs:
     with:
       environment: production
       ref: ${{ github.sha }}
+
+    secrets: inherit
 
   publish:
     name: Publish
