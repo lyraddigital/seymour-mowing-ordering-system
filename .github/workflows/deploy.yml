@@ -22,10 +22,13 @@ jobs:
       url: ${{ vars.APP_URL }}
 
     steps:
-      - name: Set up project
-        uses: ./.github/actions/setup-node-project
+      - name: Checkout repository
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref }}
+
+      - name: Set up project
+        uses: ./.github/actions/setup-node-project
 
       - name: Validate Access configuration
         run: npm run validate:access -- ${{ inputs.environment }}

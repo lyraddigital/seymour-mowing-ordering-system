@@ -1,22 +1,11 @@
 name: Setup Node Project
 
-description: Checkout the repository, configure Node, and install dependencies.
-
-inputs:
-  ref:
-    description: Git ref or commit to checkout
-    required: false
-    default: ""
+description: Configure Node and install project dependencies.
 
 runs:
   using: composite
 
   steps:
-    - name: Checkout repository
-      uses: actions/checkout@v7
-      with:
-        ref: ${{ inputs.ref }}
-
     - name: Set up Node
       uses: actions/setup-node@v7
       with:
