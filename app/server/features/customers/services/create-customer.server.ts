@@ -4,7 +4,7 @@ import type { CurrentUser } from "../../../auth/principal/types/current-user";
 import { createDb } from "../../../db/client/create-db.server";
 import { customers } from "../../../db/schema/customers";
 import type { CreateCustomerInput } from "../types/create-customer-input";
-import { CustomerValidationError } from "../errors/customer-validation-error";
+import { validateCustomerInput } from "../validation/validate-customer-input";
 export async function createCustomer(
   binding: Env["DB"],
   user: CurrentUser,
@@ -13,25 +13,16 @@ export async function createCustomer(
   if (!can(user, "customers.manage")) {
     throw new PermissionDeniedError();
   }
-  const name = input.name.trim();
-  if (!name) {
-    throw new CustomerValidationError();
-  }
+
+  const values = validateCustomerInput(input);
+
   const now = Date.now();
   const id = crypto.randomUUID();
   await createDb(binding)
     .insert(customers)
     .values({
       id,
-      name,
-      email: input.email?.trim() || null,
-      phone: input.phone?.trim() || null,
-      addressLine1: input.addressLine1?.trim() || null,
-      addressLine2: input.addressLine2?.trim() || null,
-      suburb: input.suburb?.trim() || null,
-      state: input.state?.trim() || null,
-      postcode: input.postcode?.trim() || null,
-      notes: input.notes?.trim() || null,
+      ...values,
       createdAt: now,
       updatedAt: now,
     });

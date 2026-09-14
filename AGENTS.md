@@ -109,7 +109,7 @@ Example:
 ```text
 app/routes/dashboard.tsx
         ↓
-app/ui/pages/dashboard/dashboard-page.tsx
+app/ui/features/dashboard/pages/dashboard-page/dashboard-page.tsx
 ```
 
 A route loader/action may call:
@@ -330,31 +330,48 @@ Presentation code lives under:
 app/ui/
 ```
 
-Prefer purpose-oriented folders:
+Use a feature-first structure for business-feature UI.
+
+Preferred shape:
 
 ```text
 app/
   ui/
-    document/
-      app-document.tsx
+    features/
+      customers/
+        pages/
+          customers-page/
+            customers-page.tsx
+            customers-page.module.css
 
-    components/
-      brand/
-        brand.tsx
-        brand.module.css
+          customer-page/
+            customer-page.tsx
+            customer-page.module.css
+
+          new-customer-page/
+            new-customer-page.tsx
+            new-customer-page.module.css
+
+        components/
+          customer-list/
+            customer-list.tsx
+            customer-list.module.css
+
+          customer-form/
+            customer-form.tsx
+            customer-form.module.css
+
+      dashboard/
+        pages/
+          dashboard-page/
+            dashboard-page.tsx
 
     layouts/
       app-shell/
         app-shell.tsx
-        app-sidebar.tsx
-        app-navigation.tsx
-        account-summary.tsx
-        app-shell.module.css
 
-    pages/
-      dashboard/
-        dashboard-page.tsx
-        dashboard-page.module.css
+    document/
+      app-document.tsx
 
     errors/
       root-error-boundary.tsx
@@ -365,17 +382,88 @@ app/
       global.css
 ```
 
+## Features
+
+Business-feature presentation belongs under:
+
+```text
+app/ui/features/<feature>/
+```
+
+Examples:
+
+```text
+app/ui/features/customers/
+app/ui/features/jobs/
+app/ui/features/invoices/
+app/ui/features/payments/
+```
+
+Feature UI should be organised by purpose inside the feature.
+
+Use only folders the feature actually needs.
+
+Typical feature structure:
+
+```text
+feature/
+  pages/
+  components/
+```
+
+Do not create speculative folders.
+
 ## Pages
 
 A page is route-level presentation.
 
-Pages should be easy to discover under:
+Feature pages live under:
 
 ```text
-app/ui/pages/
+app/ui/features/<feature>/pages/
 ```
 
-Route modules may render a page component.
+Each meaningful page should normally own its own folder:
+
+```text
+pages/
+  customer-page/
+    customer-page.tsx
+    customer-page.module.css
+```
+
+Do not place page components under a `components/` folder.
+
+Route modules may render page components, but the route module remains the framework adapter.
+
+## Components
+
+Feature-specific reusable presentation components live under:
+
+```text
+app/ui/features/<feature>/components/
+```
+
+Examples:
+
+```text
+components/
+  customer-form/
+  customer-list/
+```
+
+Do not extract every small JSX fragment automatically.
+
+Extract a component when it:
+
+- is reused
+- owns meaningful presentation behaviour
+- has a clear independent responsibility
+- materially improves readability
+
+Do not move feature-specific components into a global `app/ui/components/` folder merely because they are components.
+
+Introduce shared cross-feature UI primitives only when real reuse across features exists.
 
 ## Layouts
 
@@ -389,24 +477,55 @@ Do not put the whole shell implementation in `app/routes/app-layout.tsx`.
 
 The route module wires loader/middleware data into the UI layout.
 
-## Components
+## Document, errors, and global styles
 
-Reusable presentation components live under:
+Keep application-wide presentation concerns outside individual features:
 
 ```text
-app/ui/components/
+app/ui/document/
+app/ui/errors/
+app/ui/layouts/
+app/ui/styles/
 ```
 
-Do not extract every small JSX fragment automatically.
+These folders are for genuinely application-wide concerns, not feature-specific presentation.
 
-Extract a component when it:
+## CSS ownership
 
-- is reused
-- owns meaningful presentation behaviour
-- has a clear independent responsibility
-- materially improves readability
+Co-locate CSS Modules with the page, component, or layout that owns the styles.
 
-## CSS
+Preferred:
+
+```text
+customer-form/
+  customer-form.tsx
+  customer-form.module.css
+```
+
+Avoid:
+
+```text
+customers/
+  customers-page.module.css
+```
+
+when that stylesheet is imported by several unrelated pages/components.
+
+A CSS class should normally live beside the React component that uses it.
+
+Do not create generic feature style buckets such as:
+
+```text
+styles/
+common.module.css
+shared.module.css
+customer-common.module.css
+page-utils.module.css
+```
+
+Small duplication between independently owned UI modules is preferable to unclear shared style ownership.
+
+Extract a shared UI primitive only after the same presentation concept is genuinely reused across features.
 
 Keep only true application-wide CSS global.
 
@@ -423,13 +542,13 @@ for:
 - reset/base rules
 - truly global accessibility/focus behaviour
 
-Use CSS Modules for component/page/layout-specific styles:
+Use CSS Modules for feature/page/component/layout-specific styles:
 
 ```text
 *.module.css
 ```
 
-Avoid one `app.css` containing root, shell, page, and error styles together.
+Avoid one `app.css` containing root, shell, feature, page, and error styles together.
 
 ---
 
@@ -827,6 +946,18 @@ Test:
 tests/app/ui/errors/get-route-error-presentation.test.ts
 ```
 
+Example feature UI source:
+
+```text
+app/ui/features/customers/components/customer-form/customer-form.tsx
+```
+
+Corresponding UI test, when one is warranted:
+
+```text
+tests/app/ui/features/customers/components/customer-form/customer-form.test.tsx
+```
+
 Worker tests mirror:
 
 ```text
@@ -1005,29 +1136,55 @@ Draft-reserved jobs cannot be removed until released.
 
 # 22. UI discoverability for future features
 
-As features are added, pages remain easy to find:
+As business features are added, keep UI discoverable by feature first:
 
 ```text
-app/ui/pages/
+app/ui/features/
   customers/
   jobs/
   invoices/
   payments/
 ```
 
-Reusable feature UI may be grouped under a page/feature folder when it is not truly global.
-
-Example:
+Within each feature, separate route-level pages from reusable feature presentation:
 
 ```text
-app/ui/pages/customers/
-  customers-page.tsx
-  customer-table.tsx
-  customer-form.tsx
-  customers-page.module.css
+app/ui/features/customers/
+  pages/
+    customers-page/
+      customers-page.tsx
+      customers-page.module.css
+
+    customer-page/
+      customer-page.tsx
+      customer-page.module.css
+
+    new-customer-page/
+      new-customer-page.tsx
+      new-customer-page.module.css
+
+    edit-customer-page/
+      edit-customer-page.tsx
+      edit-customer-page.module.css
+
+  components/
+    customer-list/
+      customer-list.tsx
+      customer-list.module.css
+
+    customer-form/
+      customer-form.tsx
+      customer-form.module.css
 ```
 
-Do not move server operations into UI page folders.
+Rules:
+
+- pages are route-level presentation
+- page components do not belong under `components/`
+- feature components stay with their feature until they are genuinely cross-feature
+- CSS Modules stay next to their owning page/component
+- do not create a feature-wide stylesheet imported by unrelated UI modules
+- do not move server operations into UI feature folders
 
 Server feature operations belong under:
 
@@ -1035,9 +1192,7 @@ Server feature operations belong under:
 app/server/features/
 ```
 
-when business features become large enough to justify feature modules.
-
-For example later:
+For example:
 
 ```text
 app/server/features/customers/
@@ -1047,7 +1202,9 @@ app/server/features/customers/
   validation/
 ```
 
-Do not create these future feature folders until work begins on that feature.
+Use only the categories the feature actually needs.
+
+UI and server feature trees may be symmetrical at the feature boundary, but they do not need identical internal structure.
 
 ---
 
@@ -1062,9 +1219,36 @@ app/ui/styles/theme.css
 app/ui/styles/global.css
 ```
 
+for genuinely application-wide rules only.
+
 Use CSS Modules for page/layout/component-specific styles.
 
-Avoid broad global selectors for feature styling.
+Co-locate each CSS Module with its owner:
+
+```text
+customer-list/
+  customer-list.tsx
+  customer-list.module.css
+
+customer-form/
+  customer-form.tsx
+  customer-form.module.css
+
+customer-page/
+  customer-page.tsx
+  customer-page.module.css
+```
+
+Rules:
+
+- a page should normally import its own page stylesheet
+- a component should normally import its own component stylesheet
+- do not use one feature stylesheet as a dumping ground for several unrelated UI modules
+- do not create `common.module.css`, `shared.module.css`, or feature style buckets merely to remove small duplication
+- prefer explicit local ownership over premature CSS abstraction
+- extract shared presentation only when the same concept is genuinely reused across features
+- avoid broad global selectors for feature styling
+- keep responsive/container-query rules with the component/page they affect
 
 Maintain:
 
@@ -1118,26 +1302,28 @@ Do not commit or edit generated/local outputs:
 
 ---
 
-# 26. Current structural refactor priorities
+# 26. Current structural expectations
 
-For the current foundation, address in this order:
+The structural foundation is established.
 
-1. Introduce `app/server` and move auth/db server concerns beneath it.
-2. Group auth files by purpose: types/errors/config/services/queries/policies/middleware/context.
-3. Introduce `app/ui` for document/layout/page/component/error/style concerns.
-4. Extract app shell UI from `app/routes/app-layout.tsx`.
-5. Extract dashboard UI from `app/routes/dashboard.tsx`.
-6. Reduce `app/root.tsx` to the framework/document adapter and extract error/document UI.
-7. Split monolithic `app/app.css` into global/theme CSS plus CSS Modules.
-8. Mirror source structure under `tests/`.
-9. Move fixtures/setup into `tests/support/`.
-10. Move Worker error mapping into a purpose folder if appropriate.
-11. Preserve current authentication/business behaviour during the structural refactor.
-12. Add/refine integration coverage only where moving boundaries could break wiring.
+For ongoing feature work:
 
-This is a structural/readability refactor.
+1. Keep `app/routes/` as thin React Router adapters/controllers.
+2. Put business-feature server code under `app/server/features/<feature>/` and group it by purpose such as `types/`, `queries/`, `services/`, and `validation/` only when needed.
+3. Put business-feature presentation under `app/ui/features/<feature>/`.
+4. Separate feature `pages/` from feature `components/`.
+5. Never place route-level page components in a `components/` folder.
+6. Give meaningful pages/components their own folders when they own associated CSS or presentation concerns.
+7. Co-locate `*.module.css` beside the page/component/layout that owns it.
+8. Keep layouts, document UI, root error presentation, and global styles outside business-feature folders.
+9. Mirror production paths under `tests/`.
+10. Prefer one concept per file and explicit ownership over fewer files.
+11. Avoid catch-all types/helpers/utils/models/service files.
+12. Avoid unrelated refactors while implementing a feature slice.
+13. Preserve existing business behaviour during structural moves.
+14. Add shared UI primitives only after genuine cross-feature reuse is demonstrated.
 
-Do not add business CRUD or new application behaviour while doing it.
+Do not reintroduce the old flat `app/ui/pages/` convention for new feature work.
 
 ---
 

@@ -5,8 +5,10 @@ import styles from "./customer-page.module.css";
 
 export default function CustomerPage({
   customer,
+  canManage,
 }: {
   customer: CustomerDetails;
+  canManage: boolean;
 }) {
   const locality = [customer.suburb, customer.state, customer.postcode]
     .filter(Boolean)
@@ -29,6 +31,14 @@ export default function CustomerPage({
           <h1 className="page-title">{customer.name}</h1>
           <p className={styles.intro}>Customer details</p>
         </div>
+        {canManage && (
+          <Link
+            className={styles.primaryAction}
+            to={`/customers/${customer.id}/edit`}
+          >
+            Edit customer
+          </Link>
+        )}
       </header>
 
       <div className={styles.detailsGrid}>

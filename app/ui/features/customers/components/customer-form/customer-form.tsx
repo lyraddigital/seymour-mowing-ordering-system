@@ -1,12 +1,16 @@
 import { Form, Link, useNavigation } from "react-router";
-import type { CreateCustomerInput } from "../../../../../server/features/customers/types/create-customer-input";
+import type { CustomerFormValues } from "./customer-form-values";
 import styles from "./customer-form.module.css";
 
 export default function CustomerForm({
   values,
   fieldErrors,
+  submitLabel = "Create customer",
+  cancelTo = "/customers",
 }: {
-  values?: CreateCustomerInput;
+  values?: CustomerFormValues;
+  submitLabel?: string;
+  cancelTo?: string;
   fieldErrors?: { name?: string };
 }) {
   const navigation = useNavigation();
@@ -142,9 +146,9 @@ export default function CustomerForm({
           type="submit"
           disabled={saving}
         >
-          {saving ? "Saving…" : "Create customer"}
+          {saving ? "Saving…" : submitLabel}
         </button>
-        <Link className={styles.secondaryAction} to="/customers">
+        <Link className={styles.secondaryAction} to={cancelTo}>
           Cancel
         </Link>
         <span className={styles.savingStatus} role="status">

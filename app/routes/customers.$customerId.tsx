@@ -1,3 +1,4 @@
+import { can } from "../server/auth/authorization/policies/can";
 import { PermissionDeniedError } from "../server/auth/authorization/errors/permission-denied-error";
 import { currentUserContext } from "../server/auth/context/current-user-context";
 import { runtimeContext } from "../server/auth/context/runtime-context";
@@ -17,7 +18,10 @@ export async function loader({ context, params }: Route.LoaderArgs) {
       throw new Response("Customer not found", { status: 404 });
     }
 
-    return { customer };
+    return {
+      customer,
+      canManage: can(context.get(currentUserContext), "customers.manage"),
+    };
   } catch (error) {
     if (error instanceof PermissionDeniedError) {
       throw new Response("Forbidden", { status: 403 });
@@ -28,5 +32,10 @@ export async function loader({ context, params }: Route.LoaderArgs) {
 }
 
 export default function CustomerRoute({ loaderData }: Route.ComponentProps) {
-  return <CustomerPage customer={loaderData.customer} />;
+  return (
+    <CustomerPage
+      customer={loaderData.customer}
+      canManage={loaderData.canManage}
+    />
+  );
 }
