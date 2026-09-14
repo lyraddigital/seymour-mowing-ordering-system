@@ -11,7 +11,8 @@ import { currentUserContext } from "../../../app/server/auth/context/current-use
 import { runtimeContext } from "../../../app/server/auth/context/runtime-context";
 import { createDb } from "../../../app/server/db/client/create-db.server";
 import { customers } from "../../../app/server/db/schema/customers";
-import NewCustomerPage from "../../../app/ui/pages/customers/new-customer-page";
+import NewCustomerPage from "../../../app/ui/features/customers/pages/new-customer-page/new-customer-page";
+
 const context = new RouterContextProvider();
 context.set(currentUserContext, {
   id: "admin",

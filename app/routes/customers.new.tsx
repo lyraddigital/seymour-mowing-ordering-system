@@ -6,13 +6,15 @@ import type { Route } from "./+types/customers.new";
 import { can } from "../server/auth/authorization/policies/can";
 import { createCustomer } from "../server/features/customers/services/create-customer.server";
 import { CustomerValidationError } from "../server/features/customers/errors/customer-validation-error";
-import NewCustomerPage from "../ui/pages/customers/new-customer-page";
+import NewCustomerPage from "../ui/features/customers/pages/new-customer-page/new-customer-page";
+
 export function loader({ context }: Route.LoaderArgs) {
   if (!can(context.get(currentUserContext), "customers.manage")) {
     throw new Response("Forbidden", { status: 403 });
   }
   return null;
 }
+
 export async function action({ request, context }: Route.ActionArgs) {
   const form = await request.formData();
   const text = (key: string) => {
@@ -47,6 +49,7 @@ export async function action({ request, context }: Route.ActionArgs) {
   }
   return redirect("/customers");
 }
+
 export default function NewCustomerRoute({ actionData }: Route.ComponentProps) {
   return (
     <NewCustomerPage

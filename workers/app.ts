@@ -23,6 +23,7 @@ export default {
 
       response = await requestHandler(request, context);
     } catch (error) {
+      console.error("Unhandled request error:", error);
       response = requestErrorResponse(error);
     }
 

@@ -1,5 +1,5 @@
 import type { Route } from "./+types/dashboard";
-import DashboardPage from "../ui/pages/dashboard/dashboard-page";
+import DashboardPage from "../ui/features/dashboard/pages/dashboard-page/dashboard-page";
 
 export const meta: Route.MetaFunction = () => [
   { title: "Dashboard | Seymour" },

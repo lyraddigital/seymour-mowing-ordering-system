@@ -3,7 +3,7 @@ import { expect, it } from "vitest";
 import { MemoryRouter, RouterContextProvider } from "react-router";
 import { renderToStaticMarkup } from "react-dom/server";
 import { loader } from "../../../app/routes/customers";
-import CustomersPage from "../../../app/ui/pages/customers/customers-page";
+import CustomersPage from "../../../app/ui/features/customers/pages/customers-page/customers-page";
 import { currentUserContext } from "../../../app/server/auth/context/current-user-context";
 import { runtimeContext } from "../../../app/server/auth/context/runtime-context";
 import { createDb } from "../../../app/server/db/client/create-db.server";

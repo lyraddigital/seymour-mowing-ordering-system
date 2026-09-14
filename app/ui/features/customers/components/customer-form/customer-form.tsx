@@ -1,6 +1,6 @@
 import { Form, Link, useNavigation } from "react-router";
-import type { CreateCustomerInput } from "../../../server/features/customers/types/create-customer-input";
-import styles from "./customers-page.module.css";
+import type { CreateCustomerInput } from "../../../../../server/features/customers/types/create-customer-input";
+import styles from "./customer-form.module.css";
 
 export default function CustomerForm({
   values,

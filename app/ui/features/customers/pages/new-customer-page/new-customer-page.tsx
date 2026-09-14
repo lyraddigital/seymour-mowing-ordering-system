@@ -1,7 +1,8 @@
 import { Link } from "react-router";
-import type { CreateCustomerInput } from "../../../server/features/customers/types/create-customer-input";
-import CustomerForm from "./customer-form";
-import styles from "./customers-page.module.css";
+
+import type { CreateCustomerInput } from "../../../../../server/features/customers/types/create-customer-input";
+import CustomerForm from "../../components/customer-form/customer-form";
+import styles from "./new-customer-page.module.css";
 
 export default function NewCustomerPage({
   values,
@@ -11,10 +12,11 @@ export default function NewCustomerPage({
   fieldErrors?: { name?: string };
 }) {
   return (
-    <section className={styles.formPage}>
+    <section className={styles.page}>
       <Link className={styles.backLink} to="/customers">
         ← Customers
       </Link>
+
       <header className={styles.header}>
         <div>
           <h1 className="page-title">New customer</h1>
@@ -23,6 +25,7 @@ export default function NewCustomerPage({
           </p>
         </div>
       </header>
+
       <CustomerForm values={values} fieldErrors={fieldErrors} />
     </section>
   );

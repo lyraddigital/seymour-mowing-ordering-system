@@ -1,5 +1,7 @@
-import type { CustomerSummary } from "../../../server/features/customers/types/customer-summary";
-import styles from "./customers-page.module.css";
+import { Link } from "react-router/internal/react-server-client";
+
+import type { CustomerSummary } from "../../../../../server/features/customers/types/customer-summary";
+import styles from "./customer-list.module.css";
 
 export default function CustomerList({
   customers,
@@ -12,12 +14,22 @@ export default function CustomerList({
         const locality = [customer.suburb, customer.state, customer.postcode]
           .filter(Boolean)
           .join(" ");
+
         const address = [customer.addressLine1, customer.addressLine2, locality]
           .filter(Boolean)
           .join(", ");
+
         return (
           <li key={customer.id} className={styles.customer}>
-            <h2 className={styles.customerName}>{customer.name}</h2>
+            <h2 className={styles.customerName}>
+              <Link
+                className={styles.customerLink}
+                to={`/customers/${customer.id}`}
+              >
+                {customer.name}
+              </Link>
+            </h2>
+
             {(customer.email || customer.phone) && (
               <dl className={styles.contact}>
                 {customer.email && (
@@ -28,6 +40,7 @@ export default function CustomerList({
                     </dd>
                   </div>
                 )}
+
                 {customer.phone && (
                   <div>
                     <dt>Phone</dt>
@@ -38,6 +51,7 @@ export default function CustomerList({
                 )}
               </dl>
             )}
+
             {address && (
               <dl className={styles.address}>
                 <div>

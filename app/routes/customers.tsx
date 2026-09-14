@@ -3,7 +3,8 @@ import { runtimeContext } from "../server/auth/context/runtime-context";
 import { PermissionDeniedError } from "../server/auth/authorization/errors/permission-denied-error";
 import type { Route } from "./+types/customers";
 import { listActiveCustomers } from "../server/features/customers/queries/list-active-customers.server";
-import CustomersPage from "../ui/pages/customers/customers-page";
+import CustomersPage from "../ui/features/customers/pages/customers-page/customers-page";
+
 export async function loader({ context }: Route.LoaderArgs) {
   try {
     return {
@@ -19,6 +20,7 @@ export async function loader({ context }: Route.LoaderArgs) {
     throw error;
   }
 }
+
 export default function CustomersRoute({ loaderData }: Route.ComponentProps) {
   return <CustomersPage customers={loaderData.customers} />;
 }
