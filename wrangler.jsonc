@@ -14,6 +14,7 @@
   },
   "vars": {
     "APP_ENV": "local",
+    "DEV_AUTH_EMAIL": "developer@example.test",
   },
   "d1_databases": [
     {
@@ -29,6 +30,9 @@
       "name": "seymour-staging-mowing-ordering-system",
       "vars": {
         "APP_ENV": "staging",
+        "ACCESS_TEAM_DOMAIN": "https://seymour-mm.cloudflareaccess.com",
+        "ACCESS_AUD": "0979e22cd7474a22076b8eed736ca4976eeceab37b1862f0eff72471a256ff30",
+        "DEV_AUTH_EMAIL": "",
       },
       "d1_databases": [
         {
@@ -44,6 +48,9 @@
       "name": "seymour-mowing-ordering-system",
       "vars": {
         "APP_ENV": "production",
+        "ACCESS_TEAM_DOMAIN": "https://seymour-mm.cloudflareaccess.com",
+        "ACCESS_AUD": "f133f32b16da137116556471c13010a23b8a4426b7e8c235b6d85f23c7577c55",
+        "DEV_AUTH_EMAIL": "",
       },
       "d1_databases": [
         {

@@ -1,5 +1,6 @@
 import { redirect } from "react-router";
+import type { Route } from "./+types/index";
 
-export function loader() {
-  return redirect("/login");
-}
+export const loader = (() => redirect("/dashboard")) satisfies (
+  args: Route.LoaderArgs,
+) => Response;
