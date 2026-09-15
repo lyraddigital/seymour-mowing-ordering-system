@@ -1,1564 +1,664 @@
-# Seymour Engineering Rules
+# Seymour Mowing Ordering System — Agent Instructions
 
 ## Purpose
 
-Seymour is a small internal turf-management administration system.
+This repository contains the Seymour Mowing Ordering System.
 
-The codebase must optimise for:
+When making changes:
 
-- readability
-- discoverability
-- explicit ownership
-- modularity
-- strong server-side invariants
-- clear UI/server boundaries
-- platform-native React Router / Cloudflare patterns
-- low accidental complexity
+- Preserve the existing architecture.
+- Prefer small, reviewable changes.
+- Follow existing patterns before introducing new ones.
+- Avoid unrelated refactors.
+- Keep implementation explicit, readable, and boring.
+- Use pragmatic SOLID principles.
+- Avoid abstraction for abstraction's sake.
+- Read this file before making changes.
 
-Do not optimise for the fewest files or the fewest folders.
-
-A developer should be able to infer what a file contains from its path before opening it.
+If existing code conflicts with assumptions in a task prompt, inspect the repository and follow the established project conventions unless the task explicitly requires changing them.
 
 ---
 
-# 1. Top-level application structure
+# Technology Stack
 
-Keep the application split into three clear concerns:
+The application uses:
 
-```text
-app/
-  root.tsx
-  routes.ts
+- Cloudflare Workers
+- React Router Framework Mode with SSR
+- TypeScript with strict mode
+- Cloudflare D1
+- Drizzle ORM
+- Cloudflare Access
+- Google as the sole Cloudflare Access identity provider
+- Vitest and the project's existing test infrastructure
 
-  routes/
-  ui/
-  server/
-```
+Staging and production are deployed independently.
 
-Ownership:
+Production deployment requires approval.
 
-## `app/routes/`
-
-React Router route modules only.
-
-Route modules are framework adapters. They may connect:
-
-- route loader/action/middleware APIs
-- server-side use cases/services
-- UI pages/layouts
-
-They should not contain substantial UI implementation or business/server implementation.
-
-## `app/ui/`
-
-Browser-rendered presentation concerns:
-
-- pages
-- layouts
-- reusable components
-- error presentation
-- styles
-
-UI modules must not directly query D1 or validate Cloudflare Access tokens.
-
-## `app/server/`
-
-Server-only application/runtime concerns:
-
-- authentication
-- authorization
-- middleware
-- request contexts
-- database
-- persistence queries
-- domain/application services
-- external provider adapters
-
-Server modules must not render React components.
-
-This split is deliberate even though React Router is a full-stack/server-routed framework.
-
-Routes are the boundary that joins UI and server concerns.
+Do not introduce infrastructure, frameworks, packages, or architectural layers unless they are clearly required by the task.
 
 ---
 
-# 2. Route modules are thin adapters
+# General Engineering Principles
 
-React Router route modules live in:
+Prefer:
+
+- simple code
+- explicit dependencies
+- small functions with clear responsibilities
+- feature-local code
+- domain-specific names
+- predictable control flow
+- narrow interfaces
+- server-side validation
+- database constraints where appropriate
+- transactions where multiple writes form one business operation
+
+Avoid:
+
+- speculative abstractions
+- generic repository layers without a demonstrated need
+- service locators
+- global dependency containers
+- unnecessary inheritance
+- generic CRUD frameworks
+- premature state machines
+- excessive indirection
+- unnecessary wrapper functions
+- unrelated cleanup while implementing a feature
+
+A small amount of duplication is preferable to a premature abstraction.
+
+Refactor only when the task requires it or when a very small local refactor is necessary to implement the requested behaviour cleanly.
+
+---
+
+# Application Architecture
+
+## Routes
+
+React Router route modules live under:
 
 ```text
 app/routes/
 ```
 
-Keep them small.
+Routes are thin adapters/controllers.
 
-A route module may contain framework exports such as:
+A route may:
 
-- `loader`
-- `action`
-- `middleware`
-- `meta`
-- `headers`
-- `ErrorBoundary`
-- default route component
+- authenticate the request
+- authorize the user
+- parse route parameters
+- parse submitted form data
+- call server feature functions
+- map known server results to HTTP responses
+- redirect
+- provide loader/action data to presentation components
 
-But implementation should be delegated when it becomes meaningful.
+Routes should not contain substantial business logic.
 
-Example:
+Do not place database queries directly in route modules when the logic belongs to a server feature.
 
-```text
-app/routes/dashboard.tsx
-        ↓
-app/ui/features/dashboard/pages/dashboard-page/dashboard-page.tsx
-```
-
-A route loader/action may call:
-
-```text
-app/server/...
-```
-
-A route component may render:
-
-```text
-app/ui/...
-```
-
-Do not put D1 queries, JWT verification, large forms, or large page layouts directly in route modules.
-
-## Mutation routes are command-oriented
-
-Seymour is a server-rendered web application, not a public REST API.
-
-Prefer explicit command-style POST routes for business mutations:
-
-```text
-POST /customers/:customerId/archive
-POST /customers/:customerId/restore
-POST /invoices/:invoiceId/issue
-POST /invoices/:invoiceId/void
-POST /payments/:paymentId/void
-```
-
-Use one route action for one business operation.
-
-Preferred:
-
-```text
-app/routes/customers.$customerId.archive.tsx
-  -> action
-  -> archiveCustomer(...)
-```
-
-Avoid one route action that dispatches several business commands using form payloads such as:
-
-```text
-intent=archive
-intent=restore
-intent=issue
-intent=void
-```
-
-Do not add switch statements over mutation intent when separate routes can express the operations directly.
-
-UI forms should post explicitly to the command route they invoke:
-
-```tsx
-<Form method="post" action={`/customers/${customer.id}/archive`}>
-```
-
-For command routes:
-
-- use `POST` unless a different method has a concrete application need
-- explicitly reject unsupported methods with `405 Method Not Allowed` when the action could otherwise receive them
-- do not add a loader unless the route genuinely reads/renders something
-- keep the action thin
-- call one server-side business operation
-- translate known domain/application errors at the route boundary
-- redirect on success when navigation is expected
-
-A read/detail route should not also become a dispatcher for several independent business commands.
+Do not turn route modules into large page components.
 
 ---
 
-# 3. Root route
+# Server Features
 
-`app/root.tsx` is a required React Router framework boundary.
-
-Keep it, but keep it thin.
-
-It should primarily wire together:
-
-- document layout
-- root outlet
-- root error boundary
-- root-level links/meta when necessary
-
-Move substantial implementation into `app/ui/`.
-
-Preferred shape:
+Server-side feature logic lives under:
 
 ```text
-app/
-  root.tsx
-
-  ui/
-    document/
-      app-document.tsx
-    errors/
-      root-error-boundary.tsx
-      get-route-error-presentation.ts
-    styles/
-      global.css
-      theme.css
+app/server/features/<feature>/
 ```
 
-`app/root.tsx` should not become the home for:
-
-- application shell UI
-- navigation
-- error-message policy
-- feature styles
-- business logic
-- authentication logic
-
-The root file is a framework adapter, not a general application module.
-
----
-
-# 4. Folder names describe file purpose
-
-“One concept per file” is not enough.
-
-Files with different reasons for existing should also be grouped by kind.
-
-Do not place types, errors, services, middleware, queries, and configuration validators side-by-side in one large feature folder.
-
-Prefer:
+Examples:
 
 ```text
-feature/
-  types/
-  errors/
-  config/
-  services/
-  queries/
-  policies/
-  middleware/
+app/server/features/customers/
+app/server/features/jobs/
 ```
 
-Use only the categories a feature actually needs.
+Feature code should use domain-specific files.
 
-Do not create empty or speculative folders.
+Prefer one meaningful concept per file.
 
-A folder should answer:
-
-> What kind of file will I find here?
-
-A filename should answer:
-
-> What concept/operation does this file own?
-
----
-
-# 5. One concept per file
-
-A file should normally have one primary public export.
-
-Good:
+Good examples:
 
 ```text
-types/access-identity.ts
-types/access-config.ts
-
-errors/access-authentication-error.ts
-
-services/get-access-identity.server.ts
-services/verify-access-token.server.ts
-
-middleware/require-current-user.server.ts
-
-queries/find-user-by-email.server.ts
-
-policies/can.ts
+create-job.ts
+create-job-input.ts
+validate-create-job.ts
+job-status.ts
+get-active-jobs.ts
+archive-customer.ts
 ```
 
-Avoid catch-all files:
+Avoid catch-all files such as:
 
 ```text
 types.ts
-auth-types.ts
-models.ts
-helpers.ts
 utils.ts
-common.ts
-services.ts
-```
-
-Private helpers may remain in the owning file when they only exist to implement that one public operation.
-
-If a helper becomes independently meaningful, reused, separately testable, or a separate reason to change, move it into its own appropriately named file/folder.
-
-## Type ownership
-
-Types should live with the concept that owns them.
-
-For React components, pages, and layouts, keep a props type in the same file as the component when that type is used only by that component.
-
-Preferred:
-
-```tsx
-type CustomerArchiveActionsProps = {
-  customerId: string;
-  archived: boolean;
-};
-
-export function CustomerArchiveActions({
-  customerId,
-  archived,
-}: CustomerArchiveActionsProps) {
-  // ...
-}
-```
-
-A component and its private props contract are one concept for the purposes of the one-concept-per-file rule.
-
-Do not create dedicated files such as:
-
-```text
-customer-archive-actions-props.ts
-customer-page-props.ts
-app-shell-props.ts
-```
-
-when the type is private to one component.
-
-Extract a type into its own appropriately named file only when it has independent meaning, for example when:
-
-- it is reused by multiple files
-- it represents a domain/application concept rather than a component-only contract
-- it is large enough that keeping it inline materially harms readability
-- it changes for reasons independent of the component
-- it is independently tested or otherwise has its own ownership boundary
-
-Server/domain/application types with independent meaning should continue to live in their own files under the owning feature/kind.
-
-Do not create central catch-all type modules such as:
-
-```text
-types.ts
-props.ts
+helpers.ts
 models.ts
-interfaces.ts
+services.ts
+common.ts
 ```
 
-Generated React Router `Route.*` types remain generated framework concerns.
+unless the contents genuinely represent one cohesive concept and the existing repository already uses that convention.
 
-The goal is one concept per file, not one declaration per file.
+Do not introduce classes merely to create "services".
+
+Functions are preferred when they clearly express the operation.
 
 ---
 
-# 6. Preferred current auth/server structure
+# Queries
 
-Refactor the authentication foundation toward:
+Queries should live near the server feature that owns the read behaviour.
+
+For example:
 
 ```text
-app/
-  server/
-    auth/
-      access/
-        types/
-          access-config.ts
-          access-identity.ts
-          access-runtime-settings.ts
-          access-token-claims.ts
-
-        errors/
-          access-authentication-error.ts
-          access-configuration-error.ts
-          access-unavailable-error.ts
-
-        config/
-          validate-access-config.server.ts
-
-        services/
-          get-access-identity.server.ts
-          verify-access-token.server.ts
-
-      authorization/
-        types/
-          permission.ts
-          user-role.ts
-
-        policies/
-          role-permissions.ts
-          can.ts
-
-      principal/
-        types/
-          current-user.ts
-
-        errors/
-          user-inactive-error.ts
-          user-not-provisioned-error.ts
-
-        queries/
-          find-user-by-email.server.ts
-
-        services/
-          resolve-current-user.server.ts
-
-        middleware/
-          require-current-user.server.ts
-
-      context/
-        access-identity-context.ts
-        current-user-context.ts
-        runtime-context.ts
-
-      normalizers/
-        normalize-account-email.ts
-
-    db/
-      client/
-        create-db.server.ts
-
-      schema/
-        users.ts
-        schema-registry.ts
+app/server/features/jobs/queries/get-active-jobs.ts
 ```
 
-This is a target ownership model, not a requirement to add folders that have no real contents.
+Queries should return data shaped appropriately for their caller.
+
+Do not force routes or UI code to reconstruct domain state from raw database rows when the server query can express it clearly.
+
+Avoid generic repository abstractions.
+
+Cross-feature reads are acceptable when they are simple and intentional. Do not create a generic data-access layer solely to prevent one feature from reading data owned by another feature.
+
+Reuse an existing query when it already expresses the required behaviour cleanly.
 
 ---
 
-# 7. Clean UI structure
+# UI Architecture
 
-Presentation code lives under:
-
-```text
-app/ui/
-```
-
-Use a feature-first structure for business-feature UI.
-
-Preferred shape:
-
-```text
-app/
-  ui/
-    features/
-      customers/
-        pages/
-          customers-page/
-            customers-page.tsx
-            customers-page.module.css
-
-          customer-page/
-            customer-page.tsx
-            customer-page.module.css
-
-          new-customer-page/
-            new-customer-page.tsx
-            new-customer-page.module.css
-
-        components/
-          customer-list/
-            customer-list.tsx
-            customer-list.module.css
-
-          customer-form/
-            customer-form.tsx
-            customer-form.module.css
-
-      dashboard/
-        pages/
-          dashboard-page/
-            dashboard-page.tsx
-
-    layouts/
-      app-shell/
-        app-shell.tsx
-
-    document/
-      app-document.tsx
-
-    errors/
-      root-error-boundary.tsx
-      get-route-error-presentation.ts
-
-    styles/
-      theme.css
-      global.css
-```
-
-## Features
-
-Business-feature presentation belongs under:
+Feature UI lives under:
 
 ```text
 app/ui/features/<feature>/
 ```
 
-Examples:
-
-```text
-app/ui/features/customers/
-app/ui/features/jobs/
-app/ui/features/invoices/
-app/ui/features/payments/
-```
-
-Feature UI should be organised by purpose inside the feature.
-
-Use only folders the feature actually needs.
-
-Typical feature structure:
-
-```text
-feature/
-  pages/
-  components/
-```
-
-Do not create speculative folders.
-
-## Pages
-
-A page is route-level presentation.
-
-Feature pages live under:
-
-```text
-app/ui/features/<feature>/pages/
-```
-
-Each meaningful page should normally own its own folder:
+Feature UI is separated into:
 
 ```text
 pages/
-  customer-page/
-    customer-page.tsx
-    customer-page.module.css
-```
-
-Do not place page components under a `components/` folder.
-
-Route modules may render page components, but the route module remains the framework adapter.
-
-## Components
-
-Feature-specific reusable presentation components live under:
-
-```text
-app/ui/features/<feature>/components/
-```
-
-Examples:
-
-```text
 components/
-  customer-form/
-  customer-list/
-```
-
-Do not extract every small JSX fragment automatically.
-
-Extract a component when it:
-
-- is reused
-- owns meaningful presentation behaviour
-- has a clear independent responsibility
-- materially improves readability
-
-Do not move feature-specific components into a global `app/ui/components/` folder merely because they are components.
-
-Introduce shared cross-feature UI primitives only when real reuse across features exists.
-
-## Layouts
-
-Application shells/layout composition live under:
-
-```text
-app/ui/layouts/
-```
-
-Do not put the whole shell implementation in `app/routes/app-layout.tsx`.
-
-The route module wires loader/middleware data into the UI layout.
-
-Prefer layout presentation components to render the children passed by their route adapter.
-
-Example:
-
-```tsx
-export default function AppLayoutRoute({ loaderData }: Route.ComponentProps) {
-  return (
-    <AppShell currentUser={loaderData.currentUser}>
-      <Outlet />
-    </AppShell>
-  );
-}
-```
-
-`AppShell` should render its `children`; it should not independently import/render another `Outlet` when the route adapter already owns that framework concern.
-
-This keeps React Router composition in `app/routes/` and presentation composition in `app/ui/`.
-
-## Document, errors, and global styles
-
-Keep application-wide presentation concerns outside individual features:
-
-```text
-app/ui/document/
-app/ui/errors/
-app/ui/layouts/
-app/ui/styles/
-```
-
-These folders are for genuinely application-wide concerns, not feature-specific presentation.
-
-## CSS ownership
-
-Co-locate CSS Modules with the page, component, or layout that owns the styles.
-
-Preferred:
-
-```text
-customer-form/
-  customer-form.tsx
-  customer-form.module.css
-```
-
-Avoid:
-
-```text
-customers/
-  customers-page.module.css
-```
-
-when that stylesheet is imported by several unrelated pages/components.
-
-A CSS class should normally live beside the React component that uses it.
-
-Do not create generic feature style buckets such as:
-
-```text
-styles/
-common.module.css
-shared.module.css
-customer-common.module.css
-page-utils.module.css
-```
-
-Small duplication between independently owned UI modules is preferable to unclear shared style ownership.
-
-Extract a shared UI primitive only after the same presentation concept is genuinely reused across features.
-
-Keep only true application-wide CSS global.
-
-Use:
-
-```text
-app/ui/styles/theme.css
-app/ui/styles/global.css
-```
-
-for:
-
-- design tokens/custom properties
-- reset/base rules
-- truly global accessibility/focus behaviour
-
-Use CSS Modules for feature/page/component/layout-specific styles:
-
-```text
-*.module.css
-```
-
-Avoid one `app.css` containing root, shell, feature, page, and error styles together.
-
----
-
-# 8. Server readability
-
-Server code is written for humans first.
-
-A `.server.ts` file should normally have one primary responsibility.
-
-If a file owns several of these, split it:
-
-- configuration parsing
-- provider integration
-- JWT/crypto verification
-- persistence queries
-- domain policy
-- middleware
-- HTTP response mapping
-- data transformation
-
-Do not compress server code merely because Prettier allows it.
-
-Use deliberate blank lines between conceptual phases.
-
-Prefer:
-
-```ts
-const token = request.headers.get("Cf-Access-Jwt-Assertion");
-
-if (!token) {
-  throw new AccessAuthenticationError();
-}
-
-const claims = await verifyAccessToken(token, config);
-
-const email = normalizeAccountEmail(claims.email);
-
-if (!email) {
-  throw new AccessAuthenticationError();
-}
-
-return {
-  email,
-};
-```
-
-Use braces for meaningful guard clauses.
-
-Functions should operate at one level of abstraction.
-
----
-
-# 9. Dependency direction
-
-Application flow:
-
-```text
-route module
-    ↓
-server use case/service
-    ↓
-query/provider/persistence
-```
-
-Presentation flow:
-
-```text
-route module
-    ↓
-UI page/layout
-    ↓
-UI component
-```
-
-Authentication flow:
-
-```text
-Cloudflare Access assertion
-    ↓
-Access verifier
-    ↓
-Access identity
-    ↓
-request context
-    ↓
-current-user middleware
-    ↓
-principal resolver
-    ↓
-authorization policy
-```
-
-Rules:
-
-- UI does not import database modules
-- UI does not verify authentication tokens
-- server modules do not import React components
-- pure policy modules do not import React Router
-- persistence/query modules do not construct HTTP responses
-- routes translate framework requests/responses and coordinate the two sides
-
----
-
-# 10. Authentication
-
-Seymour does not own credentials.
-
-Authentication is delegated to:
-
-- Cloudflare Access
-- Google
-
-Do not implement:
-
-- passwords
-- password hashes
-- password resets
-- MFA/OTP
-- login cookies
-- authentication session tables
-- authentication email
-- public registration
-- Seymour login form
-
-Normal deployed flow:
-
-```text
-Seymour
-  -> Cloudflare Access
-  -> Google
-  -> Access policy
-  -> Seymour
-```
-
-Configure Access to:
-
-- use Google as sole IdP unless requirements change
-- use Instant Authentication
-- explicitly allow approved emails
-- deny by default
-
-## Session and sign-out behaviour
-
-Cloudflare Access owns the deployed authentication session.
-
-For the current application:
-
-- do not implement a Seymour session-expiry mechanism
-- do not automatically call `/cdn-cgi/access/logout`
-- do not show a Seymour sign-out action unless the product explicitly requires one
-- allow Access session expiry to trigger authentication again
-- with Google as the sole IdP and Instant Authentication enabled, re-authentication should flow back through Google
-
-The authenticated shell may display the current Seymour user's identity, but it does not own the Access session lifecycle.
-
----
-
-# 11. Cloudflare Access trust boundary
-
-For the current Cloudflare Vite + Workers Static Assets architecture, use:
-
-```text
-Cf-Access-Jwt-Assertion
-```
-
-as the canonical deployed identity path.
-
-Validate:
-
-- cryptographic signature
-- issuer
-- audience
-- expiry
-- required claims
-- email
-
-Do not maintain a duplicate `ctx.access` identity path unless the deployment architecture changes and it is deliberately re-evaluated.
-
-Never trust:
-
-- query parameters
-- form data
-- arbitrary identity headers
-- unverified JWT claims
-- browser-provided user IDs
-
-Never persist or log raw Access assertions.
-
-Google OAuth client secrets belong in Cloudflare Zero Trust configuration, not Seymour.
-
----
-
-# 12. Local authentication
-
-Local development may use a configured developer identity only when:
-
-```text
-APP_ENV === "local"
-```
-
-Rules:
-
-- identity comes from trusted local configuration
-- request headers cannot enable it
-- staging/production never fall back to it
-- committed seed identities are fictional
-- local seed scripts never target remote D1
-
----
-
-# 13. Internal principal and authorization
-
-Seymour maintains an internal user/principal for authorization and audit identity.
-
-Keep external Access identity separate from internal Seymour principal.
-
-## Authorization layout
-
-```text
-app/server/auth/authorization/
-  types/
-    permission.ts
-    user-role.ts
-
-  policies/
-    role-permissions.ts
-    can.ts
-```
-
-Keep authorization policy pure.
-
-`can()` must not:
-
-- throw React Router responses
-- query D1
-- render UI
-
-UI visibility is not authorization.
-
-Server-side actions/use cases enforce permissions.
-
-Initial roles:
-
-- `admin`
-- `operator`
-
-Do not add RBAC database tables until dynamic roles are a real requirement.
-
----
-
-# 14. React Router v8 Framework Mode
-
-Use React Router v8 Framework Mode with SSR.
-
-Preserve:
-
-- `app/root.tsx`
-- `app/routes.ts`
-- route modules
-- generated `Route.*` types
-- React Router Vite plugin
-- Cloudflare Vite plugin
-
-Use route modules as framework adapters.
-
-Use:
-
-- loaders for reads
-- actions for mutations; an action should normally own one mutation/business command
-- `<Form>` for navigation-changing submissions
-- `useFetcher`/`fetcher.Form` for in-place submissions
-- middleware for request-wide authenticated route concerns
-- `createContext` / `RouterContextProvider` for request-scoped injected state
-
-Never use mutable global state for current request/user.
-
----
-
-# 15. Worker boundary
-
-Keep:
-
-```text
-workers/
-```
-
-as the Cloudflare platform boundary.
-
-Preferred shape as it grows:
-
-```text
-workers/
-  app.ts
-
-  errors/
-    request-error-response.server.ts
-```
-
-`workers/app.ts` may:
-
-1. resolve external identity
-2. create router context
-3. set request-scoped runtime/identity
-4. delegate to React Router
-5. apply cross-cutting response headers
-6. map infrastructure-boundary errors
-
-It must not:
-
-- query business tables
-- implement domain workflows
-- contain JWT implementation details
-- render application UI
-
----
-
-# 16. D1 and Drizzle
-
-D1 is the application database.
-
-Drizzle is the schema/query layer.
-
-Group DB files by purpose:
-
-```text
-app/server/db/
-  client/
-  schema/
-```
-
-Prefer:
-
-```text
-client/create-db.server.ts
-schema/users.ts
-schema/schema-registry.ts
-```
-
-The schema registry is an intentional aggregation boundary for Drizzle, not a generic barrel.
-
-Use database constraints for durable invariants where appropriate:
-
-- normalized unique email
-- valid roles/states
-- valid booleans
-- relational integrity
-- non-negative values
-
-Do not rely solely on TypeScript for persisted invariants.
-
-Do not add speculative indexes.
-
-## Migrations
-
-- Drizzle Kit generates migrations
-- Wrangler applies migrations
-- never run migrations from request handlers
-- never schema-push staging/production
-- never hand-edit Drizzle snapshot metadata
-- never rewrite already-applied shared migration history
-
-Preserve the configured nested migration layout.
-
----
-
-# 17. Test structure mirrors source
-
-Tests live under:
-
-```text
-tests/
-```
-
-The test tree mirrors the source tree after that prefix.
-
-Example source:
-
-```text
-app/server/auth/access/services/verify-access-token.server.ts
-```
-
-Corresponding test:
-
-```text
-tests/app/server/auth/access/services/verify-access-token.test.ts
-```
-
-Example source:
-
-```text
-app/server/auth/authorization/policies/can.ts
-```
-
-Test:
-
-```text
-tests/app/server/auth/authorization/policies/can.test.ts
-```
-
-Example source:
-
-```text
-app/ui/errors/get-route-error-presentation.ts
-```
-
-Test:
-
-```text
-tests/app/ui/errors/get-route-error-presentation.test.ts
-```
-
-Example feature UI source:
-
-```text
-app/ui/features/customers/components/customer-form/customer-form.tsx
-```
-
-Corresponding UI test, when one is warranted:
-
-```text
-tests/app/ui/features/customers/components/customer-form/customer-form.test.tsx
-```
-
-Command mutation routes mirror in tests as well.
-
-Example source:
-
-```text
-app/routes/customers.$customerId.archive.tsx
-app/routes/customers.$customerId.restore.tsx
-```
-
-Tests:
-
-```text
-tests/app/routes/customers.$customerId.archive.test.tsx
-tests/app/routes/customers.$customerId.restore.test.tsx
-```
-
-Do not keep archive/restore route behaviour hidden inside the detail-route test when they are separate route concepts.
-
-Worker tests mirror:
-
-```text
-workers/app.ts
-```
-
-under:
-
-```text
-tests/workers/app.test.ts
-```
-
-## Test support
-
-The intentional exception is shared test infrastructure:
-
-```text
-tests/support/
-  setup.ts
-
-  fixtures/
-    access-signing-key.ts
-    internal-user.ts
-```
-
-Do not put feature tests directly at the root of `tests/`.
-
-This mirror is a Seymour project convention.
-
----
-
-# 18. Testing tools
-
-Use Vitest.
-
-Use `@cloudflare/vitest-plugin` for unit tests and D1/Workers-runtime tests.
-
-Use Cloudflare's Worker integration test harness when whole deployed Worker behaviour genuinely needs production-like integration coverage.
-
-Do not build a custom Miniflare harness.
-
-Tests should validate public behaviour/invariants rather than private implementation details.
-
-Keep D1 tests isolated and local.
-
-Never access staging or production from automated tests.
-
----
-
-# 19. Test organisation
-
-Prefer one test subject per test file.
-
-Examples:
-
-```text
-verify-access-token.test.ts
-resolve-current-user.test.ts
-can.test.ts
-users.test.ts
-```
-
-One test file can contain many cases for its one subject.
-
-Do not make one giant `auth.test.ts`.
-
-Fixtures belong in `tests/support/fixtures`, not beside unrelated test subjects.
-
----
-
-# 20. Error handling
-
-Keep error concepts close to the server feature that owns them.
-
-Example:
-
-```text
-auth/access/errors/
-auth/principal/errors/
-```
-
-Do not identify error meaning only by HTTP status.
-
-Keep distinct:
-
-- invalid Access configuration
-- invalid/missing Access assertion
-- Access unavailable
-- authenticated but not provisioned
-- inactive user
-- permission denied
-- validation error
-- not found
-- unexpected infrastructure error
-
-Translate application/server errors into React Router/HTTP responses at the appropriate boundary.
-
-UI error presentation belongs under `app/ui/errors/`.
-
----
-
-# 21. Product/domain invariants
-
-## Current scope
-
-Navigation:
-
-- Dashboard
-- Customers
-- Jobs
-- Invoices
-- Payments
-
-Do not implement unless explicitly scoped:
-
-- Reports
-- general Settings
-- Expenses
-- Suppliers
-- material cost pricing
-- tax-deduction workflows
-- customer portal
-- quotes
-- recurring work
-- scheduling optimisation
-
-## Money / GST
-
-- money is integer cents
-- no authoritative floating-point money
-- customer-facing prices are GST-inclusive
-- assume standard Australian GST unless changed
-- centralise financial calculations
-
-## Dates
-
-- audit timestamps use UTC epoch milliseconds
-- business date-only values stay date-only
-- avoid timezone shifting date-only values
-
-## Customers
-
-- archive/restore
-- no destructive delete of history
-
-## Jobs
-
-States:
-
-- Scheduled
-- In Progress
-- Completed
-- Cancelled
-
-Preserve completed/invoiced history.
-
-Draft-reserved jobs cannot be removed until released.
-
-## Invoices
-
-- invoice may cover multiple jobs for one customer
-- use historical invoice/job association
-- job items and invoice items are separate concepts
-- issued invoice/items are immutable snapshots
-- invoice numbers are never reused
-- corrections use void/replacement
-
-## Payments
-
-- one payment belongs to one invoice
-- no overpayment
-- incorrect payments are voided
-- paid/outstanding is derived from active payments
-
----
-
-# 22. UI discoverability for future features
-
-As business features are added, keep UI discoverable by feature first:
-
-```text
-app/ui/features/
-  customers/
-  jobs/
-  invoices/
-  payments/
-```
-
-Within each feature, separate route-level pages from reusable feature presentation:
-
-```text
-app/ui/features/customers/
-  pages/
-    customers-page/
-      customers-page.tsx
-      customers-page.module.css
-
-    customer-page/
-      customer-page.tsx
-      customer-page.module.css
-
-    new-customer-page/
-      new-customer-page.tsx
-      new-customer-page.module.css
-
-    edit-customer-page/
-      edit-customer-page.tsx
-      edit-customer-page.module.css
-
-  components/
-    customer-list/
-      customer-list.tsx
-      customer-list.module.css
-
-    customer-form/
-      customer-form.tsx
-      customer-form.module.css
-```
-
-Rules:
-
-- pages are route-level presentation
-- page components do not belong under `components/`
-- feature components stay with their feature until they are genuinely cross-feature
-- CSS Modules stay next to their owning page/component
-- do not create a feature-wide stylesheet imported by unrelated UI modules
-- do not move server operations into UI feature folders
-
-Server feature operations belong under:
-
-```text
-app/server/features/
 ```
 
 For example:
 
 ```text
-app/server/features/customers/
-  types/
-  queries/
-  services/
-  validation/
+app/ui/features/jobs/
+├── pages/
+└── components/
 ```
 
-Use only the categories the feature actually needs.
+## Pages
 
-UI and server feature trees may be symmetrical at the feature boundary, but they do not need identical internal structure.
-
----
-
-# 23. CSS
-
-Global CSS should be small.
-
-Prefer:
+Route-level page components belong under:
 
 ```text
-app/ui/styles/theme.css
-app/ui/styles/global.css
+app/ui/features/<feature>/pages/
 ```
 
-for genuinely application-wide rules only.
+Route-level page components must not be placed under `components/`.
 
-Use CSS Modules for page/layout/component-specific styles.
-
-Co-locate each CSS Module with its owner:
-
-```text
-customer-list/
-  customer-list.tsx
-  customer-list.module.css
-
-customer-form/
-  customer-form.tsx
-  customer-form.module.css
-
-customer-page/
-  customer-page.tsx
-  customer-page.module.css
-```
-
-Rules:
-
-- a page should normally import its own page stylesheet
-- a component should normally import its own component stylesheet
-- do not use one feature stylesheet as a dumping ground for several unrelated UI modules
-- do not create `common.module.css`, `shared.module.css`, or feature style buckets merely to remove small duplication
-- prefer explicit local ownership over premature CSS abstraction
-- extract shared presentation only when the same concept is genuinely reused across features
-- avoid broad global selectors for feature styling
-- keep responsive/container-query rules with the component/page they affect
-
-Maintain:
-
-- semantic HTML
-- keyboard support
-- visible focus styles
-- labels
-- accessible errors
-- clear destructive confirmations
-
----
-
-# 24. CI / deployment
-
-Maintain one canonical release path.
-
-Use the same pinned Node version source for:
-
-- local development
-- CI
-- staging
-- production
-
-Prefer `.nvmrc`.
-
-Cloudflare deploy credentials are exposed only to migration/deploy steps.
-
-Before deploy:
-
-1. validate configuration
-2. run checks/build
-3. apply pending environment migrations
-4. deploy
-5. smoke test
-
-Production must deploy the same source revision tested in staging.
-
-## GitHub Actions ownership
-
-Keep the Actions workflow list focused on user-meaningful workflows.
-
-Current preferred structure:
-
-```text
-.github/
-  workflows/
-    ci.yml
-    release.yml
-
-  actions/
-    setup-node-project/
-      action.yml
-
-    deploy-environment/
-      action.yml
-
-  scripts/
-    smoke-access.sh
-    validate-deploy-config.ts
-```
-
-Use:
-
-- `.github/workflows/` for top-level CI/release orchestration
-- `.github/actions/` for reusable step sequences/composite actions
-- `.github/scripts/` for workflow-only helper programs/scripts
-
-Do not create extra reusable workflows merely to split one release pipeline into more files when they add noise to the Actions UI without a real reuse boundary.
-
-Release branch convention:
-
-```text
-release/<major>.<minor>.<patch>
-```
+Meaningful pages should own their own folder.
 
 Example:
 
 ```text
-release/0.1.0
+app/ui/features/jobs/pages/jobs-page/
+├── jobs-page.tsx
+└── jobs-page.module.css
 ```
 
-The release flow is:
+## Components
+
+Reusable or meaningful feature components belong under:
 
 ```text
-check
-  -> staging
-  -> production approval
-  -> production
-  -> publish immutable tag/GitHub Release
+app/ui/features/<feature>/components/
 ```
 
-The `production` GitHub Environment must retain its required-reviewer protection rule.
+Meaningful components should normally own their own folder.
 
----
+Example:
 
-# 25. Generated/local files
-
-Do not commit or edit generated/local outputs:
-
-- `node_modules`
-- `.react-router`
-- `build`
-- `.wrangler`
-- `worker-configuration.d.ts`
-- `*.tsbuildinfo`
-- coverage output
-
----
-
-# 26. Current structural expectations
-
-The structural foundation is established.
-
-For ongoing feature work:
-
-1. Keep `app/routes/` as thin React Router adapters/controllers.
-2. Put business-feature server code under `app/server/features/<feature>/` and group it by purpose such as `types/`, `queries/`, `services/`, and `validation/` only when needed.
-3. Put business-feature presentation under `app/ui/features/<feature>/`.
-4. Separate feature `pages/` from feature `components/`.
-5. Never place route-level page components in a `components/` folder.
-6. Give meaningful pages/components their own folders when they own associated CSS or presentation concerns.
-7. Co-locate `*.module.css` beside the page/component/layout that owns it.
-8. Keep layouts, document UI, root error presentation, and global styles outside business-feature folders.
-9. Mirror production paths under `tests/`.
-10. Prefer one concept per file and explicit ownership over fewer files.
-11. Avoid catch-all types/helpers/utils/models/service files.
-12. Avoid unrelated refactors while implementing a feature slice.
-13. Preserve existing business behaviour during structural moves.
-14. Add shared UI primitives only after genuine cross-feature reuse is demonstrated.
-15. Prefer one POST command route/action per business mutation; do not multiplex business commands with form `intent` switches.
-16. Keep read/detail routes focused on reading/rendering; archive/restore/issue/void operations get their own mutation routes.
-17. Keep component-local props types beside the component; extract types only when they have independent meaning or genuine reuse.
-18. Keep React Router `Outlet` ownership in route adapters and let presentation layouts render passed children.
-
-Do not reintroduce the old flat `app/ui/pages/` convention for new feature work.
-
----
-
-# 27. Completion requirements
-
-Before completing changes run:
-
-```bash
-npm run format
-npm run check
-npm run build
+```text
+app/ui/features/jobs/components/job-list/
+├── job-list.tsx
+└── job-list.module.css
 ```
 
-Also run staging/production build variants if environment-specific files/configuration changed.
+Do not extract trivial components merely to reduce line count.
 
-Report any command that could not be run or did not pass.
+Create a component when it represents a meaningful UI concept, has reusable behaviour, or materially improves readability.
 
-Do not proceed into adjacent features unless explicitly requested.
+---
+
+# Component Props
+
+Component prop types should normally be defined in the same file as the component that consumes them.
+
+For example:
+
+```tsx
+interface JobListProps {
+  jobs: JobListItem[];
+}
+
+export function JobList({ jobs }: JobListProps) {
+  // ...
+}
+```
+
+Do not create a separate file solely for a component's props.
+
+A type should have its own file only when it represents a meaningful shared or domain concept independent of one component.
+
+---
+
+# CSS
+
+Use CSS Modules following the existing project conventions.
+
+CSS should be co-located with the page, component, or layout that owns it.
+
+Example:
+
+```text
+job-list.tsx
+job-list.module.css
+```
+
+Avoid feature-wide CSS dumping grounds.
+
+Do not move unrelated styles while implementing a feature.
+
+Reuse existing design patterns and visual conventions before inventing new ones.
+
+The UI should remain consistent with the existing Customers feature.
+
+---
+
+# Types
+
+Use TypeScript strict mode correctly.
+
+Do not weaken types to make implementation easier.
+
+Avoid:
+
+```ts
+any;
+```
+
+unless interoperability genuinely requires it and the use is narrowly contained.
+
+Prefer domain-specific types with meaningful names.
+
+Do not create catch-all `types.ts` files.
+
+Types used only by one component should usually remain with that component.
+
+Types representing a meaningful server/domain concept may have their own file.
+
+Do not duplicate a type if Drizzle or another authoritative project source already provides the appropriate type cleanly.
+
+---
+
+# Validation
+
+All mutation inputs must be validated on the server.
+
+Client-side validation may improve UX but is not a substitute for server-side validation.
+
+Validation behaviour should be explicit and testable.
+
+Do not trust:
+
+- form data
+- route parameters
+- foreign-key identifiers supplied by the browser
+- client-side status values
+- user role information supplied by the browser
+
+Business invariants must be enforced on the server.
+
+---
+
+# Authentication and Authorization
+
+Cloudflare Access provides authentication using Google as the sole identity provider.
+
+Application users are stored internally in D1.
+
+Internal users currently have:
+
+- admin
+- operator
+
+roles.
+
+Follow the existing authentication and authorization helpers and patterns.
+
+Do not duplicate Access parsing or authorization logic when established helpers already exist.
+
+All protected loaders and actions must enforce the appropriate authentication and authorization requirements server-side.
+
+Do not rely on hiding UI controls as authorization.
+
+---
+
+# Database and Drizzle
+
+Use the existing D1 and Drizzle conventions.
+
+Before adding schema code:
+
+- inspect the existing schema layout
+- follow the existing identifier strategy
+- follow existing timestamp conventions
+- follow existing foreign-key conventions
+- follow existing migration conventions
+
+Do not reorganize the database layer as part of an unrelated feature.
+
+Do not manually choose a migration numbering scheme that conflicts with the project's existing Drizzle workflow.
+
+Use database constraints where they reinforce meaningful invariants.
+
+Add indexes where required by known query patterns, not speculatively.
+
+---
+
+# Transactions
+
+Use a transaction when multiple writes together represent one business operation.
+
+The operation should either succeed completely or leave the database unchanged.
+
+Do not leave partially-created domain state.
+
+For example, creating a Job and creating its initial Job status-history row are one operation and must be atomic.
+
+---
+
+# Customers Domain Rules
+
+Customers are never hard-deleted.
+
+Customers may be:
+
+- active
+- archived
+
+Archived customers may later be restored.
+
+Customer operations currently include:
+
+- active customer list
+- create customer
+- customer detail
+- edit customer
+- archive customer
+- archived customer list
+- restore customer
+
+New behaviour must preserve these semantics.
+
+Do not introduce hard-delete customer behaviour.
+
+---
+
+# Jobs Domain Rules
+
+Jobs preserve status history.
+
+Do not model job status solely as a mutable field whose previous values are discarded.
+
+The status-history records are the authoritative history of job state.
+
+The current status should be determined from the latest applicable status-history record unless a later deliberate architectural decision introduces a safe derived/cache representation.
+
+Do not introduce both:
+
+```text
+jobs.status
+```
+
+and:
+
+```text
+job_status_history
+```
+
+as competing sources of truth.
+
+For the initial Jobs implementation, supported status values are:
+
+```text
+scheduled
+completed
+cancelled
+```
+
+The first Jobs vertical slice creates only `scheduled` jobs.
+
+Creating a Job must also create its initial `scheduled` status-history entry.
+
+These writes must occur in the same transaction.
+
+A Job must never be successfully created without its initial status-history row.
+
+Job status-history entries should record the internal Seymour user responsible for the change.
+
+Only active customers may be selected when creating a new Job.
+
+The initial active Jobs list consists of Jobs whose current status is `scheduled`.
+
+Do not introduce a generic workflow engine or state-machine abstraction for Jobs at this stage.
+
+Status-transition behaviour should be implemented incrementally as product requirements are added.
+
+---
+
+# Invoice Domain Rules
+
+Invoice items are distinct from Job items.
+
+Do not assume invoice line items remain linked mutable representations of Job items.
+
+Issued invoices are immutable.
+
+Issued invoice items are immutable.
+
+Draft invoices may be deleted.
+
+Issued invoices must not be deleted.
+
+Issued invoices may instead be voided.
+
+Invoice numbers are never reused.
+
+Money must be stored as integer cents.
+
+Do not store monetary values as floating-point dollars.
+
+Pricing is GST-inclusive.
+
+These rules must be preserved when invoice functionality is implemented or modified.
+
+---
+
+# Payment Domain Rules
+
+A Payment belongs to exactly one Invoice.
+
+An Invoice may have multiple Payments.
+
+Overpayments are not allowed.
+
+Incorrect Payments are voided rather than destructively altered or deleted in a way that destroys their history.
+
+Invoice balances are derived from invoice and payment data.
+
+Do not introduce a mutable balance field as an independent source of truth without an explicit architectural decision requiring it.
+
+---
+
+# Testing
+
+Tests structurally mirror production code under:
+
+```text
+tests/app/
+```
+
+For example:
+
+```text
+app/server/features/jobs/create-job.ts
+```
+
+should normally have its corresponding test near:
+
+```text
+tests/app/server/features/jobs/create-job.test.ts
+```
+
+and:
+
+```text
+app/server/features/jobs/queries/get-active-jobs.ts
+```
+
+should normally map to:
+
+```text
+tests/app/server/features/jobs/queries/get-active-jobs.test.ts
+```
+
+Follow existing route-test conventions for files under `app/routes/`.
+
+Tests should focus on behaviour and business invariants.
+
+Do not duplicate implementation details unnecessarily.
+
+High-value tests include:
+
+- validation boundaries
+- authorization
+- domain invariants
+- transactional behaviour
+- status-history behaviour
+- query filtering
+- predictable ordering
+- failure cases that could otherwise create inconsistent state
+
+Avoid broad snapshot tests when focused behavioural assertions are clearer.
+
+---
+
+# Feature Development
+
+Develop features incrementally as vertical slices.
+
+A good vertical slice should include only what is required to deliver one useful end-to-end behaviour.
+
+A slice may include:
+
+- schema/migration changes
+- server feature behaviour
+- query behaviour
+- route adapters
+- UI
+- focused tests
+
+Do not implement future slices pre-emptively.
+
+For example, when implementing the initial Jobs slice, do not also add:
+
+- Job detail
+- Job editing
+- rescheduling
+- completion UI
+- cancellation UI
+- reopening
+- recurring Jobs
+- Job items
+- pricing
+- invoice generation
+- operator assignment
+- calendar views
+- notes
+- generic status-transition engines
+
+unless explicitly requested.
+
+---
+
+# File Creation
+
+Before creating a file, ask:
+
+1. Does this represent one meaningful concept?
+2. Does an existing file already own this responsibility?
+3. Is this abstraction required now?
+4. Does its location match the repository architecture?
+
+Do not create placeholder files for hypothetical future behaviour.
+
+Do not create index/barrel files unless the existing repository consistently uses them and they provide actual value.
+
+---
+
+# Scope Discipline
+
+Implement only the requested task.
+
+Do not:
+
+- rename unrelated files
+- reorganize unrelated directories
+- reformat large unrelated areas
+- rewrite working code for personal preference
+- introduce unrelated dependencies
+- clean up unrelated TODOs
+- alter CI or deployment workflows unless required
+- change authentication architecture unless required
+
+If a small nearby change is essential for correctness, keep it tightly scoped and explain it in the final summary.
+
+---
+
+# Before Finishing
+
+Before considering work complete:
+
+1. Review the diff for unrelated changes.
+2. Run the relevant test suite.
+3. Run TypeScript/type checking using the project's existing command.
+4. Run linting/formatting using the project's existing commands where applicable.
+5. Confirm new server mutations validate input.
+6. Confirm authorization is enforced server-side.
+7. Confirm database operations preserve domain invariants.
+8. Confirm tests mirror the production structure.
+9. Confirm new UI follows the existing Customers visual and structural conventions.
+10. Confirm no unnecessary abstractions were introduced.
+
+Report:
+
+- what changed
+- important design decisions
+- tests/checks run
+- any assumptions or limitations
+
+Do not claim a test or check passed unless it was actually run successfully.

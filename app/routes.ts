@@ -9,6 +9,9 @@ export default [
     index("routes/index.ts"),
     route("dashboard", "routes/dashboard.tsx"),
     route("customers", "routes/customers.tsx"),
+    route("jobs", "routes/jobs.tsx"),
+    route("jobs/new", "routes/jobs.new.tsx"),
+    route("jobs/:jobId", "routes/jobs.$jobId.tsx"),
     route(
       "customers/:customerId/archive",
       "routes/customers.$customerId.archive.tsx",

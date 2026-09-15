@@ -20,7 +20,8 @@ export default function AppShell({ currentUser, children }: AppShellProps) {
         <nav className="sidebar-nav" aria-label="Main navigation">
           <NavLink to="/dashboard">Dashboard</NavLink>
           <NavLink to="/customers">Customers</NavLink>
-          {["Jobs", "Invoices", "Payments"].map((name) => (
+          <NavLink to="/jobs">Jobs</NavLink>
+          {["Invoices", "Payments"].map((name) => (
             <span key={name} className="nav-pending" aria-disabled="true">
               {name}
               <small>Coming soon</small>
