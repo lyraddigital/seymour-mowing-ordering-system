@@ -1,4 +1,4 @@
-import { and, asc, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq, inArray } from "drizzle-orm";
 import { alias } from "drizzle-orm/sqlite-core";
 import { can } from "../../../auth/authorization/policies/can";
 import { PermissionDeniedError } from "../../../auth/authorization/errors/permission-denied-error";
@@ -35,6 +35,7 @@ export async function listActiveJobs(binding: Env["DB"], user: CurrentUser) {
       jobStatusHistory,
       and(eq(jobStatusHistory.jobId, jobs.id), eq(jobStatusHistory.id, latest)),
     )
-    .where(eq(jobStatusHistory.status, "scheduled"))
+    .where(inArray(jobStatusHistory.status, ["scheduled", "in_progress"]))
     .orderBy(asc(jobs.scheduledDate), asc(jobs.id));
 }
+

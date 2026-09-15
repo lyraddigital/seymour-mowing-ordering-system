@@ -1,4 +1,5 @@
 import { Link } from "react-router";
+import JobLifecycleActions from "../job-lifecycle-actions/job-lifecycle-actions";
 import type { JobSummary } from "../../../../../server/features/jobs/types/job-summary";
 import styles from "./job-list.module.css";
 
@@ -12,9 +13,11 @@ const dateFormat = new Intl.DateTimeFormat("en-AU", {
 export default function JobList({
   jobs,
   label = "Active jobs",
+  canManage = false,
 }: {
   jobs: JobSummary[];
   label?: string;
+  canManage?: boolean;
 }) {
   return (
     <ul className={styles.list} aria-label={label}>
@@ -44,9 +47,10 @@ export default function JobList({
             </div>
             <div>
               <dt>Status</dt>
-              <dd className={styles.status}>{job.currentStatus}</dd>
+              <dd className={styles.status}>{job.currentStatus === "in_progress" ? "In Progress" : job.currentStatus}</dd>
             </div>
           </dl>
+          {canManage && <div className={styles.lifecycleActions}><JobLifecycleActions job={job} returnTo="list" /></div>}
         </li>
       ))}
     </ul>

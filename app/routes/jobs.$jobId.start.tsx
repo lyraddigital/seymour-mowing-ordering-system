@@ -1,12 +1,12 @@
 import { can } from "../server/auth/authorization/policies/can";
 import { redirect } from "react-router";
-import type { Route } from "./+types/jobs.$jobId.cancel";
+import type { Route } from "./+types/jobs.$jobId.start";
 import { currentUserContext } from "../server/auth/context/current-user-context";
 import { runtimeContext } from "../server/auth/context/runtime-context";
 import { PermissionDeniedError } from "../server/auth/authorization/errors/permission-denied-error";
 import { JobNotFoundError } from "../server/features/jobs/errors/job-not-found-error";
 import { JobStateConflictError } from "../server/features/jobs/errors/job-state-conflict-error";
-import { cancelJob } from "../server/features/jobs/services/cancel-job.server";
+import { startJob } from "../server/features/jobs/services/start-job.server";
 
 export async function action({ request, context, params }: Route.ActionArgs) {
   if (request.method !== "POST") {
@@ -20,7 +20,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   const form = await request.formData();
   const returnToList = form.get("returnTo") === "list";
   try {
-    await cancelJob(
+    await startJob(
       context.get(runtimeContext).env.DB,
       user,
       params.jobId,
@@ -36,4 +36,5 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   }
   return redirect(returnToList ? "/jobs" : `/jobs/${params.jobId}`);
 }
+
 

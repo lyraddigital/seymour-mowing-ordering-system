@@ -62,6 +62,7 @@
 .status {
   text-transform: capitalize;
 }
+.lifecycleActions { grid-column: 1 / -1; }
 @container (max-width: 620px) {
   .job {
     grid-template-columns: minmax(0, 1fr);

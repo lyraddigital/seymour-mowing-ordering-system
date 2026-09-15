@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/sqlite-core";
 import { can } from "../../../auth/authorization/policies/can";
 import { PermissionDeniedError } from "../../../auth/authorization/errors/permission-denied-error";
@@ -9,7 +9,7 @@ import { jobStatusHistory } from "../../../db/schema/job-status-history";
 import { JobNotFoundError } from "../errors/job-not-found-error";
 import { JobStateConflictError } from "../errors/job-state-conflict-error";
 
-export async function cancelJob(
+export async function startJob(
   binding: Env["DB"],
   user: CurrentUser,
   jobId: string,
@@ -24,7 +24,7 @@ export async function cancelJob(
     .orderBy(desc(history.createdAt), desc(history.id))
     .limit(1);
   // Check and append in one atomic statement, so competing requests cannot
-  // both finish an active job. Advance past even a same-millisecond row.
+  // both transition a scheduled job. Advance past even a same-millisecond row.
   const inserted = await db
     .insert(jobStatusHistory)
     .select(
@@ -32,7 +32,7 @@ export async function cancelJob(
         .select({
           id: sql<string>`${crypto.randomUUID()}`.as("id"),
           jobId: jobStatusHistory.jobId,
-          status: sql<"cancelled">`'cancelled'`.as("status"),
+          status: sql<"in_progress">`'in_progress'`.as("status"),
           createdByUserId: sql<string>`${user.id}`.as("created_by_user_id"),
           createdAt:
             sql<number>`max(${Date.now()}, ${jobStatusHistory.createdAt} + 1)`.as(
@@ -43,7 +43,7 @@ export async function cancelJob(
         .where(
           and(
             eq(jobStatusHistory.id, latest),
-            inArray(jobStatusHistory.status, ["scheduled", "in_progress"]),
+            eq(jobStatusHistory.status, "scheduled"),
           ),
         ),
     )
@@ -56,7 +56,7 @@ export async function cancelJob(
       .where(eq(jobs.id, jobId))
       .get();
     if (!existing) throw new JobNotFoundError();
-    throw new JobStateConflictError("Only scheduled or in-progress jobs can be cancelled.");
+    throw new JobStateConflictError("Only scheduled jobs can be started.");
   }
   return inserted;
 }

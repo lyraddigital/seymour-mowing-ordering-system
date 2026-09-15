@@ -1,4 +1,4 @@
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/sqlite-core";
 import { can } from "../../../auth/authorization/policies/can";
 import { PermissionDeniedError } from "../../../auth/authorization/errors/permission-denied-error";
@@ -24,7 +24,7 @@ export async function completeJob(
     .orderBy(desc(history.createdAt), desc(history.id))
     .limit(1);
   // Check and append in one atomic statement, so competing requests cannot
-  // both transition a scheduled job. Advance past even a same-millisecond row.
+  // both finish an active job. Advance past even a same-millisecond row.
   const inserted = await db
     .insert(jobStatusHistory)
     .select(
@@ -43,7 +43,7 @@ export async function completeJob(
         .where(
           and(
             eq(jobStatusHistory.id, latest),
-            eq(jobStatusHistory.status, "scheduled"),
+            inArray(jobStatusHistory.status, ["scheduled", "in_progress"]),
           ),
         ),
     )
@@ -56,7 +56,8 @@ export async function completeJob(
       .where(eq(jobs.id, jobId))
       .get();
     if (!existing) throw new JobNotFoundError();
-    throw new JobStateConflictError("Only scheduled jobs can be completed.");
+    throw new JobStateConflictError("Only scheduled or in-progress jobs can be completed.");
   }
   return inserted;
 }
+

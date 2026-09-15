@@ -1,3 +1,4 @@
+import { can } from "../server/auth/authorization/policies/can";
 import { redirect } from "react-router";
 import type { Route } from "./+types/jobs.$jobId.complete";
 import { currentUserContext } from "../server/auth/context/current-user-context";
@@ -14,10 +15,14 @@ export async function action({ request, context, params }: Route.ActionArgs) {
       headers: { Allow: "POST" },
     });
   }
+  const user = context.get(currentUserContext);
+  if (!can(user, "jobs.manage")) throw new Response("Forbidden", { status: 403 });
+  const form = await request.formData();
+  const returnToList = form.get("returnTo") === "list";
   try {
     await completeJob(
       context.get(runtimeContext).env.DB,
-      context.get(currentUserContext),
+      user,
       params.jobId,
     );
   } catch (error) {
@@ -29,5 +34,6 @@ export async function action({ request, context, params }: Route.ActionArgs) {
       throw new Response(error.message, { status: 409 });
     throw error;
   }
-  return redirect(`/jobs/${params.jobId}`);
+  return redirect(returnToList ? "/jobs" : `/jobs/${params.jobId}`);
 }
+

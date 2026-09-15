@@ -3,14 +3,14 @@ import type { JobSummary } from "../../../../../server/features/jobs/types/job-s
 import JobList from "../../components/job-list/job-list";
 import styles from "./jobs-page.module.css";
 
-export default function JobsPage({ jobs }: { jobs: JobSummary[] }) {
+export default function JobsPage({ jobs, canManage }: { jobs: JobSummary[]; canManage: boolean }) {
   return (
     <section className={styles.page}>
       <header className={styles.header}>
         <div>
           <h1 className="page-title">Jobs</h1>
           <p className={styles.intro}>
-            Scheduled work for your customers, ordered by date.
+            Scheduled and in-progress work for your customers, ordered by date.
           </p>
         </div>
         <Link className={styles.primaryAction} to="/jobs/new">
@@ -21,7 +21,7 @@ export default function JobsPage({ jobs }: { jobs: JobSummary[] }) {
         Job History
       </Link>
       {jobs.length ? (
-        <JobList jobs={jobs} />
+        <JobList jobs={jobs} canManage={canManage} />
       ) : (
         <div className={styles.emptyState}>
           <h2>No active jobs</h2>
