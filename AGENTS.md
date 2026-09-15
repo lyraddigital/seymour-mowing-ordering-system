@@ -140,11 +140,14 @@ Good examples:
 
 ```text
 create-job.ts
+update-job.ts
 start-job.ts
 complete-job.ts
 cancel-job.ts
 create-job-input.ts
+update-job-input.ts
 validate-create-job.ts
+validate-update-job.ts
 job-status.ts
 get-active-jobs.ts
 get-job-history.ts
@@ -469,7 +472,9 @@ Creating a Job:
 
 A Job must never be successfully created without its initial status-history record.
 
-## Job Naming
+---
+
+# Job Naming and Description
 
 Jobs have a required human-readable name.
 
@@ -491,7 +496,119 @@ The Job name should normally be the focal identifier and link to the Job detail 
 
 The Customer remains important contextual information and may link to the Customer record, but should not replace the Job as the primary UI concept.
 
-## Job Status Transitions
+Job name and description are descriptive metadata.
+
+They may be edited regardless of current Job status:
+
+```text
+scheduled
+in_progress
+completed
+cancelled
+```
+
+This allows corrections and clarification of the Job record without altering its lifecycle history.
+
+Editing Job name or description must not create or modify Job status-history rows.
+
+---
+
+# Job Customer Immutability
+
+The Customer associated with a Job is set when the Job is created and is immutable afterwards.
+
+Do not provide a general edit operation for:
+
+```text
+customer_id
+```
+
+Do not include `customerId` in Job update input types or edit forms.
+
+Do not allow a browser-submitted Customer id to alter an existing Job's Customer.
+
+If a Job was created for the wrong Customer, the required correction workflow is:
+
+```text
+1. Cancel the incorrect Job.
+2. Create a new Job for the correct Customer.
+```
+
+This is intentional.
+
+Do not introduce a "Change Customer", "Reassign Customer", or equivalent operation unless explicitly requested by a later product decision.
+
+The Customer relationship is considered part of the Job's identity and historical integrity.
+
+---
+
+# Scheduled Date Editing
+
+A Job's scheduled date may be changed only while the authoritative current status is:
+
+```text
+scheduled
+```
+
+Once the Job leaves the scheduled phase, its scheduled date becomes immutable.
+
+Therefore:
+
+```text
+scheduled:
+  scheduled date editable
+
+in_progress:
+  scheduled date read-only
+
+completed:
+  scheduled date read-only
+
+cancelled:
+  scheduled date read-only
+```
+
+This rule must be enforced server-side.
+
+Do not rely solely on disabling or hiding the field in the UI.
+
+When updating a Job whose current status is not `scheduled`, name and description may still be changed, but the scheduled date must remain unchanged.
+
+If the edit form includes the existing scheduled date as a submitted value, do not reject an otherwise valid metadata edit merely because the field is present.
+
+Reject the operation only if a non-scheduled Job attempts to change the stored scheduled date.
+
+Prefer making the field disabled or read-only in the UI when the Job is not scheduled, while still enforcing the invariant on the server.
+
+Editing a scheduled date does not itself create a Job status-history record.
+
+---
+
+# Job Edit Rules
+
+The current Job edit rules are:
+
+```text
+Field            Scheduled     In Progress     Completed     Cancelled
+
+name             editable      editable        editable      editable
+description      editable      editable        editable      editable
+scheduled date   editable      read-only       read-only     read-only
+customer         immutable     immutable       immutable     immutable
+status           lifecycle     lifecycle       lifecycle     lifecycle
+```
+
+Status is never changed through the normal Job edit form.
+
+Status changes occur only through explicit lifecycle operations.
+
+The Job edit operation should only accept fields it is allowed to modify.
+
+Do not create a broad update DTO that includes immutable or lifecycle-managed fields.
+
+---
+
+# Job Status Transitions
 
 Current legal transitions are:
 
@@ -508,6 +625,7 @@ The following are not currently valid:
 
 ```text
 in_progress -> scheduled
+in_progress -> in_progress
 
 completed -> scheduled
 completed -> in_progress
@@ -524,9 +642,9 @@ There is currently no reopen transition.
 
 There is currently no transition from `in_progress` back to `scheduled`.
 
-A scheduled Job may be completed directly without first being moved to `in_progress`.
+A scheduled Job may be completed directly without first moving to `in_progress`.
 
-This is intentional and avoids forcing an unnecessary intermediate action for simple Jobs.
+This is intentional.
 
 Starting, completing, or cancelling a Job must append a new status-history row.
 
@@ -760,13 +878,13 @@ tests/app/
 For example:
 
 ```text
-app/server/features/jobs/start-job.ts
+app/server/features/jobs/update-job.ts
 ```
 
 should normally have a corresponding test near:
 
 ```text
-tests/app/server/features/jobs/start-job.test.ts
+tests/app/server/features/jobs/update-job.test.ts
 ```
 
 Follow existing route-test conventions for files under `app/routes/`.
@@ -780,7 +898,9 @@ High-value tests include:
 * validation boundaries
 * authorization
 * domain invariants
-* transactional behaviour
+* immutable Customer relationship
+* scheduled-date mutation rules
+* metadata editing across Job statuses
 * status-history behaviour
 * legal and illegal status transitions
 * active/history filtering based on current status
@@ -789,6 +909,23 @@ High-value tests include:
 * failure cases that could otherwise create inconsistent state
 
 Avoid broad snapshot tests when focused behavioural assertions are clearer.
+
+For Job editing specifically, test at minimum:
+
+* scheduled Job name can be changed
+* scheduled Job description can be changed
+* scheduled Job date can be changed
+* in-progress Job name can be changed
+* in-progress Job description can be changed
+* in-progress Job date cannot be changed
+* completed Job name can be changed
+* completed Job description can be changed
+* completed Job date cannot be changed
+* cancelled Job name can be changed
+* cancelled Job description can be changed
+* cancelled Job date cannot be changed
+* Customer cannot be changed through the update operation
+* editing metadata does not alter status history
 
 ---
 
@@ -809,10 +946,9 @@ A slice may include:
 
 Do not implement future slices pre-emptively.
 
-When implementing `in_progress` and active-list actions, do not also add:
+When implementing Job editing, do not also add:
 
-* Job editing
-* rescheduling
+* Customer reassignment
 * reopening
 * moving `in_progress` back to `scheduled`
 * status-history timeline UI
@@ -822,7 +958,6 @@ When implementing `in_progress` and active-list actions, do not also add:
 * recurring Jobs
 * operator assignment
 * calendar views
-* notes
 * generic status-transition frameworks
 
 unless explicitly requested.
@@ -876,11 +1011,15 @@ Before considering work complete:
 7. Confirm legal transitions are enforced server-side.
 8. Confirm active Jobs includes both `scheduled` and `in_progress`.
 9. Confirm Job History contains `completed` and `cancelled`.
-10. Confirm active-list actions use the same domain operations as detail-page actions.
-11. Confirm redirect handling cannot create an open redirect.
-12. Confirm tests mirror production structure.
-13. Confirm new UI follows existing visual and structural conventions.
-14. Confirm no unnecessary abstractions were introduced.
+10. Confirm Customer cannot be changed after Job creation.
+11. Confirm name and description remain editable for all Job statuses.
+12. Confirm scheduled date can only change while the Job is `scheduled`.
+13. Confirm metadata edits do not modify Job status history.
+14. Confirm active-list actions use the same domain operations as detail-page actions.
+15. Confirm redirect handling cannot create an open redirect.
+16. Confirm tests mirror production structure.
+17. Confirm new UI follows existing visual and structural conventions.
+18. Confirm no unnecessary abstractions were introduced.
 
 Report:
 
