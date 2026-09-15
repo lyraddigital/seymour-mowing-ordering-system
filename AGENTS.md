@@ -105,6 +105,16 @@ Do not turn route modules into large page components.
 
 Where one route action represents one specific business operation, prefer a dedicated route/action rather than a generic action that dispatches based on a value supplied by the client.
 
+For example, prefer:
+
+```text
+POST /jobs/:jobId/start
+POST /jobs/:jobId/complete
+POST /jobs/:jobId/cancel
+```
+
+over a single generic status route accepting a client-supplied target status.
+
 ---
 
 # Server Features
@@ -130,6 +140,7 @@ Good examples:
 
 ```text
 create-job.ts
+start-job.ts
 complete-job.ts
 cancel-job.ts
 create-job-input.ts
@@ -214,9 +225,9 @@ Meaningful pages should own their own folder.
 Example:
 
 ```text
-app/ui/features/jobs/pages/job-history-page/
-├── job-history-page.tsx
-└── job-history-page.module.css
+app/ui/features/jobs/pages/jobs-page/
+├── jobs-page.tsx
+└── jobs-page.module.css
 ```
 
 ## Components
@@ -232,6 +243,10 @@ Meaningful components should normally own their own folder.
 Do not extract trivial components merely to reduce line count.
 
 Create a component when it represents a meaningful UI concept, has reusable behaviour, or materially improves readability.
+
+If an active Job row/card gains several meaningful actions and the existing list component becomes unwieldy, extracting a Job list item component is acceptable.
+
+Do not force such extraction prematurely.
 
 ---
 
@@ -314,13 +329,16 @@ Do not trust:
 * route parameters
 * foreign-key identifiers supplied by the browser
 * status values supplied by the browser
+* return destinations supplied by the browser
 * user role information supplied by the browser
 
 Business invariants must be enforced on the server.
 
-The server should determine the resulting status for explicit business actions such as completing or cancelling a Job.
+The server should determine the resulting status for explicit business actions such as starting, completing, or cancelling a Job.
 
 Do not accept arbitrary target status values from the client for those operations.
+
+If a browser-provided return destination is supported, it must be restricted to known safe application destinations rather than treated as an arbitrary redirect URL.
 
 ---
 
@@ -436,6 +454,7 @@ Current Job statuses are:
 
 ```text
 scheduled
+in_progress
 completed
 cancelled
 ```
@@ -477,25 +496,39 @@ The Customer remains important contextual information and may link to the Custom
 Current legal transitions are:
 
 ```text
+scheduled -> in_progress
 scheduled -> completed
 scheduled -> cancelled
+
+in_progress -> completed
+in_progress -> cancelled
 ```
 
 The following are not currently valid:
 
 ```text
+in_progress -> scheduled
+
+completed -> scheduled
+completed -> in_progress
 completed -> completed
 completed -> cancelled
 
-cancelled -> cancelled
+cancelled -> scheduled
+cancelled -> in_progress
 cancelled -> completed
+cancelled -> cancelled
 ```
 
 There is currently no reopen transition.
 
-There is currently no transition back to `scheduled`.
+There is currently no transition from `in_progress` back to `scheduled`.
 
-Completing or cancelling a Job must append a new status-history row.
+A scheduled Job may be completed directly without first being moved to `in_progress`.
+
+This is intentional and avoids forcing an unnecessary intermediate action for simple Jobs.
+
+Starting, completing, or cancelling a Job must append a new status-history row.
 
 Do not mutate or delete previous status-history records.
 
@@ -508,6 +541,7 @@ Do not rely on the UI hiding buttons to prevent invalid transitions.
 Prefer explicit business operations such as:
 
 ```text
+startJob
 completeJob
 cancelJob
 ```
@@ -516,50 +550,158 @@ over generic status-setting APIs.
 
 Do not introduce a generic workflow engine or state-machine abstraction unless future requirements demonstrate a real need.
 
-## Job Lists and History
+---
 
-The primary Jobs list represents active work.
+# Active Jobs and Job History
 
-For the current status model:
+The primary Jobs list represents active operational work.
+
+The current active statuses are:
+
+```text
+scheduled
+in_progress
+```
+
+Therefore:
 
 ```text
 /jobs
 ```
 
-contains Jobs whose authoritative current status is:
+contains Jobs whose authoritative current status is either:
 
 ```text
 scheduled
+in_progress
 ```
 
-Completed and cancelled Jobs must not disappear from the product entirely.
+Historical/non-active Jobs are shown separately.
 
-They remain valid historical records and must remain discoverable.
-
-Historical/non-active Jobs are shown separately from active Jobs.
-
-The current history view is:
-
-```text
-/jobs/history
-```
-
-and contains Jobs whose authoritative current status is:
+The current history statuses are:
 
 ```text
 completed
 cancelled
 ```
 
+Therefore:
+
+```text
+/jobs/history
+```
+
+contains Jobs whose authoritative current status is either:
+
+```text
+completed
+cancelled
+```
+
+The latest applicable status-history record determines which list a Job belongs to.
+
 Do not model completed or cancelled Jobs as deleted or archived merely to support this UI separation.
 
-`completed` and `cancelled` are Job statuses, not archival flags.
+Completed and cancelled are Job statuses, not archival flags.
 
 Both active and historical Jobs must continue to link to the normal Job detail page.
 
 Do not duplicate separate Job-detail implementations for active and historical Jobs.
 
-The authoritative latest status must determine which list a Job belongs to.
+---
+
+# Active Jobs Operational Actions
+
+The active Jobs list is an operational screen, not merely a navigation index.
+
+Common lifecycle actions should be available directly against active Jobs where appropriate.
+
+For a Job whose current status is:
+
+```text
+scheduled
+```
+
+the active Jobs UI may expose:
+
+```text
+Start Job
+Complete Job
+Cancel Job
+```
+
+For a Job whose current status is:
+
+```text
+in_progress
+```
+
+the active Jobs UI may expose:
+
+```text
+Complete Job
+Cancel Job
+```
+
+These actions may also remain available on the Job detail page.
+
+Providing actions on the active list does not replace the Job detail page.
+
+The same server-side transition operations and invariants must be used regardless of whether an action is initiated from the active Jobs list or Job detail page.
+
+Do not duplicate transition business logic in UI components or routes.
+
+The UI may decide which controls to show based on current status, but the server remains authoritative.
+
+---
+
+# Lifecycle Action Routes
+
+Prefer one dedicated route/action per Job lifecycle operation.
+
+Current operations are conceptually:
+
+```text
+POST /jobs/:jobId/start
+POST /jobs/:jobId/complete
+POST /jobs/:jobId/cancel
+```
+
+Do not replace these with a generic status endpoint controlled by a client-supplied status value.
+
+Lifecycle routes should remain thin.
+
+Their responsibilities are typically:
+
+* authenticate
+* authorize
+* validate/read Job id
+* call the relevant domain operation
+* map known domain errors to the established response pattern
+* redirect to the appropriate UI destination
+
+Business transition rules belong in the server feature, not the route.
+
+---
+
+# Redirect Behaviour for Shared Actions
+
+Lifecycle actions may be initiated from more than one UI surface, such as:
+
+```text
+/jobs
+/jobs/:jobId
+```
+
+Do not put UI navigation concerns into `startJob`, `completeJob`, or `cancelJob`.
+
+The route/controller layer owns redirect behaviour.
+
+If a return destination is supplied by the client, it must be constrained to known safe application destinations.
+
+Do not implement an open redirect using arbitrary client-provided URLs.
+
+A small explicit destination value or route-specific behaviour is preferable to a generic redirect mechanism.
 
 ---
 
@@ -618,13 +760,13 @@ tests/app/
 For example:
 
 ```text
-app/server/features/jobs/queries/get-job-history.ts
+app/server/features/jobs/start-job.ts
 ```
 
 should normally have a corresponding test near:
 
 ```text
-tests/app/server/features/jobs/queries/get-job-history.test.ts
+tests/app/server/features/jobs/start-job.test.ts
 ```
 
 Follow existing route-test conventions for files under `app/routes/`.
@@ -642,6 +784,7 @@ High-value tests include:
 * status-history behaviour
 * legal and illegal status transitions
 * active/history filtering based on current status
+* actions exposed for the correct active states
 * predictable ordering
 * failure cases that could otherwise create inconsistent state
 
@@ -666,11 +809,12 @@ A slice may include:
 
 Do not implement future slices pre-emptively.
 
-When implementing Job History, do not also add:
+When implementing `in_progress` and active-list actions, do not also add:
 
 * Job editing
 * rescheduling
 * reopening
+* moving `in_progress` back to `scheduled`
 * status-history timeline UI
 * Job items
 * pricing
@@ -729,11 +873,14 @@ Before considering work complete:
 4. Run linting/formatting using the project's existing commands where applicable.
 5. Confirm authorization is enforced server-side.
 6. Confirm Job status remains derived from status history.
-7. Confirm active and history lists use authoritative current status.
-8. Confirm completed/cancelled Jobs remain accessible through Job detail.
-9. Confirm tests mirror production structure.
-10. Confirm new UI follows existing visual and structural conventions.
-11. Confirm no unnecessary abstractions were introduced.
+7. Confirm legal transitions are enforced server-side.
+8. Confirm active Jobs includes both `scheduled` and `in_progress`.
+9. Confirm Job History contains `completed` and `cancelled`.
+10. Confirm active-list actions use the same domain operations as detail-page actions.
+11. Confirm redirect handling cannot create an open redirect.
+12. Confirm tests mirror production structure.
+13. Confirm new UI follows existing visual and structural conventions.
+14. Confirm no unnecessary abstractions were introduced.
 
 Report:
 
