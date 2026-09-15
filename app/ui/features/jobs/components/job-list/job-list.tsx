@@ -9,9 +9,15 @@ const dateFormat = new Intl.DateTimeFormat("en-AU", {
   timeZone: "UTC",
 });
 
-export default function JobList({ jobs }: { jobs: JobSummary[] }) {
+export default function JobList({
+  jobs,
+  label = "Active jobs",
+}: {
+  jobs: JobSummary[];
+  label?: string;
+}) {
   return (
-    <ul className={styles.list} aria-label="Active jobs">
+    <ul className={styles.list} aria-label={label}>
       {jobs.map((job) => (
         <li key={job.id} className={styles.job}>
           <div>

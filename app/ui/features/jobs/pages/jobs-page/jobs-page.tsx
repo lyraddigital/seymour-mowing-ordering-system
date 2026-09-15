@@ -17,6 +17,9 @@ export default function JobsPage({ jobs }: { jobs: JobSummary[] }) {
           New job
         </Link>
       </header>
+      <Link className={styles.historyLink} to="/jobs/history">
+        Job History
+      </Link>
       {jobs.length ? (
         <JobList jobs={jobs} />
       ) : (

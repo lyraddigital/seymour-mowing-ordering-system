@@ -11,6 +11,7 @@ export default [
     route("customers", "routes/customers.tsx"),
     route("jobs", "routes/jobs.tsx"),
     route("jobs/new", "routes/jobs.new.tsx"),
+    route("jobs/history", "routes/jobs.history.tsx"),
     route("jobs/:jobId", "routes/jobs.$jobId.tsx"),
     route("jobs/:jobId/complete", "routes/jobs.$jobId.complete.tsx"),
     route("jobs/:jobId/cancel", "routes/jobs.$jobId.cancel.tsx"),

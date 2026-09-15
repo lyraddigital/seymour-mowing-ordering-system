@@ -15,7 +15,7 @@ When making changes:
 * Avoid abstraction for abstraction's sake.
 * Read this file before making changes.
 
-If existing code conflicts with assumptions in a task prompt, inspect the repository and follow the established project conventions unless the task explicitly requires changing them.
+If existing code conflicts with assumptions in a task prompt, inspect the repository and follow established project conventions unless the task explicitly requires changing them.
 
 ---
 
@@ -70,7 +70,7 @@ Avoid:
 
 A small amount of duplication is preferable to premature abstraction.
 
-Refactor only when the task requires it or when a small local refactor is necessary to implement the requested behaviour cleanly.
+Refactor only when required by the task or when a small local refactor is necessary to implement requested behaviour cleanly.
 
 ---
 
@@ -103,7 +103,7 @@ Do not place database queries directly in route modules when the logic belongs t
 
 Do not turn route modules into large page components.
 
-Where one route action represents one specific business operation, prefer a dedicated route/action rather than a generic action that dispatches based on an operation/status value supplied by the client.
+Where one route action represents one specific business operation, prefer a dedicated route/action rather than a generic action that dispatches based on a value supplied by the client.
 
 ---
 
@@ -136,6 +136,7 @@ create-job-input.ts
 validate-create-job.ts
 job-status.ts
 get-active-jobs.ts
+get-job-history.ts
 archive-customer.ts
 ```
 
@@ -150,7 +151,7 @@ services.ts
 common.ts
 ```
 
-unless the contents genuinely represent one cohesive concept and the existing repository already uses that convention.
+unless the contents genuinely represent one cohesive concept and the repository already uses that convention.
 
 Do not introduce classes merely to create "services".
 
@@ -166,6 +167,7 @@ For example:
 
 ```text
 app/server/features/jobs/queries/get-active-jobs.ts
+app/server/features/jobs/queries/get-job-history.ts
 ```
 
 Queries should return data shaped appropriately for their caller.
@@ -212,9 +214,9 @@ Meaningful pages should own their own folder.
 Example:
 
 ```text
-app/ui/features/jobs/pages/job-page/
-├── job-page.tsx
-└── job-page.module.css
+app/ui/features/jobs/pages/job-history-page/
+├── job-history-page.tsx
+└── job-history-page.module.css
 ```
 
 ## Components
@@ -257,7 +259,7 @@ A type should have its own file only when it represents a meaningful shared or d
 
 # CSS
 
-Use CSS Modules following the existing project conventions.
+Use CSS Modules following existing project conventions.
 
 CSS should be co-located with the page, component, or layout that owns it.
 
@@ -284,7 +286,7 @@ Use TypeScript strict mode correctly.
 
 Do not weaken types to make implementation easier.
 
-Avoid `any` unless interoperability genuinely requires it and its use is narrowly contained.
+Avoid `any` unless interoperability genuinely requires it and use is narrowly contained.
 
 Prefer domain-specific types with meaningful names.
 
@@ -316,7 +318,9 @@ Do not trust:
 
 Business invariants must be enforced on the server.
 
-The server should determine the resulting status for explicit business actions such as "complete job" or "cancel job". Do not accept an arbitrary target status from the client for these operations.
+The server should determine the resulting status for explicit business actions such as completing or cancelling a Job.
+
+Do not accept arbitrary target status values from the client for those operations.
 
 ---
 
@@ -333,7 +337,7 @@ Internal users currently have:
 
 roles.
 
-Follow the existing authentication and authorization helpers and patterns.
+Follow existing authentication and authorization helpers and patterns.
 
 Do not duplicate Access parsing or authorization logic when established helpers already exist.
 
@@ -345,7 +349,7 @@ Do not rely on hiding UI controls as authorization.
 
 # Database and Drizzle
 
-Use the existing D1 and Drizzle conventions.
+Use existing D1 and Drizzle conventions.
 
 Before adding schema code:
 
@@ -501,23 +505,61 @@ Transition validity must be enforced server-side using the authoritative current
 
 Do not rely on the UI hiding buttons to prevent invalid transitions.
 
-Prefer explicit business operations:
+Prefer explicit business operations such as:
 
 ```text
 completeJob
 cancelJob
 ```
 
-over a generic API such as:
+over generic status-setting APIs.
+
+Do not introduce a generic workflow engine or state-machine abstraction unless future requirements demonstrate a real need.
+
+## Job Lists and History
+
+The primary Jobs list represents active work.
+
+For the current status model:
 
 ```text
-setJobStatus(status)
-transitionJob(status)
+/jobs
 ```
 
-at this stage.
+contains Jobs whose authoritative current status is:
 
-Do not introduce a generic workflow engine or state-machine abstraction unless future requirements demonstrate a real need for one.
+```text
+scheduled
+```
+
+Completed and cancelled Jobs must not disappear from the product entirely.
+
+They remain valid historical records and must remain discoverable.
+
+Historical/non-active Jobs are shown separately from active Jobs.
+
+The current history view is:
+
+```text
+/jobs/history
+```
+
+and contains Jobs whose authoritative current status is:
+
+```text
+completed
+cancelled
+```
+
+Do not model completed or cancelled Jobs as deleted or archived merely to support this UI separation.
+
+`completed` and `cancelled` are Job statuses, not archival flags.
+
+Both active and historical Jobs must continue to link to the normal Job detail page.
+
+Do not duplicate separate Job-detail implementations for active and historical Jobs.
+
+The authoritative latest status must determine which list a Job belongs to.
 
 ---
 
@@ -576,13 +618,13 @@ tests/app/
 For example:
 
 ```text
-app/server/features/jobs/complete-job.ts
+app/server/features/jobs/queries/get-job-history.ts
 ```
 
 should normally have a corresponding test near:
 
 ```text
-tests/app/server/features/jobs/complete-job.test.ts
+tests/app/server/features/jobs/queries/get-job-history.test.ts
 ```
 
 Follow existing route-test conventions for files under `app/routes/`.
@@ -599,7 +641,7 @@ High-value tests include:
 * transactional behaviour
 * status-history behaviour
 * legal and illegal status transitions
-* query filtering
+* active/history filtering based on current status
 * predictable ordering
 * failure cases that could otherwise create inconsistent state
 
@@ -624,11 +666,12 @@ A slice may include:
 
 Do not implement future slices pre-emptively.
 
-When implementing Job status actions, do not also add:
+When implementing Job History, do not also add:
 
 * Job editing
 * rescheduling
 * reopening
+* status-history timeline UI
 * Job items
 * pricing
 * invoice generation
@@ -649,7 +692,7 @@ Before creating a file, ask:
 1. Does this represent one meaningful concept?
 2. Does an existing file already own this responsibility?
 3. Is this abstraction required now?
-4. Does its location match the repository architecture?
+4. Does its location match repository architecture?
 
 Do not create placeholder files for hypothetical future behaviour.
 
@@ -684,10 +727,10 @@ Before considering work complete:
 2. Run the relevant test suite.
 3. Run TypeScript/type checking using the project's existing command.
 4. Run linting/formatting using the project's existing commands where applicable.
-5. Confirm new server mutations validate input.
-6. Confirm authorization is enforced server-side.
-7. Confirm database operations preserve domain invariants.
-8. Confirm Job status transitions preserve existing history.
+5. Confirm authorization is enforced server-side.
+6. Confirm Job status remains derived from status history.
+7. Confirm active and history lists use authoritative current status.
+8. Confirm completed/cancelled Jobs remain accessible through Job detail.
 9. Confirm tests mirror production structure.
 10. Confirm new UI follows existing visual and structural conventions.
 11. Confirm no unnecessary abstractions were introduced.

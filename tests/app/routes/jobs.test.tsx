@@ -64,6 +64,7 @@ it("renders list-ready loader data and a creation link", async () => {
   expect(html).toContain('dateTime="2026-09-15"');
   expect(html).toContain("scheduled");
   expect(html).toContain('href="/jobs/new"');
+  expect(html).toContain('href="/jobs/history"');
 });
 it("renders the empty state", async () => {
   const result = await loader(args());
@@ -73,6 +74,7 @@ it("renders the empty state", async () => {
     </MemoryRouter>,
   );
   expect(html).toContain("No active jobs");
+  expect(html).toContain('href="/jobs/history"');
   expect(html).toContain("Create job");
 });
 it("denies access without read permission", async () => {
