@@ -1,4 +1,5 @@
 import { PermissionDeniedError } from "../server/auth/authorization/errors/permission-denied-error";
+import { can } from "../server/auth/authorization/policies/can";
 import { currentUserContext } from "../server/auth/context/current-user-context";
 import { runtimeContext } from "../server/auth/context/runtime-context";
 import { getJobById } from "../server/features/jobs/queries/get-job-by-id.server";
@@ -13,7 +14,10 @@ export async function loader({ context, params }: Route.LoaderArgs) {
       params.jobId,
     );
     if (!job) throw new Response("Job not found", { status: 404 });
-    return { job };
+    return {
+      job,
+      canManage: can(context.get(currentUserContext), "jobs.manage"),
+    };
   } catch (error) {
     if (error instanceof PermissionDeniedError)
       throw new Response("Forbidden", { status: 403 });
@@ -22,5 +26,5 @@ export async function loader({ context, params }: Route.LoaderArgs) {
 }
 
 export default function JobRoute({ loaderData }: Route.ComponentProps) {
-  return <JobPage job={loaderData.job} />;
+  return <JobPage job={loaderData.job} canManage={loaderData.canManage} />;
 }

@@ -1,0 +1,33 @@
+import { redirect } from "react-router";
+import type { Route } from "./+types/jobs.$jobId.cancel";
+import { currentUserContext } from "../server/auth/context/current-user-context";
+import { runtimeContext } from "../server/auth/context/runtime-context";
+import { PermissionDeniedError } from "../server/auth/authorization/errors/permission-denied-error";
+import { JobNotFoundError } from "../server/features/jobs/errors/job-not-found-error";
+import { JobStateConflictError } from "../server/features/jobs/errors/job-state-conflict-error";
+import { cancelJob } from "../server/features/jobs/services/cancel-job.server";
+
+export async function action({ request, context, params }: Route.ActionArgs) {
+  if (request.method !== "POST") {
+    throw new Response("Method Not Allowed", {
+      status: 405,
+      headers: { Allow: "POST" },
+    });
+  }
+  try {
+    await cancelJob(
+      context.get(runtimeContext).env.DB,
+      context.get(currentUserContext),
+      params.jobId,
+    );
+  } catch (error) {
+    if (error instanceof PermissionDeniedError)
+      throw new Response("Forbidden", { status: 403 });
+    if (error instanceof JobNotFoundError)
+      throw new Response("Job not found", { status: 404 });
+    if (error instanceof JobStateConflictError)
+      throw new Response(error.message, { status: 409 });
+    throw error;
+  }
+  return redirect(`/jobs/${params.jobId}`);
+}
