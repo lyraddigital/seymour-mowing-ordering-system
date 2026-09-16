@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+import { Form, Link } from "react-router";
 
 import type { JobItemSummary } from "~/server/features/jobs/types/job-item-summary";
 import styles from "./job-items.module.css";
@@ -50,12 +50,34 @@ export default function JobItems({
                   </span>
 
                   {canManage && (
-                    <Link
-                      className={styles.editAction}
-                      to={`/jobs/${jobId}/items/${item.id}/edit`}
-                    >
-                      Edit
-                    </Link>
+                    <div className={styles.managementActions}>
+                      <Link
+                        className={styles.editAction}
+                        to={`/jobs/${jobId}/items/${item.id}/edit`}
+                      >
+                        Edit
+                      </Link>
+
+                      <details className={styles.removeConfirmation}>
+                        <summary>Remove</summary>
+
+                        <div className={styles.removeConfirmationBody}>
+                          <p>Remove this item from the job?</p>
+
+                          <Form
+                            method="post"
+                            action={`/jobs/${jobId}/items/${item.id}/delete`}
+                          >
+                            <button
+                              className={styles.removeAction}
+                              type="submit"
+                            >
+                              Confirm remove
+                            </button>
+                          </Form>
+                        </div>
+                      </details>
+                    </div>
                   )}
                 </div>
               </li>
