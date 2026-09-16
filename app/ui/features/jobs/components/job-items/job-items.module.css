@@ -83,3 +83,22 @@
     gap: 16px;
   }
 }
+
+.addAction {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 1px solid #365941;
+  border-radius: 6px;
+  background: #365941;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.addAction:hover {
+  background: #2d4b36;
+}

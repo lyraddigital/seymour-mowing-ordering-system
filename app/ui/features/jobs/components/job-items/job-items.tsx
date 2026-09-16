@@ -1,3 +1,5 @@
+import { Link } from "react-router";
+
 import type { JobItemSummary } from "~/server/features/jobs/types/ob-item-summary";
 import styles from "./job-items.module.css";
 
@@ -7,11 +9,18 @@ const currencyFormatter = new Intl.NumberFormat("en-AU", {
 });
 
 interface JobItemsProps {
+  jobId: string;
   items: JobItemSummary[];
   totalCents: number;
+  canManage: boolean;
 }
 
-export default function JobItems({ items, totalCents }: JobItemsProps) {
+export default function JobItems({
+  jobId,
+  items,
+  totalCents,
+  canManage,
+}: JobItemsProps) {
   return (
     <section className={styles.section}>
       <div className={styles.header}>
@@ -19,6 +28,11 @@ export default function JobItems({ items, totalCents }: JobItemsProps) {
           <h2>Items</h2>
           <p>Work and charges recorded against this job.</p>
         </div>
+        {canManage && (
+          <Link className={styles.addAction} to={`/jobs/${jobId}/items/new`}>
+            Add item
+          </Link>
+        )}
       </div>
 
       {items.length === 0 ? (

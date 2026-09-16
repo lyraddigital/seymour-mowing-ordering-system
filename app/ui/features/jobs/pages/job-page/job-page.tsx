@@ -70,7 +70,12 @@ export default function JobPage({
           <h2>Description</h2>
           <p className={styles.description}>{job.description}</p>
         </section>
-        <JobItems items={jobItems} totalCents={jobTotalCents} />
+        <JobItems
+          jobId={job.id}
+          items={jobItems}
+          totalCents={jobTotalCents}
+          canManage={canManage}
+        />
       </div>
       {canManage && <Link to={`/jobs/${job.id}/edit`}>Edit Job</Link>}
       {canManage && <JobLifecycleActions job={job} returnTo="detail" />}
