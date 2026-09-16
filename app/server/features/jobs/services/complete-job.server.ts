@@ -56,8 +56,9 @@ export async function completeJob(
       .where(eq(jobs.id, jobId))
       .get();
     if (!existing) throw new JobNotFoundError();
-    throw new JobStateConflictError("Only scheduled or in-progress jobs can be completed.");
+    throw new JobStateConflictError(
+      "Only scheduled or in-progress jobs can be completed.",
+    );
   }
   return inserted;
 }
-

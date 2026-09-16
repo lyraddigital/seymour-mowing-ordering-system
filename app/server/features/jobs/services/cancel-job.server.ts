@@ -56,8 +56,9 @@ export async function cancelJob(
       .where(eq(jobs.id, jobId))
       .get();
     if (!existing) throw new JobNotFoundError();
-    throw new JobStateConflictError("Only scheduled or in-progress jobs can be cancelled.");
+    throw new JobStateConflictError(
+      "Only scheduled or in-progress jobs can be cancelled.",
+    );
   }
   return inserted;
 }
-

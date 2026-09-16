@@ -80,7 +80,7 @@ it.each(["admin", "operator"] as const)(
     expect(html).toContain("Complete Job");
     expect(html).toContain("<summary>Cancel Job</summary>");
     expect(html).toContain("Confirm cancellation");
-    expect(html).not.toContain("/edit");
+    expect(html).toContain(`/jobs/${jobId}/edit`);
   },
 );
 it.each([

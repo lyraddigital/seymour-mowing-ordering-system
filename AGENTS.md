@@ -6,14 +6,14 @@ This repository contains the Seymour Mowing Ordering System.
 
 When making changes:
 
-* Preserve the existing architecture.
-* Prefer small, reviewable changes.
-* Follow existing patterns before introducing new ones.
-* Avoid unrelated refactors.
-* Keep implementation explicit, readable, and boring.
-* Use pragmatic SOLID principles.
-* Avoid abstraction for abstraction's sake.
-* Read this file before making changes.
+- Preserve the existing architecture.
+- Prefer small, reviewable changes.
+- Follow existing patterns before introducing new ones.
+- Avoid unrelated refactors.
+- Keep implementation explicit, readable, and boring.
+- Use pragmatic SOLID principles.
+- Avoid abstraction for abstraction's sake.
+- Read this file before making changes.
 
 If existing code conflicts with assumptions in a task prompt, inspect the repository and follow established project conventions unless the task explicitly requires changing them.
 
@@ -23,14 +23,14 @@ If existing code conflicts with assumptions in a task prompt, inspect the reposi
 
 The application uses:
 
-* Cloudflare Workers
-* React Router Framework Mode with SSR
-* TypeScript with strict mode
-* Cloudflare D1
-* Drizzle ORM
-* Cloudflare Access
-* Google as the sole Cloudflare Access identity provider
-* Vitest and the project's existing test infrastructure
+- Cloudflare Workers
+- React Router Framework Mode with SSR
+- TypeScript with strict mode
+- Cloudflare D1
+- Drizzle ORM
+- Cloudflare Access
+- Google as the sole Cloudflare Access identity provider
+- Vitest and the project's existing test infrastructure
 
 Staging and production are deployed independently.
 
@@ -44,29 +44,29 @@ Do not introduce infrastructure, frameworks, packages, or architectural layers u
 
 Prefer:
 
-* simple code
-* explicit dependencies
-* small functions with clear responsibilities
-* feature-local code
-* domain-specific names
-* predictable control flow
-* narrow interfaces
-* server-side validation
-* database constraints where appropriate
-* transactions where multiple writes form one business operation
+- simple code
+- explicit dependencies
+- small functions with clear responsibilities
+- feature-local code
+- domain-specific names
+- predictable control flow
+- narrow interfaces
+- server-side validation
+- database constraints where appropriate
+- transactions where multiple writes form one business operation
 
 Avoid:
 
-* speculative abstractions
-* generic repository layers without demonstrated need
-* service locators
-* global dependency containers
-* unnecessary inheritance
-* generic CRUD frameworks
-* premature state machines
-* excessive indirection
-* unnecessary wrapper functions
-* unrelated cleanup while implementing a feature
+- speculative abstractions
+- generic repository layers without demonstrated need
+- service locators
+- global dependency containers
+- unnecessary inheritance
+- generic CRUD frameworks
+- premature state machines
+- excessive indirection
+- unnecessary wrapper functions
+- unrelated cleanup while implementing a feature
 
 A small amount of duplication is preferable to premature abstraction.
 
@@ -88,14 +88,14 @@ Routes are thin adapters/controllers.
 
 A route may:
 
-* authenticate the request
-* authorize the user
-* parse route parameters
-* parse submitted form data
-* call server feature functions
-* map known server results to HTTP responses
-* redirect
-* provide loader/action data to presentation components
+- authenticate the request
+- authorize the user
+- parse route parameters
+- parse submitted form data
+- call server feature functions
+- map known server results to HTTP responses
+- redirect
+- provide loader/action data to presentation components
 
 Routes should not contain substantial business logic.
 
@@ -328,12 +328,12 @@ Validation behaviour should be explicit and testable.
 
 Do not trust:
 
-* form data
-* route parameters
-* foreign-key identifiers supplied by the browser
-* status values supplied by the browser
-* return destinations supplied by the browser
-* user role information supplied by the browser
+- form data
+- route parameters
+- foreign-key identifiers supplied by the browser
+- status values supplied by the browser
+- return destinations supplied by the browser
+- user role information supplied by the browser
 
 Business invariants must be enforced on the server.
 
@@ -353,8 +353,8 @@ Application users are stored internally in D1.
 
 Internal users currently have:
 
-* admin
-* operator
+- admin
+- operator
 
 roles.
 
@@ -374,11 +374,11 @@ Use existing D1 and Drizzle conventions.
 
 Before adding schema code:
 
-* inspect the existing schema layout
-* follow the existing identifier strategy
-* follow existing timestamp conventions
-* follow existing foreign-key conventions
-* follow existing migration conventions
+- inspect the existing schema layout
+- follow the existing identifier strategy
+- follow existing timestamp conventions
+- follow existing foreign-key conventions
+- follow existing migration conventions
 
 Do not reorganize the database layer as part of an unrelated feature.
 
@@ -408,20 +408,20 @@ Customers are never hard-deleted.
 
 Customers may be:
 
-* active
-* archived
+- active
+- archived
 
 Archived Customers may later be restored.
 
 Current Customer operations include:
 
-* active Customer list
-* create Customer
-* Customer detail
-* edit Customer
-* archive Customer
-* archived Customer list
-* restore Customer
+- active Customer list
+- create Customer
+- Customer detail
+- edit Customer
+- archive Customer
+- archived Customer list
+- restore Customer
 
 New behaviour must preserve these semantics.
 
@@ -464,11 +464,11 @@ cancelled
 
 Creating a Job:
 
-* requires an active Customer
-* creates the Job
-* creates an initial `scheduled` status-history entry
-* records the responsible internal Seymour user
-* performs Job creation and initial history creation atomically
+- requires an active Customer
+- creates the Job
+- creates an initial `scheduled` status-history entry
+- records the responsible internal Seymour user
+- performs Job creation and initial history creation atomically
 
 A Job must never be successfully created without its initial status-history record.
 
@@ -791,12 +791,12 @@ Lifecycle routes should remain thin.
 
 Their responsibilities are typically:
 
-* authenticate
-* authorize
-* validate/read Job id
-* call the relevant domain operation
-* map known domain errors to the established response pattern
-* redirect to the appropriate UI destination
+- authenticate
+- authorize
+- validate/read Job id
+- call the relevant domain operation
+- map known domain errors to the established response pattern
+- redirect to the appropriate UI destination
 
 Business transition rules belong in the server feature, not the route.
 
@@ -895,37 +895,37 @@ Do not duplicate implementation details unnecessarily.
 
 High-value tests include:
 
-* validation boundaries
-* authorization
-* domain invariants
-* immutable Customer relationship
-* scheduled-date mutation rules
-* metadata editing across Job statuses
-* status-history behaviour
-* legal and illegal status transitions
-* active/history filtering based on current status
-* actions exposed for the correct active states
-* predictable ordering
-* failure cases that could otherwise create inconsistent state
+- validation boundaries
+- authorization
+- domain invariants
+- immutable Customer relationship
+- scheduled-date mutation rules
+- metadata editing across Job statuses
+- status-history behaviour
+- legal and illegal status transitions
+- active/history filtering based on current status
+- actions exposed for the correct active states
+- predictable ordering
+- failure cases that could otherwise create inconsistent state
 
 Avoid broad snapshot tests when focused behavioural assertions are clearer.
 
 For Job editing specifically, test at minimum:
 
-* scheduled Job name can be changed
-* scheduled Job description can be changed
-* scheduled Job date can be changed
-* in-progress Job name can be changed
-* in-progress Job description can be changed
-* in-progress Job date cannot be changed
-* completed Job name can be changed
-* completed Job description can be changed
-* completed Job date cannot be changed
-* cancelled Job name can be changed
-* cancelled Job description can be changed
-* cancelled Job date cannot be changed
-* Customer cannot be changed through the update operation
-* editing metadata does not alter status history
+- scheduled Job name can be changed
+- scheduled Job description can be changed
+- scheduled Job date can be changed
+- in-progress Job name can be changed
+- in-progress Job description can be changed
+- in-progress Job date cannot be changed
+- completed Job name can be changed
+- completed Job description can be changed
+- completed Job date cannot be changed
+- cancelled Job name can be changed
+- cancelled Job description can be changed
+- cancelled Job date cannot be changed
+- Customer cannot be changed through the update operation
+- editing metadata does not alter status history
 
 ---
 
@@ -937,28 +937,28 @@ A good vertical slice should include only what is required to deliver one useful
 
 A slice may include:
 
-* schema/migration changes
-* server feature behaviour
-* query behaviour
-* route adapters
-* UI
-* focused tests
+- schema/migration changes
+- server feature behaviour
+- query behaviour
+- route adapters
+- UI
+- focused tests
 
 Do not implement future slices pre-emptively.
 
 When implementing Job editing, do not also add:
 
-* Customer reassignment
-* reopening
-* moving `in_progress` back to `scheduled`
-* status-history timeline UI
-* Job items
-* pricing
-* invoice generation
-* recurring Jobs
-* operator assignment
-* calendar views
-* generic status-transition frameworks
+- Customer reassignment
+- reopening
+- moving `in_progress` back to `scheduled`
+- status-history timeline UI
+- Job items
+- pricing
+- invoice generation
+- recurring Jobs
+- operator assignment
+- calendar views
+- generic status-transition frameworks
 
 unless explicitly requested.
 
@@ -985,14 +985,14 @@ Implement only the requested task.
 
 Do not:
 
-* rename unrelated files
-* reorganize unrelated directories
-* reformat large unrelated areas
-* rewrite working code for personal preference
-* introduce unrelated dependencies
-* clean up unrelated TODOs
-* alter CI or deployment workflows unless required
-* change authentication architecture unless required
+- rename unrelated files
+- reorganize unrelated directories
+- reformat large unrelated areas
+- rewrite working code for personal preference
+- introduce unrelated dependencies
+- clean up unrelated TODOs
+- alter CI or deployment workflows unless required
+- change authentication architecture unless required
 
 If a small nearby change is essential for correctness, keep it tightly scoped and explain it in the final summary.
 
@@ -1023,9 +1023,9 @@ Before considering work complete:
 
 Report:
 
-* what changed
-* important design decisions
-* tests/checks run
-* any assumptions or limitations
+- what changed
+- important design decisions
+- tests/checks run
+- any assumptions or limitations
 
 Do not claim a test or check passed unless it was actually run successfully.

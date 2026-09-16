@@ -50,7 +50,11 @@ export default function JobPage({
             </div>
             <div>
               <dt>Status</dt>
-              <dd className={styles.status}>{job.currentStatus === "in_progress" ? "In Progress" : job.currentStatus}</dd>
+              <dd className={styles.status}>
+                {job.currentStatus === "in_progress"
+                  ? "In Progress"
+                  : job.currentStatus}
+              </dd>
             </div>
           </dl>
         </section>
@@ -59,8 +63,8 @@ export default function JobPage({
           <p className={styles.description}>{job.description}</p>
         </section>
       </div>
+      {canManage && <Link to={`/jobs/${job.id}/edit`}>Edit Job</Link>}
       {canManage && <JobLifecycleActions job={job} returnTo="detail" />}
     </section>
   );
 }
-

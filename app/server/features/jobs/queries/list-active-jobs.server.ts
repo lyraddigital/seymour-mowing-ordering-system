@@ -38,4 +38,3 @@ export async function listActiveJobs(binding: Env["DB"], user: CurrentUser) {
     .where(inArray(jobStatusHistory.status, ["scheduled", "in_progress"]))
     .orderBy(asc(jobs.scheduledDate), asc(jobs.id));
 }
-

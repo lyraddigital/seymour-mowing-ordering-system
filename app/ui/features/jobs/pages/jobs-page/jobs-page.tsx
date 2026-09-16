@@ -3,7 +3,13 @@ import type { JobSummary } from "../../../../../server/features/jobs/types/job-s
 import JobList from "../../components/job-list/job-list";
 import styles from "./jobs-page.module.css";
 
-export default function JobsPage({ jobs, canManage }: { jobs: JobSummary[]; canManage: boolean }) {
+export default function JobsPage({
+  jobs,
+  canManage,
+}: {
+  jobs: JobSummary[];
+  canManage: boolean;
+}) {
   return (
     <section className={styles.page}>
       <header className={styles.header}>

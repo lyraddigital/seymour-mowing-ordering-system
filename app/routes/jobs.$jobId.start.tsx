@@ -16,15 +16,12 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     });
   }
   const user = context.get(currentUserContext);
-  if (!can(user, "jobs.manage")) throw new Response("Forbidden", { status: 403 });
+  if (!can(user, "jobs.manage"))
+    throw new Response("Forbidden", { status: 403 });
   const form = await request.formData();
   const returnToList = form.get("returnTo") === "list";
   try {
-    await startJob(
-      context.get(runtimeContext).env.DB,
-      user,
-      params.jobId,
-    );
+    await startJob(context.get(runtimeContext).env.DB, user, params.jobId);
   } catch (error) {
     if (error instanceof PermissionDeniedError)
       throw new Response("Forbidden", { status: 403 });
@@ -36,5 +33,3 @@ export async function action({ request, context, params }: Route.ActionArgs) {
   }
   return redirect(returnToList ? "/jobs" : `/jobs/${params.jobId}`);
 }
-
-

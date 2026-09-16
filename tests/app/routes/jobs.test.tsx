@@ -1,6 +1,11 @@
 import { env } from "cloudflare:workers";
 import { beforeEach, expect, it } from "vitest";
-import { MemoryRouter, RouterContextProvider } from "react-router";
+import type { ComponentProps } from "react";
+import {
+  createMemoryRouter,
+  RouterContextProvider,
+  RouterProvider,
+} from "react-router";
 import { renderToStaticMarkup } from "react-dom/server";
 import { loader } from "../../../app/routes/jobs";
 import { currentUserContext } from "../../../app/server/auth/context/current-user-context";
@@ -23,6 +28,22 @@ const args = () => ({
   params: {},
   pattern: "/jobs",
 });
+function renderJobsPage(props: ComponentProps<typeof JobsPage>) {
+  const router = createMemoryRouter(
+    [
+      {
+        path: "/jobs",
+        element: <JobsPage {...props} />,
+      },
+    ],
+    {
+      initialEntries: ["/jobs"],
+    },
+  );
+
+  return renderToStaticMarkup(<RouterProvider router={router} />);
+}
+
 beforeEach(async () => {
   context = new RouterContextProvider();
   context.set(currentUserContext, user);
@@ -48,11 +69,10 @@ it("renders list-ready loader data and a creation link", async () => {
     scheduledDate: "2026-09-15",
   });
   const result = await loader(args());
-  const html = renderToStaticMarkup(
-    <MemoryRouter>
-      <JobsPage jobs={result.jobs} />
-    </MemoryRouter>,
-  );
+  const html = renderJobsPage({
+    jobs: result.jobs,
+    canManage: true,
+  });
   expect(html).toContain("Visible customer");
   expect(html).toMatch(
     new RegExp(`<h2[^>]*><a[^>]*href="/jobs/${id}"[^>]*>Lawn service</a></h2>`),
@@ -68,11 +88,10 @@ it("renders list-ready loader data and a creation link", async () => {
 });
 it("renders the empty state", async () => {
   const result = await loader(args());
-  const html = renderToStaticMarkup(
-    <MemoryRouter>
-      <JobsPage jobs={result.jobs} />
-    </MemoryRouter>,
-  );
+  const html = renderJobsPage({
+    jobs: result.jobs,
+    canManage: true,
+  });
   expect(html).toContain("No active jobs");
   expect(html).toContain('href="/jobs/history"');
   expect(html).toContain("Create job");

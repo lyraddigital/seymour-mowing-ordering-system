@@ -36,4 +36,3 @@ export const jobStatusHistory = sqliteTable(
     ),
   ],
 );
-

@@ -47,10 +47,19 @@ export default function JobList({
             </div>
             <div>
               <dt>Status</dt>
-              <dd className={styles.status}>{job.currentStatus === "in_progress" ? "In Progress" : job.currentStatus}</dd>
+              <dd className={styles.status}>
+                {job.currentStatus === "in_progress"
+                  ? "In Progress"
+                  : job.currentStatus}
+              </dd>
             </div>
           </dl>
-          {canManage && <div className={styles.lifecycleActions}><JobLifecycleActions job={job} returnTo="list" /></div>}
+          {canManage && <Link to={`/jobs/${job.id}/edit`}>Edit</Link>}
+          {canManage && (
+            <div className={styles.lifecycleActions}>
+              <JobLifecycleActions job={job} returnTo="list" />
+            </div>
+          )}
         </li>
       ))}
     </ul>
