@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import type { JobSummary } from "../../../../../server/features/jobs/types/job-summary";
 import styles from "./job-page.module.css";
 import type { JobItemSummary } from "~/server/features/jobs/types/ob-item-summary";
+import JobItems from "../../components/job-items/job-items";
 
 const dateFormat = new Intl.DateTimeFormat("en-AU", {
   day: "numeric",
@@ -69,6 +70,7 @@ export default function JobPage({
           <h2>Description</h2>
           <p className={styles.description}>{job.description}</p>
         </section>
+        <JobItems items={jobItems} totalCents={jobTotalCents} />
       </div>
       {canManage && <Link to={`/jobs/${job.id}/edit`}>Edit Job</Link>}
       {canManage && <JobLifecycleActions job={job} returnTo="detail" />}

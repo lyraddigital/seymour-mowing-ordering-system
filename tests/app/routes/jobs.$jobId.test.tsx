@@ -81,6 +81,7 @@ it.each(["admin", "operator"] as const)(
     expect(html).toContain("<summary>Cancel Job</summary>");
     expect(html).toContain("Confirm cancellation");
     expect(html).toContain(`/jobs/${jobId}/edit`);
+    expect(html).toContain("No items have been added yet.");
   },
 );
 it.each([
