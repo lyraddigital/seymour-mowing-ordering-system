@@ -43,6 +43,13 @@
       "when": 1789533356266,
       "tag": "0005_tense_sentinel",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1789564619199,
+      "tag": "0006_colorful_mister_fear",
+      "breakpoints": true
     }
   ]
 }
