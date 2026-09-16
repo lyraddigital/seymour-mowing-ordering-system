@@ -33,12 +33,8 @@ export async function createJobItem(
         .select({
           id: sql<string>`${id}`.as("id"),
           jobId: jobs.id,
-          description: sql<string>`${values.description}`.as(
-            "description",
-          ),
-          amountCents: sql<number>`${values.amountCents}`.as(
-            "amount_cents",
-          ),
+          description: sql<string>`${values.description}`.as("description"),
+          amountCents: sql<number>`${values.amountCents}`.as("amount_cents"),
           createdAt: sql<number>`${now}`.as("created_at"),
           updatedAt: sql<number>`${now}`.as("updated_at"),
         })

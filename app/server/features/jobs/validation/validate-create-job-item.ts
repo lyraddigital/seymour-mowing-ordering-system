@@ -17,10 +17,7 @@ export function validateCreateJobItem(
     fieldErrors.description = "Use 500 characters or fewer.";
   }
 
-  if (
-    !Number.isSafeInteger(input.amountCents) ||
-    input.amountCents < 0
-  ) {
+  if (!Number.isSafeInteger(input.amountCents) || input.amountCents < 0) {
     fieldErrors.amountCents = "Enter a valid amount.";
   }
 

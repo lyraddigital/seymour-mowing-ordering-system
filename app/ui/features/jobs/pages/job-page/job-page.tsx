@@ -2,6 +2,7 @@ import JobLifecycleActions from "../../components/job-lifecycle-actions/job-life
 import { Link } from "react-router";
 import type { JobSummary } from "../../../../../server/features/jobs/types/job-summary";
 import styles from "./job-page.module.css";
+import type { JobItemSummary } from "~/server/features/jobs/types/ob-item-summary";
 
 const dateFormat = new Intl.DateTimeFormat("en-AU", {
   day: "numeric",
@@ -10,13 +11,19 @@ const dateFormat = new Intl.DateTimeFormat("en-AU", {
   timeZone: "UTC",
 });
 
+type JobPageProps = {
+  job: JobSummary;
+  jobItems: JobItemSummary[];
+  jobTotalCents: number;
+  canManage: boolean;
+};
+
 export default function JobPage({
   job,
+  jobItems,
+  jobTotalCents,
   canManage,
-}: {
-  job: JobSummary;
-  canManage: boolean;
-}) {
+}: JobPageProps) {
   return (
     <section className={styles.page}>
       <Link className={styles.backLink} to="/jobs">

@@ -31,15 +31,8 @@ export const jobItems = sqliteTable(
       sql`length(trim(${table.description})) between 1 and 500`,
     ),
 
-    check(
-      "job_items_amount_cents_valid",
-      sql`${table.amountCents} >= 0`,
-    ),
+    check("job_items_amount_cents_valid", sql`${table.amountCents} >= 0`),
 
-    index("job_items_job_id_idx").on(
-      table.jobId,
-      table.createdAt,
-      table.id,
-    ),
+    index("job_items_job_id_idx").on(table.jobId, table.createdAt, table.id),
   ],
 );

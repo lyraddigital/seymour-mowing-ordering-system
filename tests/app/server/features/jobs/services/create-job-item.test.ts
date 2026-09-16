@@ -49,20 +49,12 @@ it.each(["admin", "operator"] as const)(
   async (role) => {
     const before = Date.now();
 
-    const { id } = await createJobItem(
-      env.DB,
-      { ...user, role },
-      jobId,
-      {
-        description: "  Front lawn mow  ",
-        amountCents: 4500,
-      },
-    );
+    const { id } = await createJobItem(env.DB, { ...user, role }, jobId, {
+      description: "  Front lawn mow  ",
+      amountCents: 4500,
+    });
 
-    const saved = await createDb(env.DB)
-      .select()
-      .from(jobItems)
-      .get();
+    const saved = await createDb(env.DB).select().from(jobItems).get();
 
     expect(saved).toMatchObject({
       id,
@@ -76,12 +68,7 @@ it.each(["admin", "operator"] as const)(
   },
 );
 
-it.each([
-  "scheduled",
-  "in_progress",
-  "completed",
-  "cancelled",
-] as const)(
+it.each(["scheduled", "in_progress", "completed", "cancelled"] as const)(
   "allows an item to be added while the job is %s",
   async (status) => {
     const db = createDb(env.DB);
@@ -161,15 +148,10 @@ it("rejects a nonexistent job", async () => {
 
 it("requires manage permission", async () => {
   await expect(
-    createJobItem(
-      env.DB,
-      { ...user, role: "unknown" as "admin" },
-      jobId,
-      {
-        description: "Lawn mowing",
-        amountCents: 5000,
-      },
-    ),
+    createJobItem(env.DB, { ...user, role: "unknown" as "admin" }, jobId, {
+      description: "Lawn mowing",
+      amountCents: 5000,
+    }),
   ).rejects.toBeInstanceOf(PermissionDeniedError);
 
   expect(await createDb(env.DB).select().from(jobItems)).toEqual([]);

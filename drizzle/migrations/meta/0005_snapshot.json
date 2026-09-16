@@ -159,11 +159,7 @@
       "indexes": {
         "job_items_job_id_idx": {
           "name": "job_items_job_id_idx",
-          "columns": [
-            "job_id",
-            "created_at",
-            "id"
-          ],
+          "columns": ["job_id", "created_at", "id"],
           "isUnique": false
         }
       },
@@ -172,12 +168,8 @@
           "name": "job_items_job_id_jobs_id_fk",
           "tableFrom": "job_items",
           "tableTo": "jobs",
-          "columnsFrom": [
-            "job_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["job_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -237,11 +229,7 @@
       "indexes": {
         "job_status_history_latest_idx": {
           "name": "job_status_history_latest_idx",
-          "columns": [
-            "job_id",
-            "created_at",
-            "id"
-          ],
+          "columns": ["job_id", "created_at", "id"],
           "isUnique": false
         }
       },
@@ -250,12 +238,8 @@
           "name": "job_status_history_job_id_jobs_id_fk",
           "tableFrom": "job_status_history",
           "tableTo": "jobs",
-          "columnsFrom": [
-            "job_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["job_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -263,12 +247,8 @@
           "name": "job_status_history_created_by_user_id_users_id_fk",
           "tableFrom": "job_status_history",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -338,17 +318,12 @@
       "indexes": {
         "jobs_customer_id_idx": {
           "name": "jobs_customer_id_idx",
-          "columns": [
-            "customer_id"
-          ],
+          "columns": ["customer_id"],
           "isUnique": false
         },
         "jobs_scheduled_date_idx": {
           "name": "jobs_scheduled_date_idx",
-          "columns": [
-            "scheduled_date",
-            "id"
-          ],
+          "columns": ["scheduled_date", "id"],
           "isUnique": false
         }
       },
@@ -357,12 +332,8 @@
           "name": "jobs_customer_id_customers_id_fk",
           "tableFrom": "jobs",
           "tableTo": "customers",
-          "columnsFrom": [
-            "customer_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["customer_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -437,9 +408,7 @@
       "indexes": {
         "users_email_unique": {
           "name": "users_email_unique",
-          "columns": [
-            "email"
-          ],
+          "columns": ["email"],
           "isUnique": true
         }
       },
