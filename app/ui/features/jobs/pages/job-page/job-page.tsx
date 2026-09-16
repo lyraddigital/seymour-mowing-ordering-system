@@ -2,7 +2,7 @@ import JobLifecycleActions from "../../components/job-lifecycle-actions/job-life
 import { Link } from "react-router";
 import type { JobSummary } from "../../../../../server/features/jobs/types/job-summary";
 import styles from "./job-page.module.css";
-import type { JobItemSummary } from "~/server/features/jobs/types/ob-item-summary";
+import type { JobItemSummary } from "~/server/features/jobs/types/job-item-summary";
 import JobItems from "../../components/job-items/job-items";
 
 const dateFormat = new Intl.DateTimeFormat("en-AU", {

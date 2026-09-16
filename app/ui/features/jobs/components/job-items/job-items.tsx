@@ -1,6 +1,6 @@
 import { Link } from "react-router";
 
-import type { JobItemSummary } from "~/server/features/jobs/types/ob-item-summary";
+import type { JobItemSummary } from "~/server/features/jobs/types/job-item-summary";
 import styles from "./job-items.module.css";
 
 const currencyFormatter = new Intl.NumberFormat("en-AU", {
@@ -44,9 +44,20 @@ export default function JobItems({
               <li className={styles.item} key={item.id}>
                 <span className={styles.description}>{item.description}</span>
 
-                <span className={styles.amount}>
-                  {currencyFormatter.format(item.amountCents / 100)}
-                </span>
+                <div className={styles.itemActions}>
+                  <span className={styles.amount}>
+                    {currencyFormatter.format(item.amountCents / 100)}
+                  </span>
+
+                  {canManage && (
+                    <Link
+                      className={styles.editAction}
+                      to={`/jobs/${jobId}/items/${item.id}/edit`}
+                    >
+                      Edit
+                    </Link>
+                  )}
+                </div>
               </li>
             ))}
           </ul>

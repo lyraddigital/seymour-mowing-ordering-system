@@ -102,3 +102,21 @@
 .addAction:hover {
   background: #2d4b36;
 }
+
+.itemActions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+}
+
+.editAction {
+  color: #365941;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.editAction:hover {
+  text-decoration: underline;
+}

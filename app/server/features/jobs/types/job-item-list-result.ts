@@ -1,4 +1,4 @@
-import type { JobItemSummary } from "./ob-item-summary";
+import type { JobItemSummary } from "./job-item-summary";
 
 export interface JobItemListResult {
   items: JobItemSummary[];

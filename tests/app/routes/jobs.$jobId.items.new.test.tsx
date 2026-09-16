@@ -29,9 +29,7 @@ let jobId: string;
 function loaderArgs() {
   return {
     context,
-    request: new Request(
-      `https://example.test/jobs/${jobId}/items/new`,
-    ),
+    request: new Request(`https://example.test/jobs/${jobId}/items/new`),
     url: new URL(`https://example.test/jobs/${jobId}/items/new`),
     params: { jobId },
     pattern: "/jobs/:jobId/items/new",
@@ -41,22 +39,17 @@ function loaderArgs() {
 function actionArgs(body: URLSearchParams) {
   return {
     context,
-    request: new Request(
-      `https://example.test/jobs/${jobId}/items/new`,
-      {
-        method: "POST",
-        body,
-      },
-    ),
+    request: new Request(`https://example.test/jobs/${jobId}/items/new`, {
+      method: "POST",
+      body,
+    }),
     url: new URL(`https://example.test/jobs/${jobId}/items/new`),
     params: { jobId },
     pattern: "/jobs/:jobId/items/new",
   };
 }
 
-function renderPage(
-  props: ComponentProps<typeof AddJobItemPage>,
-) {
+function renderPage(props: ComponentProps<typeof AddJobItemPage>) {
   const router = createMemoryRouter(
     [
       {
@@ -69,15 +62,10 @@ function renderPage(
     },
   );
 
-  return renderToStaticMarkup(
-    <RouterProvider router={router} />,
-  );
+  return renderToStaticMarkup(<RouterProvider router={router} />);
 }
 
-async function expectResponseStatus(
-  promise: Promise<unknown>,
-  status: number,
-) {
+async function expectResponseStatus(promise: Promise<unknown>, status: number) {
   try {
     await promise;
     throw new Error(`Expected Response with status ${status}`);
@@ -166,13 +154,11 @@ it.each([
 
     expect(response).toBeInstanceOf(Response);
     expect((response as Response).status).toBe(302);
-    expect(
-      (response as Response).headers.get("Location"),
-    ).toBe(`/jobs/${jobId}`);
+    expect((response as Response).headers.get("Location")).toBe(
+      `/jobs/${jobId}`,
+    );
 
-    const items = await createDb(env.DB)
-      .select()
-      .from(jobItems);
+    const items = await createDb(env.DB).select().from(jobItems);
 
     expect(items).toEqual([
       expect.objectContaining({
@@ -208,9 +194,7 @@ it.each(["", "abc", "1.234", "-1", "$45.00"])(
       },
     });
 
-    expect(
-      await createDb(env.DB).select().from(jobItems),
-    ).toEqual([]);
+    expect(await createDb(env.DB).select().from(jobItems)).toEqual([]);
   },
 );
 
@@ -236,9 +220,7 @@ it("returns 400 for a blank description", async () => {
     },
   });
 
-  expect(
-    await createDb(env.DB).select().from(jobItems),
-  ).toEqual([]);
+  expect(await createDb(env.DB).select().from(jobItems)).toEqual([]);
 });
 
 it("preserves submitted values on validation failure", async () => {
@@ -289,9 +271,7 @@ it.each(["completed", "cancelled"] as const)(
     expect(response).toBeInstanceOf(Response);
     expect((response as Response).status).toBe(302);
 
-    expect(
-      await createDb(env.DB).select().from(jobItems),
-    ).toEqual([
+    expect(await createDb(env.DB).select().from(jobItems)).toEqual([
       expect.objectContaining({
         jobId,
         description: "Final charge",
@@ -304,10 +284,7 @@ it.each(["completed", "cancelled"] as const)(
 it("returns 404 for a missing job", async () => {
   jobId = "missing";
 
-  await expectResponseStatus(
-    loader(loaderArgs()),
-    404,
-  );
+  await expectResponseStatus(loader(loaderArgs()), 404);
 });
 
 it("returns 404 when adding an item to a missing job", async () => {
@@ -332,10 +309,7 @@ it("returns 403 without manage permission", async () => {
     role: "unknown" as "admin",
   });
 
-  await expectResponseStatus(
-    loader(loaderArgs()),
-    403,
-  );
+  await expectResponseStatus(loader(loaderArgs()), 403);
 
   await expectResponseStatus(
     action(
