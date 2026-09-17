@@ -1,0 +1,227 @@
+import { env } from "cloudflare:workers";
+import { eq } from "drizzle-orm";
+import { beforeEach, expect, it } from "vitest";
+
+import { PermissionDeniedError } from "../../../../../../app/server/auth/authorization/errors/permission-denied-error";
+import { createDb } from "../../../../../../app/server/db/client/create-db.server";
+import { customers } from "../../../../../../app/server/db/schema/customers";
+import { invoiceItems } from "../../../../../../app/server/db/schema/invoice-items";
+import { invoices } from "../../../../../../app/server/db/schema/invoices";
+import { jobItems } from "../../../../../../app/server/db/schema/job-items";
+import { jobStatusHistory } from "../../../../../../app/server/db/schema/job-status-history";
+import { jobs } from "../../../../../../app/server/db/schema/jobs";
+import { users } from "../../../../../../app/server/db/schema/users";
+import { InvoiceNotFoundError } from "../../../../../../app/server/features/invoices/errors/invoice-not-found-error";
+import { InvoiceStateConflictError } from "../../../../../../app/server/features/invoices/errors/invoice-state-conflict-error";
+import { createDraftInvoice } from "../../../../../../app/server/features/invoices/services/create-draft-invoice.server";
+import { deleteDraftInvoice } from "../../../../../../app/server/features/invoices/services/delete-draft-invoice.server";
+import { issueInvoice } from "../../../../../../app/server/features/invoices/services/issue-invoice.server";
+import { voidInvoice } from "../../../../../../app/server/features/invoices/services/void-invoice.server";
+import { createJobItem } from "../../../../../../app/server/features/jobs/services/create-job-item.server";
+import { createJob } from "../../../../../../app/server/features/jobs/services/create-job.server";
+import { internalUser } from "../../../../../support/fixtures/internal-user";
+
+const admin = internalUser();
+
+let jobId: string;
+
+beforeEach(async () => {
+  const db = createDb(env.DB);
+
+  await db.delete(invoiceItems);
+  await db.delete(invoices);
+  await db.delete(jobItems);
+  await db.delete(jobStatusHistory);
+  await db.delete(jobs);
+  await db.delete(customers);
+  await db.delete(users);
+
+  await db.insert(users).values(admin);
+
+  await db.insert(customers).values({
+    id: "customer",
+    name: "John Smith",
+    createdAt: 1,
+    updatedAt: 1,
+  });
+
+  ({ id: jobId } = await createJob(env.DB, admin, {
+    customerId: "customer",
+    name: "Front & Back Lawn Mow",
+    description: "Mow lawns",
+    scheduledDate: "2026-09-17",
+  }));
+});
+
+async function getInvoice(invoiceId: string) {
+  return createDb(env.DB)
+    .select()
+    .from(invoices)
+    .where(eq(invoices.id, invoiceId))
+    .get();
+}
+
+it("deletes a draft invoice", async () => {
+  const { id: invoiceId } = await createDraftInvoice(env.DB, admin, jobId);
+
+  expect(await deleteDraftInvoice(env.DB, admin, invoiceId)).toEqual({
+    id: invoiceId,
+  });
+
+  expect(await getInvoice(invoiceId)).toBeUndefined();
+});
+
+it("deletes the draft invoice items", async () => {
+  await createJobItem(env.DB, admin, jobId, {
+    description: "Front lawn",
+    amountCents: 4500,
+  });
+
+  await createJobItem(env.DB, admin, jobId, {
+    description: "Back lawn",
+    amountCents: 3500,
+  });
+
+  const { id: invoiceId } = await createDraftInvoice(env.DB, admin, jobId);
+
+  expect(
+    await createDb(env.DB)
+      .select()
+      .from(invoiceItems)
+      .where(eq(invoiceItems.invoiceId, invoiceId)),
+  ).toHaveLength(2);
+
+  await deleteDraftInvoice(env.DB, admin, invoiceId);
+
+  expect(
+    await createDb(env.DB)
+      .select()
+      .from(invoiceItems)
+      .where(eq(invoiceItems.invoiceId, invoiceId)),
+  ).toEqual([]);
+});
+
+it("does not delete invoice items belonging to another draft", async () => {
+  await createJobItem(env.DB, admin, jobId, {
+    description: "Front lawn",
+    amountCents: 4500,
+  });
+
+  const { id: firstInvoiceId } = await createDraftInvoice(env.DB, admin, jobId);
+
+  const { id: secondInvoiceId } = await createDraftInvoice(
+    env.DB,
+    admin,
+    jobId,
+  );
+
+  await deleteDraftInvoice(env.DB, admin, firstInvoiceId);
+
+  expect(
+    await createDb(env.DB)
+      .select()
+      .from(invoiceItems)
+      .where(eq(invoiceItems.invoiceId, firstInvoiceId)),
+  ).toEqual([]);
+
+  expect(
+    await createDb(env.DB)
+      .select()
+      .from(invoiceItems)
+      .where(eq(invoiceItems.invoiceId, secondInvoiceId)),
+  ).toEqual([
+    expect.objectContaining({
+      invoiceId: secondInvoiceId,
+      description: "Front lawn",
+      amountCents: 4500,
+    }),
+  ]);
+});
+
+it("rejects deleting an issued invoice", async () => {
+  const { id: invoiceId } = await createDraftInvoice(env.DB, admin, jobId);
+
+  await issueInvoice(env.DB, admin, invoiceId);
+
+  await expect(
+    deleteDraftInvoice(env.DB, admin, invoiceId),
+  ).rejects.toBeInstanceOf(InvoiceStateConflictError);
+
+  expect(await getInvoice(invoiceId)).toMatchObject({
+    id: invoiceId,
+    status: "issued",
+    invoiceNumber: "INV-000001",
+  });
+});
+
+it("does not delete items from an issued invoice", async () => {
+  await createJobItem(env.DB, admin, jobId, {
+    description: "Front lawn",
+    amountCents: 4500,
+  });
+
+  const { id: invoiceId } = await createDraftInvoice(env.DB, admin, jobId);
+
+  await issueInvoice(env.DB, admin, invoiceId);
+
+  await expect(
+    deleteDraftInvoice(env.DB, admin, invoiceId),
+  ).rejects.toBeInstanceOf(InvoiceStateConflictError);
+
+  expect(
+    await createDb(env.DB)
+      .select()
+      .from(invoiceItems)
+      .where(eq(invoiceItems.invoiceId, invoiceId)),
+  ).toEqual([
+    expect.objectContaining({
+      invoiceId,
+      description: "Front lawn",
+      amountCents: 4500,
+    }),
+  ]);
+});
+
+it("rejects deleting a voided invoice", async () => {
+  const { id: invoiceId } = await createDraftInvoice(env.DB, admin, jobId);
+
+  await issueInvoice(env.DB, admin, invoiceId);
+
+  await voidInvoice(env.DB, admin, invoiceId);
+
+  await expect(
+    deleteDraftInvoice(env.DB, admin, invoiceId),
+  ).rejects.toBeInstanceOf(InvoiceStateConflictError);
+
+  expect(await getInvoice(invoiceId)).toMatchObject({
+    id: invoiceId,
+    status: "voided",
+    invoiceNumber: "INV-000001",
+  });
+});
+
+it("rejects a missing invoice", async () => {
+  await expect(
+    deleteDraftInvoice(env.DB, admin, "missing"),
+  ).rejects.toBeInstanceOf(InvoiceNotFoundError);
+});
+
+it("requires invoice management permission", async () => {
+  const { id: invoiceId } = await createDraftInvoice(env.DB, admin, jobId);
+
+  await expect(
+    deleteDraftInvoice(
+      env.DB,
+      {
+        ...admin,
+        role: "operator",
+      },
+      invoiceId,
+    ),
+  ).rejects.toBeInstanceOf(PermissionDeniedError);
+
+  expect(await getInvoice(invoiceId)).toMatchObject({
+    id: invoiceId,
+    status: "draft",
+  });
+});
