@@ -1,8 +1,8 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "fbecb8ea-62ae-4c49-a325-d28315293002",
-  "prevId": "651f6f32-3a35-4f54-a161-6dca3826ec10",
+  "id": "162af62a-5df3-4740-ba24-c125eacc400e",
+  "prevId": "fbecb8ea-62ae-4c49-a325-d28315293002",
   "tables": {
     "customers": {
       "name": "customers",
@@ -208,7 +208,7 @@
           "name": "invoice_number",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
         "status": {
@@ -293,6 +293,10 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "checkConstraints": {
+        "invoices_invoice_number_valid": {
+          "name": "invoices_invoice_number_valid",
+          "value": "\n    (\"invoices\".\"status\" = 'draft' and \"invoices\".\"invoice_number\" is null)\n    or\n    (\"invoices\".\"status\" in ('issued', 'voided') and \"invoices\".\"invoice_number\" is not null)\n  "
+        },
         "invoices_status_valid": {
           "name": "invoices_status_valid",
           "value": "\"invoices\".\"status\" in ('draft', 'issued', 'voided')"

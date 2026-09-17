@@ -24,7 +24,7 @@ export const invoices = sqliteTable(
       .notNull()
       .references(() => customers.id),
 
-    invoiceNumber: text("invoice_number").notNull(),
+    invoiceNumber: text("invoice_number"),
 
     status: text("status", {
       enum: ["draft", "issued", "voided"],
@@ -40,15 +40,22 @@ export const invoices = sqliteTable(
     updatedAt: integer("updated_at").notNull(),
   },
   (table) => [
-    uniqueIndex("invoices_invoice_number_unique").on(
-      table.invoiceNumber,
-    ),
+    uniqueIndex("invoices_invoice_number_unique").on(table.invoiceNumber),
 
     index("invoices_job_id_idx").on(table.jobId),
 
     index("invoices_customer_id_idx").on(table.customerId),
 
     index("invoices_status_idx").on(table.status),
+
+    check(
+      "invoices_invoice_number_valid",
+      sql`
+    (${table.status} = 'draft' and ${table.invoiceNumber} is null)
+    or
+    (${table.status} in ('issued', 'voided') and ${table.invoiceNumber} is not null)
+  `,
+    ),
 
     check(
       "invoices_status_valid",

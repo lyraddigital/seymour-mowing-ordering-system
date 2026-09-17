@@ -347,19 +347,13 @@ Component prop types should normally be defined in the same file as the componen
 Example:
 
 ```tsx
-
 interface JobListProps {
-
-  jobs: JobListItem[];
-
+  jobs: JobListItem[];
 }
 
 export function JobList({ jobs }: JobListProps) {
-
-  // ...
-
+  // ...
 }
-
 ```
 
 Do not create a separate file solely for a component's props.

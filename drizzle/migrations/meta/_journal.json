@@ -50,6 +50,13 @@
       "when": 1789564619199,
       "tag": "0006_colorful_mister_fear",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1789564923564,
+      "tag": "0007_woozy_albert_cleary",
+      "breakpoints": true
     }
   ]
 }

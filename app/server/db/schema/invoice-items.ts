@@ -30,10 +30,7 @@ export const invoiceItems = sqliteTable(
       sql`length(trim(${table.description})) between 1 and 500`,
     ),
 
-    check(
-      "invoice_items_amount_cents_valid",
-      sql`${table.amountCents} >= 0`,
-    ),
+    check("invoice_items_amount_cents_valid", sql`${table.amountCents} >= 0`),
 
     index("invoice_items_invoice_id_idx").on(
       table.invoiceId,
