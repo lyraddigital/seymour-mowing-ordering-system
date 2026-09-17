@@ -21,12 +21,12 @@ export default function AppShell({ currentUser, children }: AppShellProps) {
           <NavLink to="/dashboard">Dashboard</NavLink>
           <NavLink to="/customers">Customers</NavLink>
           <NavLink to="/jobs">Jobs</NavLink>
-          {["Invoices", "Payments"].map((name) => (
-            <span key={name} className="nav-pending" aria-disabled="true">
-              {name}
-              <small>Coming soon</small>
-            </span>
-          ))}
+          <NavLink to="/invoices">Invoices</NavLink>
+
+          <span className="nav-pending" aria-disabled="true">
+            Payments
+            <small>Coming soon</small>
+          </span>
         </nav>
         <div className="account">
           <strong>{currentUser.displayName}</strong>
