@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+import { Form, Link, useNavigation } from "react-router";
 
 import type { InvoiceItemSummary } from "../../../../../server/features/invoices/types/invoice-item-summary";
 import type { InvoiceSummary } from "../../../../../server/features/invoices/types/invoice-summary";
@@ -41,7 +41,14 @@ function formatStatus(status: InvoiceSummary["status"]) {
   }
 }
 
-export default function InvoicePage({ invoice, items }: InvoicePageProps) {
+export default function InvoicePage({
+  invoice,
+  items,
+  canManage,
+}: InvoicePageProps) {
+  const navigation = useNavigation();
+  const submitting = navigation.state !== "idle";
+
   return (
     <section className={styles.page}>
       <Link className={styles.backLink} to="/invoices">
@@ -62,6 +69,63 @@ export default function InvoicePage({ invoice, items }: InvoicePageProps) {
         </span>
       </header>
 
+      {canManage && invoice.status === "draft" && (
+        <div className={styles.actions}>
+          <Form method="post" action={`/invoices/${invoice.id}/issue`}>
+            <button
+              className={styles.primaryAction}
+              type="submit"
+              disabled={submitting}
+            >
+              {submitting ? "Working…" : "Issue invoice"}
+            </button>
+          </Form>
+
+          <details className={styles.dangerConfirmation}>
+            <summary>Delete draft</summary>
+
+            <div className={styles.dangerConfirmationBody}>
+              <p>Delete this draft invoice? This cannot be undone.</p>
+
+              <Form method="post" action={`/invoices/${invoice.id}/delete`}>
+                <button
+                  className={styles.dangerAction}
+                  type="submit"
+                  disabled={submitting}
+                >
+                  Confirm delete
+                </button>
+              </Form>
+            </div>
+          </details>
+        </div>
+      )}
+
+      {canManage && invoice.status === "issued" && (
+        <div className={styles.actions}>
+          <details className={styles.dangerConfirmation}>
+            <summary>Void invoice</summary>
+
+            <div className={styles.dangerConfirmationBody}>
+              <p>
+                Void {invoice.invoiceNumber}? The invoice will remain in the
+                financial history.
+              </p>
+
+              <Form method="post" action={`/invoices/${invoice.id}/void`}>
+                <button
+                  className={styles.dangerAction}
+                  type="submit"
+                  disabled={submitting}
+                >
+                  Confirm void
+                </button>
+              </Form>
+            </div>
+          </details>
+        </div>
+      )}
+
       <div className={styles.detailsGrid}>
         <section className={styles.detailCard}>
           <h2>Invoice</h2>
@@ -81,14 +145,14 @@ export default function InvoicePage({ invoice, items }: InvoicePageProps) {
               <dd>{dateFormatter.format(new Date(invoice.createdAt))}</dd>
             </div>
 
-            {invoice.issuedAt && (
+            {invoice.issuedAt !== null && (
               <div>
                 <dt>Issued</dt>
                 <dd>{dateFormatter.format(new Date(invoice.issuedAt))}</dd>
               </div>
             )}
 
-            {invoice.voidedAt && (
+            {invoice.voidedAt !== null && (
               <div>
                 <dt>Voided</dt>
                 <dd>{dateFormatter.format(new Date(invoice.voidedAt))}</dd>
@@ -136,7 +200,7 @@ export default function InvoicePage({ invoice, items }: InvoicePageProps) {
                 </div>
               </header>
 
-              {jobItems.length ? (
+              {jobItems.length > 0 ? (
                 <ul className={styles.items}>
                   {jobItems.map((item) => (
                     <li key={item.id}>
