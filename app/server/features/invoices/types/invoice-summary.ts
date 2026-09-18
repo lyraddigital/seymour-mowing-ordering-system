@@ -1,7 +1,7 @@
+import type { InvoiceJobSummary } from "./invoice-job-summary";
+
 export interface InvoiceSummary {
   id: string;
-  jobId: string;
-  jobName: string;
   customerId: string;
   customerName: string;
   invoiceNumber: string | null;
@@ -11,4 +11,5 @@ export interface InvoiceSummary {
   createdAt: number;
   updatedAt: number;
   totalCents: number;
+  jobs: InvoiceJobSummary[];
 }

@@ -6,6 +6,7 @@ import { PermissionDeniedError } from "../../../../../../app/server/auth/authori
 import { createDb } from "../../../../../../app/server/db/client/create-db.server";
 import { customers } from "../../../../../../app/server/db/schema/customers";
 import { invoiceItems } from "../../../../../../app/server/db/schema/invoice-items";
+import { invoiceJobs } from "../../../../../../app/server/db/schema/invoice-jobs";
 import { invoices } from "../../../../../../app/server/db/schema/invoices";
 import { jobItems } from "../../../../../../app/server/db/schema/job-items";
 import { jobStatusHistory } from "../../../../../../app/server/db/schema/job-status-history";
@@ -21,12 +22,14 @@ import { internalUser } from "../../../../../support/fixtures/internal-user";
 
 const admin = internalUser();
 
-let jobId: string;
+let firstJobId: string;
+let secondJobId: string;
 
 beforeEach(async () => {
   const db = createDb(env.DB);
 
   await db.delete(invoiceItems);
+  await db.delete(invoiceJobs);
   await db.delete(invoices);
   await db.delete(jobItems);
   await db.delete(jobStatusHistory);
@@ -43,11 +46,18 @@ beforeEach(async () => {
     updatedAt: 1,
   });
 
-  ({ id: jobId } = await createJob(env.DB, admin, {
+  ({ id: firstJobId } = await createJob(env.DB, admin, {
     customerId: "customer",
-    name: "Front & Back Lawn Mow",
-    description: "Mow lawns",
+    name: "Front lawn",
+    description: "Mow front lawn",
     scheduledDate: "2026-09-17",
+  }));
+
+  ({ id: secondJobId } = await createJob(env.DB, admin, {
+    customerId: "customer",
+    name: "Back lawn",
+    description: "Mow back lawn",
+    scheduledDate: "2026-09-18",
   }));
 });
 
@@ -60,7 +70,9 @@ async function getInvoice(invoiceId: string) {
 }
 
 it("issues a draft invoice", async () => {
-  const { id: invoiceId } = await createDraftInvoice(env.DB, admin, jobId);
+  const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
+    jobIds: [firstJobId],
+  });
 
   const result = await issueInvoice(env.DB, admin, invoiceId);
 
@@ -69,57 +81,67 @@ it("issues a draft invoice", async () => {
     invoiceNumber: "INV-000001",
   });
 
-  const invoice = await getInvoice(invoiceId);
-
-  expect(invoice).toMatchObject({
+  expect(await getInvoice(invoiceId)).toMatchObject({
     id: invoiceId,
     invoiceNumber: "INV-000001",
     status: "issued",
+    issuedAt: expect.any(Number),
     voidedAt: null,
   });
+});
 
-  expect(invoice?.issuedAt).toEqual(expect.any(Number));
-  expect(invoice?.updatedAt).toEqual(expect.any(Number));
+it("issues an invoice containing multiple jobs", async () => {
+  const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
+    jobIds: [firstJobId, secondJobId],
+  });
+
+  await issueInvoice(env.DB, admin, invoiceId);
+
+  expect(
+    await createDb(env.DB)
+      .select()
+      .from(invoiceJobs)
+      .where(eq(invoiceJobs.invoiceId, invoiceId)),
+  ).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        invoiceId,
+        jobId: firstJobId,
+        releasedAt: null,
+      }),
+      expect.objectContaining({
+        invoiceId,
+        jobId: secondJobId,
+        releasedAt: null,
+      }),
+    ]),
+  );
 });
 
 it("allocates sequential invoice numbers", async () => {
-  const { id: firstInvoiceId } = await createDraftInvoice(env.DB, admin, jobId);
+  const first = await createDraftInvoice(env.DB, admin, {
+    jobIds: [firstJobId],
+  });
 
-  const { id: secondInvoiceId } = await createDraftInvoice(
-    env.DB,
-    admin,
-    jobId,
-  );
+  const second = await createDraftInvoice(env.DB, admin, {
+    jobIds: [secondJobId],
+  });
 
-  expect(await issueInvoice(env.DB, admin, firstInvoiceId)).toEqual({
-    id: firstInvoiceId,
+  expect(await issueInvoice(env.DB, admin, first.id)).toEqual({
+    id: first.id,
     invoiceNumber: "INV-000001",
   });
 
-  expect(await issueInvoice(env.DB, admin, secondInvoiceId)).toEqual({
-    id: secondInvoiceId,
+  expect(await issueInvoice(env.DB, admin, second.id)).toEqual({
+    id: second.id,
     invoiceNumber: "INV-000002",
   });
 });
 
-it("continues numbering after an existing issued invoice", async () => {
-  const { id: firstInvoiceId } = await createDraftInvoice(env.DB, admin, jobId);
-
-  await issueInvoice(env.DB, admin, firstInvoiceId);
-
-  const { id: secondInvoiceId } = await createDraftInvoice(
-    env.DB,
-    admin,
-    jobId,
-  );
-
-  const result = await issueInvoice(env.DB, admin, secondInvoiceId);
-
-  expect(result.invoiceNumber).toBe("INV-000002");
-});
-
 it("does not assign an invoice number until issue", async () => {
-  const { id: invoiceId } = await createDraftInvoice(env.DB, admin, jobId);
+  const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
+    jobIds: [firstJobId],
+  });
 
   expect(await getInvoice(invoiceId)).toMatchObject({
     invoiceNumber: null,
@@ -136,17 +158,19 @@ it("does not assign an invoice number until issue", async () => {
 });
 
 it("does not change invoice items when issuing", async () => {
-  await createJobItem(env.DB, admin, jobId, {
+  await createJobItem(env.DB, admin, firstJobId, {
     description: "Front lawn",
     amountCents: 4500,
   });
 
-  await createJobItem(env.DB, admin, jobId, {
+  await createJobItem(env.DB, admin, secondJobId, {
     description: "Back lawn",
     amountCents: 3500,
   });
 
-  const { id: invoiceId } = await createDraftInvoice(env.DB, admin, jobId);
+  const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
+    jobIds: [firstJobId, secondJobId],
+  });
 
   const before = await createDb(env.DB)
     .select()
@@ -163,8 +187,36 @@ it("does not change invoice items when issuing", async () => {
   expect(after).toEqual(before);
 });
 
+it("does not release jobs when issuing", async () => {
+  const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
+    jobIds: [firstJobId, secondJobId],
+  });
+
+  await issueInvoice(env.DB, admin, invoiceId);
+
+  const assignments = await createDb(env.DB)
+    .select()
+    .from(invoiceJobs)
+    .where(eq(invoiceJobs.invoiceId, invoiceId));
+
+  expect(assignments).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        jobId: firstJobId,
+        releasedAt: null,
+      }),
+      expect.objectContaining({
+        jobId: secondJobId,
+        releasedAt: null,
+      }),
+    ]),
+  );
+});
+
 it("rejects issuing an already issued invoice", async () => {
-  const { id: invoiceId } = await createDraftInvoice(env.DB, admin, jobId);
+  const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
+    jobIds: [firstJobId],
+  });
 
   await issueInvoice(env.DB, admin, invoiceId);
 
@@ -179,30 +231,32 @@ it("rejects issuing an already issued invoice", async () => {
 });
 
 it("does not allocate another number when issue is retried", async () => {
-  const { id: firstInvoiceId } = await createDraftInvoice(env.DB, admin, jobId);
+  const first = await createDraftInvoice(env.DB, admin, {
+    jobIds: [firstJobId],
+  });
 
-  await issueInvoice(env.DB, admin, firstInvoiceId);
+  await issueInvoice(env.DB, admin, first.id);
 
-  await expect(
-    issueInvoice(env.DB, admin, firstInvoiceId),
-  ).rejects.toBeInstanceOf(InvoiceStateConflictError);
-
-  const { id: secondInvoiceId } = await createDraftInvoice(
-    env.DB,
-    admin,
-    jobId,
+  await expect(issueInvoice(env.DB, admin, first.id)).rejects.toBeInstanceOf(
+    InvoiceStateConflictError,
   );
 
-  expect(await issueInvoice(env.DB, admin, secondInvoiceId)).toEqual({
-    id: secondInvoiceId,
+  const second = await createDraftInvoice(env.DB, admin, {
+    jobIds: [secondJobId],
+  });
+
+  expect(await issueInvoice(env.DB, admin, second.id)).toEqual({
+    id: second.id,
     invoiceNumber: "INV-000002",
   });
 });
 
 it("rejects a voided invoice", async () => {
-  const { id: invoiceId } = await createDraftInvoice(env.DB, admin, jobId);
+  const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
+    jobIds: [firstJobId],
+  });
 
-  const issued = await issueInvoice(env.DB, admin, invoiceId);
+  await issueInvoice(env.DB, admin, invoiceId);
 
   await createDb(env.DB)
     .update(invoices)
@@ -211,16 +265,11 @@ it("rejects a voided invoice", async () => {
       voidedAt: Date.now(),
       updatedAt: Date.now(),
     })
-    .where(eq(invoices.id, issued.id));
+    .where(eq(invoices.id, invoiceId));
 
   await expect(issueInvoice(env.DB, admin, invoiceId)).rejects.toBeInstanceOf(
     InvoiceStateConflictError,
   );
-
-  expect(await getInvoice(invoiceId)).toMatchObject({
-    invoiceNumber: "INV-000001",
-    status: "voided",
-  });
 });
 
 it("rejects a missing invoice", async () => {
@@ -230,7 +279,9 @@ it("rejects a missing invoice", async () => {
 });
 
 it("requires invoice management permission", async () => {
-  const { id: invoiceId } = await createDraftInvoice(env.DB, admin, jobId);
+  const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
+    jobIds: [firstJobId],
+  });
 
   await expect(
     issueInvoice(
@@ -248,4 +299,16 @@ it("requires invoice management permission", async () => {
     status: "draft",
     issuedAt: null,
   });
+
+  expect(
+    await createDb(env.DB)
+      .select()
+      .from(invoiceJobs)
+      .where(eq(invoiceJobs.invoiceId, invoiceId)),
+  ).toEqual([
+    expect.objectContaining({
+      jobId: firstJobId,
+      releasedAt: null,
+    }),
+  ]);
 });

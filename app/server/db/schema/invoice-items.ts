@@ -8,6 +8,7 @@ import {
 } from "drizzle-orm/sqlite-core";
 
 import { invoices } from "./invoices";
+import { jobs } from "./jobs";
 
 export const invoiceItems = sqliteTable(
   "invoice_items",
@@ -17,6 +18,10 @@ export const invoiceItems = sqliteTable(
     invoiceId: text("invoice_id")
       .notNull()
       .references(() => invoices.id),
+
+    jobId: text("job_id")
+      .notNull()
+      .references(() => jobs.id),
 
     description: text("description").notNull(),
 
@@ -37,5 +42,7 @@ export const invoiceItems = sqliteTable(
       table.createdAt,
       table.id,
     ),
+
+    index("invoice_items_job_id_idx").on(table.jobId),
   ],
 );

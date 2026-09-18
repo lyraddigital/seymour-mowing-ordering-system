@@ -49,3 +49,16 @@
     gap: 18px;
   }
 }
+
+.createAction {
+  display: inline-flex;
+  align-items: center;
+  min-height: 42px;
+  padding: 9px 16px;
+  border-radius: 6px;
+  background: #365941;
+  color: #fff;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}

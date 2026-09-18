@@ -6,6 +6,7 @@ import type { CurrentUser } from "../../../auth/principal/types/current-user";
 import { createDb } from "../../../db/client/create-db.server";
 import { customers } from "../../../db/schema/customers";
 import { invoiceItems } from "../../../db/schema/invoice-items";
+import { invoiceJobs } from "../../../db/schema/invoice-jobs";
 import { invoices } from "../../../db/schema/invoices";
 import { jobs } from "../../../db/schema/jobs";
 import type { InvoiceDetailResult } from "../types/invoice-detail-result";
@@ -24,8 +25,6 @@ export async function getInvoiceById(
   const invoice = await db
     .select({
       id: invoices.id,
-      jobId: invoices.jobId,
-      jobName: jobs.name,
       customerId: invoices.customerId,
       customerName: customers.name,
       invoiceNumber: invoices.invoiceNumber,
@@ -46,7 +45,6 @@ export async function getInvoiceById(
       `,
     })
     .from(invoices)
-    .innerJoin(jobs, eq(jobs.id, invoices.jobId))
     .innerJoin(customers, eq(customers.id, invoices.customerId))
     .where(eq(invoices.id, invoiceId))
     .get();
@@ -55,20 +53,37 @@ export async function getInvoiceById(
     return null;
   }
 
-  const items = await db
-    .select({
-      id: invoiceItems.id,
-      invoiceId: invoiceItems.invoiceId,
-      description: invoiceItems.description,
-      amountCents: invoiceItems.amountCents,
-      createdAt: invoiceItems.createdAt,
-    })
-    .from(invoiceItems)
-    .where(eq(invoiceItems.invoiceId, invoiceId))
-    .orderBy(asc(invoiceItems.createdAt), asc(invoiceItems.id));
+  const [invoiceJobRows, items] = await Promise.all([
+    db
+      .select({
+        id: jobs.id,
+        name: jobs.name,
+        scheduledDate: jobs.scheduledDate,
+      })
+      .from(invoiceJobs)
+      .innerJoin(jobs, eq(jobs.id, invoiceJobs.jobId))
+      .where(eq(invoiceJobs.invoiceId, invoiceId))
+      .orderBy(asc(jobs.scheduledDate), asc(jobs.id)),
+
+    db
+      .select({
+        id: invoiceItems.id,
+        invoiceId: invoiceItems.invoiceId,
+        jobId: invoiceItems.jobId,
+        description: invoiceItems.description,
+        amountCents: invoiceItems.amountCents,
+        createdAt: invoiceItems.createdAt,
+      })
+      .from(invoiceItems)
+      .where(eq(invoiceItems.invoiceId, invoiceId))
+      .orderBy(asc(invoiceItems.createdAt), asc(invoiceItems.id)),
+  ]);
 
   return {
-    invoice,
+    invoice: {
+      ...invoice,
+      jobs: invoiceJobRows,
+    },
     items,
   };
 }

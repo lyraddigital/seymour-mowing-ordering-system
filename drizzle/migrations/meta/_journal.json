@@ -57,6 +57,13 @@
       "when": 1789564923564,
       "tag": "0007_woozy_albert_cleary",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1789705244968,
+      "tag": "0008_silent_midnight",
+      "breakpoints": true
     }
   ]
 }

@@ -5,6 +5,7 @@ import { PermissionDeniedError } from "../../../../../../app/server/auth/authori
 import { createDb } from "../../../../../../app/server/db/client/create-db.server";
 import { customers } from "../../../../../../app/server/db/schema/customers";
 import { invoiceItems } from "../../../../../../app/server/db/schema/invoice-items";
+import { invoiceJobs } from "../../../../../../app/server/db/schema/invoice-jobs";
 import { invoices } from "../../../../../../app/server/db/schema/invoices";
 import { jobItems } from "../../../../../../app/server/db/schema/job-items";
 import { jobStatusHistory } from "../../../../../../app/server/db/schema/job-status-history";
@@ -18,12 +19,14 @@ import { internalUser } from "../../../../../support/fixtures/internal-user";
 
 const admin = internalUser();
 
-let jobId: string;
+let firstJobId: string;
+let secondJobId: string;
 
 beforeEach(async () => {
   const db = createDb(env.DB);
 
   await db.delete(invoiceItems);
+  await db.delete(invoiceJobs);
   await db.delete(invoices);
   await db.delete(jobItems);
   await db.delete(jobStatusHistory);
@@ -40,46 +43,67 @@ beforeEach(async () => {
     updatedAt: 1,
   });
 
-  ({ id: jobId } = await createJob(env.DB, admin, {
+  ({ id: firstJobId } = await createJob(env.DB, admin, {
     customerId: "customer",
-    name: "Front & Back Lawn Mow",
-    description: "Mow lawns",
+    name: "Front lawn",
+    description: "Mow front lawn",
     scheduledDate: "2026-09-17",
+  }));
+
+  ({ id: secondJobId } = await createJob(env.DB, admin, {
+    customerId: "customer",
+    name: "Back lawn",
+    description: "Mow back lawn",
+    scheduledDate: "2026-09-18",
   }));
 });
 
-it("returns invoice detail", async () => {
-  const { id: invoiceId } = await createDraftInvoice(env.DB, admin, jobId);
+it("returns invoice detail with multiple jobs", async () => {
+  const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
+    jobIds: [firstJobId, secondJobId],
+  });
 
   const result = await getInvoiceById(env.DB, admin, invoiceId);
 
   expect(result).toEqual({
     invoice: expect.objectContaining({
       id: invoiceId,
-      jobId,
-      jobName: "Front & Back Lawn Mow",
       customerId: "customer",
       customerName: "John Smith",
       invoiceNumber: null,
       status: "draft",
       totalCents: 0,
+      jobs: [
+        {
+          id: firstJobId,
+          name: "Front lawn",
+          scheduledDate: "2026-09-17",
+        },
+        {
+          id: secondJobId,
+          name: "Back lawn",
+          scheduledDate: "2026-09-18",
+        },
+      ],
     }),
     items: [],
   });
 });
 
-it("returns the invoice items", async () => {
-  await createJobItem(env.DB, admin, jobId, {
-    description: "Front lawn",
+it("returns invoice items with their source jobs", async () => {
+  await createJobItem(env.DB, admin, firstJobId, {
+    description: "Front lawn mow",
     amountCents: 4500,
   });
 
-  await createJobItem(env.DB, admin, jobId, {
-    description: "Back lawn",
+  await createJobItem(env.DB, admin, secondJobId, {
+    description: "Back lawn mow",
     amountCents: 3500,
   });
 
-  const { id: invoiceId } = await createDraftInvoice(env.DB, admin, jobId);
+  const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
+    jobIds: [firstJobId, secondJobId],
+  });
 
   const result = await getInvoiceById(env.DB, admin, invoiceId);
 
@@ -89,34 +113,51 @@ it("returns the invoice items", async () => {
     expect.arrayContaining([
       expect.objectContaining({
         invoiceId,
-        description: "Front lawn",
+        jobId: firstJobId,
+        description: "Front lawn mow",
         amountCents: 4500,
       }),
       expect.objectContaining({
         invoiceId,
-        description: "Back lawn",
+        jobId: secondJobId,
+        description: "Back lawn mow",
         amountCents: 3500,
       }),
     ]),
   );
 });
 
-it("derives the invoice total from invoice items", async () => {
-  await createJobItem(env.DB, admin, jobId, {
-    description: "Front lawn",
+it("derives the invoice total across all invoice items", async () => {
+  await createJobItem(env.DB, admin, firstJobId, {
+    description: "Front lawn mow",
     amountCents: 4500,
   });
 
-  await createJobItem(env.DB, admin, jobId, {
-    description: "Back lawn",
+  await createJobItem(env.DB, admin, secondJobId, {
+    description: "Back lawn mow",
     amountCents: 3500,
   });
 
-  const { id: invoiceId } = await createDraftInvoice(env.DB, admin, jobId);
+  const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
+    jobIds: [firstJobId, secondJobId],
+  });
 
   const result = await getInvoiceById(env.DB, admin, invoiceId);
 
   expect(result?.invoice.totalCents).toBe(8000);
+});
+
+it("returns jobs in scheduled-date order", async () => {
+  const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
+    jobIds: [secondJobId, firstJobId],
+  });
+
+  const result = await getInvoiceById(env.DB, admin, invoiceId);
+
+  expect(result?.invoice.jobs.map((job) => job.id)).toEqual([
+    firstJobId,
+    secondJobId,
+  ]);
 });
 
 it("returns null for a missing invoice", async () => {

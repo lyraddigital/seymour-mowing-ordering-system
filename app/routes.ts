@@ -27,6 +27,7 @@ export default [
     route("jobs/:jobId/start", "routes/jobs.$jobId.start.tsx"),
     route("jobs/:jobId/cancel", "routes/jobs.$jobId.cancel.tsx"),
     route("invoices", "routes/invoices.tsx"),
+    route("invoices/new", "routes/invoices.new.tsx"),
     route(
       "customers/:customerId/archive",
       "routes/customers.$customerId.archive.tsx",

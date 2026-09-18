@@ -9,16 +9,11 @@ import {
 } from "drizzle-orm/sqlite-core";
 
 import { customers } from "./customers";
-import { jobs } from "./jobs";
 
 export const invoices = sqliteTable(
   "invoices",
   {
     id: text("id").primaryKey().notNull(),
-
-    jobId: text("job_id")
-      .notNull()
-      .references(() => jobs.id),
 
     customerId: text("customer_id")
       .notNull()
@@ -42,8 +37,6 @@ export const invoices = sqliteTable(
   (table) => [
     uniqueIndex("invoices_invoice_number_unique").on(table.invoiceNumber),
 
-    index("invoices_job_id_idx").on(table.jobId),
-
     index("invoices_customer_id_idx").on(table.customerId),
 
     index("invoices_status_idx").on(table.status),
@@ -51,10 +44,10 @@ export const invoices = sqliteTable(
     check(
       "invoices_invoice_number_valid",
       sql`
-    (${table.status} = 'draft' and ${table.invoiceNumber} is null)
-    or
-    (${table.status} in ('issued', 'voided') and ${table.invoiceNumber} is not null)
-  `,
+        (${table.status} = 'draft' and ${table.invoiceNumber} is null)
+        or
+        (${table.status} in ('issued', 'voided') and ${table.invoiceNumber} is not null)
+      `,
     ),
 
     check(

@@ -6,6 +6,7 @@ import { PermissionDeniedError } from "../../../../../../app/server/auth/authori
 import { createDb } from "../../../../../../app/server/db/client/create-db.server";
 import { customers } from "../../../../../../app/server/db/schema/customers";
 import { invoiceItems } from "../../../../../../app/server/db/schema/invoice-items";
+import { invoiceJobs } from "../../../../../../app/server/db/schema/invoice-jobs";
 import { invoices } from "../../../../../../app/server/db/schema/invoices";
 import { jobItems } from "../../../../../../app/server/db/schema/job-items";
 import { jobStatusHistory } from "../../../../../../app/server/db/schema/job-status-history";
@@ -23,12 +24,14 @@ import { internalUser } from "../../../../../support/fixtures/internal-user";
 
 const admin = internalUser();
 
-let jobId: string;
+let firstJobId: string;
+let secondJobId: string;
 
 beforeEach(async () => {
   const db = createDb(env.DB);
 
   await db.delete(invoiceItems);
+  await db.delete(invoiceJobs);
   await db.delete(invoices);
   await db.delete(jobItems);
   await db.delete(jobStatusHistory);
@@ -45,11 +48,18 @@ beforeEach(async () => {
     updatedAt: 1,
   });
 
-  ({ id: jobId } = await createJob(env.DB, admin, {
+  ({ id: firstJobId } = await createJob(env.DB, admin, {
     customerId: "customer",
-    name: "Front & Back Lawn Mow",
-    description: "Mow lawns",
+    name: "Front lawn",
+    description: "Mow front lawn",
     scheduledDate: "2026-09-17",
+  }));
+
+  ({ id: secondJobId } = await createJob(env.DB, admin, {
+    customerId: "customer",
+    name: "Back lawn",
+    description: "Mow back lawn",
+    scheduledDate: "2026-09-18",
   }));
 });
 
@@ -62,7 +72,9 @@ async function getInvoice(invoiceId: string) {
 }
 
 it("deletes a draft invoice", async () => {
-  const { id: invoiceId } = await createDraftInvoice(env.DB, admin, jobId);
+  const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
+    jobIds: [firstJobId],
+  });
 
   expect(await deleteDraftInvoice(env.DB, admin, invoiceId)).toEqual({
     id: invoiceId,
@@ -71,18 +83,20 @@ it("deletes a draft invoice", async () => {
   expect(await getInvoice(invoiceId)).toBeUndefined();
 });
 
-it("deletes the draft invoice items", async () => {
-  await createJobItem(env.DB, admin, jobId, {
+it("deletes all invoice items belonging to the draft", async () => {
+  await createJobItem(env.DB, admin, firstJobId, {
     description: "Front lawn",
     amountCents: 4500,
   });
 
-  await createJobItem(env.DB, admin, jobId, {
+  await createJobItem(env.DB, admin, secondJobId, {
     description: "Back lawn",
     amountCents: 3500,
   });
 
-  const { id: invoiceId } = await createDraftInvoice(env.DB, admin, jobId);
+  const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
+    jobIds: [firstJobId, secondJobId],
+  });
 
   expect(
     await createDb(env.DB)
@@ -101,45 +115,101 @@ it("deletes the draft invoice items", async () => {
   ).toEqual([]);
 });
 
-it("does not delete invoice items belonging to another draft", async () => {
-  await createJobItem(env.DB, admin, jobId, {
+it("deletes all invoice job assignments belonging to the draft", async () => {
+  const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
+    jobIds: [firstJobId, secondJobId],
+  });
+
+  expect(
+    await createDb(env.DB)
+      .select()
+      .from(invoiceJobs)
+      .where(eq(invoiceJobs.invoiceId, invoiceId)),
+  ).toHaveLength(2);
+
+  await deleteDraftInvoice(env.DB, admin, invoiceId);
+
+  expect(
+    await createDb(env.DB)
+      .select()
+      .from(invoiceJobs)
+      .where(eq(invoiceJobs.invoiceId, invoiceId)),
+  ).toEqual([]);
+});
+
+it("does not delete data belonging to another draft", async () => {
+  await createJobItem(env.DB, admin, firstJobId, {
     description: "Front lawn",
     amountCents: 4500,
   });
 
-  const { id: firstInvoiceId } = await createDraftInvoice(env.DB, admin, jobId);
+  const { id: firstInvoiceId } = await createDraftInvoice(env.DB, admin, {
+    jobIds: [firstJobId],
+  });
 
-  const { id: secondInvoiceId } = await createDraftInvoice(
-    env.DB,
-    admin,
-    jobId,
-  );
+  const { id: secondInvoiceId } = await createDraftInvoice(env.DB, admin, {
+    jobIds: [secondJobId],
+  });
 
   await deleteDraftInvoice(env.DB, admin, firstInvoiceId);
 
-  expect(
-    await createDb(env.DB)
-      .select()
-      .from(invoiceItems)
-      .where(eq(invoiceItems.invoiceId, firstInvoiceId)),
-  ).toEqual([]);
+  expect(await getInvoice(firstInvoiceId)).toBeUndefined();
+
+  expect(await getInvoice(secondInvoiceId)).toMatchObject({
+    id: secondInvoiceId,
+    status: "draft",
+  });
 
   expect(
     await createDb(env.DB)
       .select()
-      .from(invoiceItems)
-      .where(eq(invoiceItems.invoiceId, secondInvoiceId)),
+      .from(invoiceJobs)
+      .where(eq(invoiceJobs.invoiceId, secondInvoiceId)),
   ).toEqual([
     expect.objectContaining({
       invoiceId: secondInvoiceId,
-      description: "Front lawn",
-      amountCents: 4500,
+      jobId: secondJobId,
+      releasedAt: null,
     }),
   ]);
 });
 
+it("allows jobs from a deleted draft to be invoiced again", async () => {
+  const { id: firstInvoiceId } = await createDraftInvoice(env.DB, admin, {
+    jobIds: [firstJobId, secondJobId],
+  });
+
+  await deleteDraftInvoice(env.DB, admin, firstInvoiceId);
+
+  const { id: secondInvoiceId } = await createDraftInvoice(env.DB, admin, {
+    jobIds: [firstJobId, secondJobId],
+  });
+
+  expect(secondInvoiceId).not.toBe(firstInvoiceId);
+
+  expect(
+    await createDb(env.DB)
+      .select()
+      .from(invoiceJobs)
+      .where(eq(invoiceJobs.invoiceId, secondInvoiceId)),
+  ).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        jobId: firstJobId,
+        releasedAt: null,
+      }),
+      expect.objectContaining({
+        jobId: secondJobId,
+        releasedAt: null,
+      }),
+    ]),
+  );
+});
+
 it("rejects deleting an issued invoice", async () => {
-  const { id: invoiceId } = await createDraftInvoice(env.DB, admin, jobId);
+  const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
+    jobIds: [firstJobId],
+  });
 
   await issueInvoice(env.DB, admin, invoiceId);
 
@@ -152,15 +222,29 @@ it("rejects deleting an issued invoice", async () => {
     status: "issued",
     invoiceNumber: "INV-000001",
   });
+
+  expect(
+    await createDb(env.DB)
+      .select()
+      .from(invoiceJobs)
+      .where(eq(invoiceJobs.invoiceId, invoiceId)),
+  ).toEqual([
+    expect.objectContaining({
+      jobId: firstJobId,
+      releasedAt: null,
+    }),
+  ]);
 });
 
 it("does not delete items from an issued invoice", async () => {
-  await createJobItem(env.DB, admin, jobId, {
+  await createJobItem(env.DB, admin, firstJobId, {
     description: "Front lawn",
     amountCents: 4500,
   });
 
-  const { id: invoiceId } = await createDraftInvoice(env.DB, admin, jobId);
+  const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
+    jobIds: [firstJobId],
+  });
 
   await issueInvoice(env.DB, admin, invoiceId);
 
@@ -176,6 +260,7 @@ it("does not delete items from an issued invoice", async () => {
   ).toEqual([
     expect.objectContaining({
       invoiceId,
+      jobId: firstJobId,
       description: "Front lawn",
       amountCents: 4500,
     }),
@@ -183,7 +268,9 @@ it("does not delete items from an issued invoice", async () => {
 });
 
 it("rejects deleting a voided invoice", async () => {
-  const { id: invoiceId } = await createDraftInvoice(env.DB, admin, jobId);
+  const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
+    jobIds: [firstJobId],
+  });
 
   await issueInvoice(env.DB, admin, invoiceId);
 
@@ -198,6 +285,18 @@ it("rejects deleting a voided invoice", async () => {
     status: "voided",
     invoiceNumber: "INV-000001",
   });
+
+  expect(
+    await createDb(env.DB)
+      .select()
+      .from(invoiceJobs)
+      .where(eq(invoiceJobs.invoiceId, invoiceId)),
+  ).toEqual([
+    expect.objectContaining({
+      jobId: firstJobId,
+      releasedAt: expect.any(Number),
+    }),
+  ]);
 });
 
 it("rejects a missing invoice", async () => {
@@ -207,7 +306,9 @@ it("rejects a missing invoice", async () => {
 });
 
 it("requires invoice management permission", async () => {
-  const { id: invoiceId } = await createDraftInvoice(env.DB, admin, jobId);
+  const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
+    jobIds: [firstJobId],
+  });
 
   await expect(
     deleteDraftInvoice(
@@ -224,4 +325,11 @@ it("requires invoice management permission", async () => {
     id: invoiceId,
     status: "draft",
   });
+
+  expect(
+    await createDb(env.DB)
+      .select()
+      .from(invoiceJobs)
+      .where(eq(invoiceJobs.invoiceId, invoiceId)),
+  ).toHaveLength(1);
 });

@@ -128,3 +128,24 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+.jobs {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.jobs li {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.jobDate {
+  color: #65745f;
+  font-size: 12px;
+  white-space: nowrap;
+}

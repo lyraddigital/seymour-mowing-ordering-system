@@ -52,25 +52,39 @@ export default function InvoiceList({ invoices }: InvoiceListProps) {
           <div className={styles.context}>
             <div>
               <span className={styles.label}>Customer</span>
+
               <Link to={`/customers/${invoice.customerId}`}>
                 {invoice.customerName}
               </Link>
             </div>
 
             <div>
-              <span className={styles.label}>Job</span>
-              <Link to={`/jobs/${invoice.jobId}`}>{invoice.jobName}</Link>
+              <span className={styles.label}>
+                {invoice.jobs.length === 1 ? "Job" : "Jobs"}
+              </span>
+
+              <ul className={styles.jobs}>
+                {invoice.jobs.map((job) => (
+                  <li key={job.id}>
+                    <Link to={`/jobs/${job.id}`}>{job.name}</Link>
+
+                    <span className={styles.jobDate}>{job.scheduledDate}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
 
           <div className={styles.summary}>
             <div>
               <span className={styles.label}>Created</span>
+
               <span>{dateFormatter.format(new Date(invoice.createdAt))}</span>
             </div>
 
             <div>
               <span className={styles.label}>Total</span>
+
               <strong className={styles.total}>
                 {currencyFormatter.format(invoice.totalCents / 100)}
               </strong>

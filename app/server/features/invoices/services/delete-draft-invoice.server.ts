@@ -5,6 +5,7 @@ import { can } from "../../../auth/authorization/policies/can";
 import type { CurrentUser } from "../../../auth/principal/types/current-user";
 import { createDb } from "../../../db/client/create-db.server";
 import { invoiceItems } from "../../../db/schema/invoice-items";
+import { invoiceJobs } from "../../../db/schema/invoice-jobs";
 import { invoices } from "../../../db/schema/invoices";
 import { InvoiceNotFoundError } from "../errors/invoice-not-found-error";
 import { InvoiceStateConflictError } from "../errors/invoice-state-conflict-error";
@@ -20,18 +21,21 @@ export async function deleteDraftInvoice(
 
   const db = createDb(binding);
 
-  const [, deletedInvoices] = await db.batch([
-    db.delete(invoiceItems).where(
-      inArray(
-        invoiceItems.invoiceId,
-        db
-          .select({
-            id: invoices.id,
-          })
-          .from(invoices)
-          .where(and(eq(invoices.id, invoiceId), eq(invoices.status, "draft"))),
-      ),
-    ),
+  const draftInvoiceIds = db
+    .select({
+      id: invoices.id,
+    })
+    .from(invoices)
+    .where(and(eq(invoices.id, invoiceId), eq(invoices.status, "draft")));
+
+  const [, , deletedInvoices] = await db.batch([
+    db
+      .delete(invoiceItems)
+      .where(inArray(invoiceItems.invoiceId, draftInvoiceIds)),
+
+    db
+      .delete(invoiceJobs)
+      .where(inArray(invoiceJobs.invoiceId, draftInvoiceIds)),
 
     db
       .delete(invoices)

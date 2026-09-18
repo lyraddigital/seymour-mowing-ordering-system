@@ -1,4 +1,4 @@
-import { desc, eq, sql } from "drizzle-orm";
+import { asc, desc, eq, inArray, sql } from "drizzle-orm";
 
 import { PermissionDeniedError } from "../../../auth/authorization/errors/permission-denied-error";
 import { can } from "../../../auth/authorization/policies/can";
@@ -6,8 +6,10 @@ import type { CurrentUser } from "../../../auth/principal/types/current-user";
 import { createDb } from "../../../db/client/create-db.server";
 import { customers } from "../../../db/schema/customers";
 import { invoiceItems } from "../../../db/schema/invoice-items";
+import { invoiceJobs } from "../../../db/schema/invoice-jobs";
 import { invoices } from "../../../db/schema/invoices";
 import { jobs } from "../../../db/schema/jobs";
+import type { InvoiceJobSummary } from "../types/invoice-job-summary";
 import type { InvoiceSummary } from "../types/invoice-summary";
 
 export async function listInvoices(
@@ -20,11 +22,9 @@ export async function listInvoices(
 
   const db = createDb(binding);
 
-  return db
+  const invoiceRows = await db
     .select({
       id: invoices.id,
-      jobId: invoices.jobId,
-      jobName: jobs.name,
       customerId: invoices.customerId,
       customerName: customers.name,
       invoiceNumber: invoices.invoiceNumber,
@@ -34,25 +34,57 @@ export async function listInvoices(
       createdAt: invoices.createdAt,
       updatedAt: invoices.updatedAt,
       totalCents: sql<number>`
-        coalesce(sum(${invoiceItems.amountCents}), 0)
+        coalesce(
+          (
+            select sum(${invoiceItems.amountCents})
+            from ${invoiceItems}
+            where ${invoiceItems.invoiceId} = ${invoices.id}
+          ),
+          0
+        )
       `,
     })
     .from(invoices)
-    .innerJoin(jobs, eq(jobs.id, invoices.jobId))
     .innerJoin(customers, eq(customers.id, invoices.customerId))
-    .leftJoin(invoiceItems, eq(invoiceItems.invoiceId, invoices.id))
-    .groupBy(
-      invoices.id,
-      invoices.jobId,
-      jobs.name,
-      invoices.customerId,
-      customers.name,
-      invoices.invoiceNumber,
-      invoices.status,
-      invoices.issuedAt,
-      invoices.voidedAt,
-      invoices.createdAt,
-      invoices.updatedAt,
-    )
     .orderBy(desc(invoices.createdAt), desc(invoices.id));
+
+  if (!invoiceRows.length) {
+    return [];
+  }
+
+  const jobRows = await db
+    .select({
+      invoiceId: invoiceJobs.invoiceId,
+      id: jobs.id,
+      name: jobs.name,
+      scheduledDate: jobs.scheduledDate,
+    })
+    .from(invoiceJobs)
+    .innerJoin(jobs, eq(jobs.id, invoiceJobs.jobId))
+    .where(
+      inArray(
+        invoiceJobs.invoiceId,
+        invoiceRows.map((invoice) => invoice.id),
+      ),
+    )
+    .orderBy(asc(jobs.scheduledDate), asc(jobs.id));
+
+  const jobsByInvoice = new Map<string, InvoiceJobSummary[]>();
+
+  for (const job of jobRows) {
+    const existing = jobsByInvoice.get(job.invoiceId) ?? [];
+
+    existing.push({
+      id: job.id,
+      name: job.name,
+      scheduledDate: job.scheduledDate,
+    });
+
+    jobsByInvoice.set(job.invoiceId, existing);
+  }
+
+  return invoiceRows.map((invoice) => ({
+    ...invoice,
+    jobs: jobsByInvoice.get(invoice.id) ?? [],
+  }));
 }

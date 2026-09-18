@@ -1,12 +1,17 @@
+import { Link } from "react-router";
 import type { InvoiceSummary } from "../../../../../server/features/invoices/types/invoice-summary";
 import InvoiceList from "../../components/invoice-list/invoice-list";
 import styles from "./invoices-page.module.css";
 
 interface InvoicesPageProps {
   invoices: InvoiceSummary[];
+  canManage: boolean;
 }
 
-export default function InvoicesPage({ invoices }: InvoicesPageProps) {
+export default function InvoicesPage({
+  canManage,
+  invoices,
+}: InvoicesPageProps) {
   return (
     <section className={styles.page}>
       <header className={styles.header}>
@@ -16,6 +21,11 @@ export default function InvoicesPage({ invoices }: InvoicesPageProps) {
             Draft, issued and voided invoices for your customers.
           </p>
         </div>
+        {canManage && (
+          <Link className={styles.createAction} to="/invoices/new">
+            Create invoice
+          </Link>
+        )}
       </header>
 
       {invoices.length ? (
