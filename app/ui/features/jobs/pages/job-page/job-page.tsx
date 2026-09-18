@@ -17,6 +17,7 @@ type JobPageProps = {
   jobItems: JobItemSummary[];
   jobTotalCents: number;
   canManage: boolean;
+  canCreateInvoice: boolean;
 };
 
 export default function JobPage({
@@ -24,6 +25,7 @@ export default function JobPage({
   jobItems,
   jobTotalCents,
   canManage,
+  canCreateInvoice,
 }: JobPageProps) {
   return (
     <section className={styles.page}>
@@ -77,8 +79,20 @@ export default function JobPage({
           canManage={canManage}
         />
       </div>
-      {canManage && <Link to={`/jobs/${job.id}/edit`}>Edit Job</Link>}
-      {canManage && <JobLifecycleActions job={job} returnTo="detail" />}
+      <div className={styles.pageActions}>
+        {canManage && <Link to={`/jobs/${job.id}/edit`}>Edit Job</Link>}
+
+        {canCreateInvoice && (
+          <Link
+            className={styles.invoiceAction}
+            to={`/invoices/new?jobId=${job.id}`}
+          >
+            Create invoice
+          </Link>
+        )}
+
+        {canManage && <JobLifecycleActions job={job} returnTo="detail" />}
+      </div>
     </section>
   );
 }
