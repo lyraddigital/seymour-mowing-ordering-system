@@ -272,3 +272,19 @@
   font-weight: 600;
   cursor: pointer;
 }
+
+.secondaryAction {
+  display: inline-flex;
+  align-items: center;
+  min-height: 42px;
+  padding: 9px 16px;
+  border: 1px solid #cbd3c5;
+  border-radius: 6px;
+  color: #365941;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.secondaryAction:hover {
+  background: #f4f6ef;
+}

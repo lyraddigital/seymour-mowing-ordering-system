@@ -81,6 +81,13 @@ export default function InvoicePage({
             </button>
           </Form>
 
+          <Link
+            className={styles.secondaryAction}
+            to={`/invoices/${invoice.id}/edit`}
+          >
+            Edit draft
+          </Link>
+
           <details className={styles.dangerConfirmation}>
             <summary>Delete draft</summary>
 

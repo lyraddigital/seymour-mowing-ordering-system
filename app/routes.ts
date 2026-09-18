@@ -28,6 +28,7 @@ export default [
     route("jobs/:jobId/cancel", "routes/jobs.$jobId.cancel.tsx"),
     route("invoices", "routes/invoices.tsx"),
     route("invoices/:invoiceId", "routes/invoices.$invoiceId.tsx"),
+    route("invoices/:invoiceId/edit", "routes/invoices.$invoiceId.edit.tsx"),
     route("invoices/:invoiceId/issue", "routes/invoices.$invoiceId.issue.ts"),
     route("invoices/:invoiceId/void", "routes/invoices.$invoiceId.void.ts"),
     route("invoices/:invoiceId/delete", "routes/invoices.$invoiceId.delete.ts"),
