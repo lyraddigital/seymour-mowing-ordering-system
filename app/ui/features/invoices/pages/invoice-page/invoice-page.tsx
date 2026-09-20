@@ -188,7 +188,17 @@ export default function InvoicePage({
       </div>
 
       <section className={styles.itemsSection}>
-        <h2>Invoice items</h2>
+        <div className={styles.itemsHeader}>
+          <h2>Invoice items</h2>
+          {canManage && invoice.status === "draft" && (
+            <Link
+              className={styles.secondaryAction}
+              to={`/invoices/${invoice.id}/items/new`}
+            >
+              Add item
+            </Link>
+          )}
+        </div>
 
         {invoice.jobs.map((job) => {
           const jobItems = items.filter((item) => item.jobId === job.id);
@@ -216,6 +226,36 @@ export default function InvoicePage({
                       <strong>
                         {currencyFormatter.format(item.amountCents / 100)}
                       </strong>
+                      {canManage && invoice.status === "draft" && (
+                        <div className={styles.itemActions}>
+                          <Link
+                            className={styles.secondaryAction}
+                            to={`/invoices/${invoice.id}/items/${item.id}/edit`}
+                          >
+                            Edit
+                          </Link>
+                          <details className={styles.dangerConfirmation}>
+                            <summary>Delete</summary>
+                            <div className={styles.dangerConfirmationBody}>
+                              <p>
+                                Delete this invoice item? This cannot be undone.
+                              </p>
+                              <Form
+                                method="post"
+                                action={`/invoices/${invoice.id}/items/${item.id}/delete`}
+                              >
+                                <button
+                                  className={styles.dangerAction}
+                                  type="submit"
+                                  disabled={submitting}
+                                >
+                                  Confirm delete item
+                                </button>
+                              </Form>
+                            </div>
+                          </details>
+                        </div>
+                      )}
                     </li>
                   ))}
                 </ul>

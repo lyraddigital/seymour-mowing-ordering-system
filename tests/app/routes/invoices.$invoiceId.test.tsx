@@ -1,3 +1,6 @@
+import { deleteInvoiceItem } from "../../../app/server/features/invoices/services/delete-invoice-item.server";
+import { updateInvoiceItem } from "../../../app/server/features/invoices/services/update-invoice-item.server";
+import { createInvoiceItem } from "../../../app/server/features/invoices/services/create-invoice-item.server";
 import { env } from "cloudflare:workers";
 import type { ComponentProps } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -260,4 +263,60 @@ it("allows an operator to view an invoice without management actions", async () 
   expect(html).not.toContain("Issue invoice");
   expect(html).not.toContain("Delete draft");
   expect(html).not.toContain("Void invoice");
+});
+
+it.each([
+  ["draft", true, true],
+  ["issued", true, false],
+  ["voided", true, false],
+  ["draft", false, false],
+] as const)(
+  "item controls for %s, managing=%s",
+  async (status, manage, visible) => {
+    const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
+      jobIds: [jobId],
+    });
+    const { id: itemId } = await createInvoiceItem(env.DB, admin, invoiceId, {
+      jobId,
+      description: "Charge",
+      amountCents: 100,
+    });
+    if (status !== "draft") await issueInvoice(env.DB, admin, invoiceId);
+    if (status === "voided") await voidInvoice(env.DB, admin, invoiceId);
+    if (!manage)
+      context.set(currentUserContext, { ...admin, role: "operator" });
+    const html = renderPage(await loader(loaderArgs(invoiceId)));
+    expect(html.includes(`/invoices/${invoiceId}/items/new`)).toBe(visible);
+    expect(html.includes(`/invoices/${invoiceId}/items/${itemId}/edit`)).toBe(
+      visible,
+    );
+    expect(html.includes(`/invoices/${invoiceId}/items/${itemId}/delete`)).toBe(
+      visible,
+    );
+    expect(html.includes("Confirm delete item")).toBe(visible);
+  },
+);
+it("renders derived totals after adding, editing and deleting an item", async () => {
+  const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
+    jobIds: [jobId],
+  });
+  const { id } = await createInvoiceItem(env.DB, admin, invoiceId, {
+    jobId,
+    description: "Charge",
+    amountCents: 1234,
+  });
+  let result = await loader(loaderArgs(invoiceId));
+  expect(result.invoice.totalCents).toBe(1234);
+  expect(renderPage(result)).toContain("$12.34");
+  await updateInvoiceItem(env.DB, admin, invoiceId, id, {
+    description: "Correction",
+    amountCents: 2000,
+  });
+  result = await loader(loaderArgs(invoiceId));
+  expect(result.invoice.totalCents).toBe(2000);
+  expect(renderPage(result)).toContain("$20.00");
+  await deleteInvoiceItem(env.DB, admin, invoiceId, id);
+  result = await loader(loaderArgs(invoiceId));
+  expect(result.invoice.totalCents).toBe(0);
+  expect(renderPage(result)).toContain("$0.00");
 });

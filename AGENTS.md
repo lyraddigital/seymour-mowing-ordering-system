@@ -1164,29 +1164,372 @@ Job Item behaviour should be covered by focused tests including:
 
 # Invoice Domain Rules
 
-Invoice items are distinct from Job items.
+Invoices are financial snapshots built from one or more Jobs.
 
-Do not assume invoice line items remain linked mutable representations of Job items.
+Invoice Items are distinct records from Job Items.
 
-Issued invoices are immutable.
+Do not model Invoice Items as mutable projections of Job Items.
 
-Issued invoice items are immutable.
-
-Draft invoices may be deleted.
-
-Issued invoices must not be deleted.
-
-Issued invoices may instead be voided.
-
-Invoice numbers are never reused.
+Changes to Job Items after they have been snapshotted must not automatically alter existing Invoice Items.
 
 Money must be stored as integer cents.
 
-Do not store monetary values as floating-point dollars.
+Do not store Invoice monetary values as floating-point dollars.
 
 Pricing is GST-inclusive.
 
-These rules must be preserved when Invoice functionality is implemented or modified.
+The Invoice total is derived from its Invoice Items.
+
+Do not introduce a mutable stored Invoice-total field as an independent source of truth.
+
+The current Invoice total is conceptually:
+
+```text
+sum(invoice_items.amount_cents)
+```
+
+---
+
+## Invoice Statuses and Lifecycle
+
+Current Invoice statuses are:
+
+```text
+draft
+issued
+voided
+```
+
+A draft Invoice:
+
+- has `invoiceNumber = null`
+- has `issuedAt = null`
+- may be edited
+- may be deleted
+- may change its selected Jobs
+- may have its Invoice Items added, edited, or removed
+
+An issued Invoice:
+
+- has an allocated Invoice number
+- has `issuedAt` populated
+- is immutable
+- must not be deleted
+- may be voided
+
+A voided Invoice:
+
+- retains its Invoice number
+- retains its original issue information
+- retains its Invoice Items and historical Job associations
+- is immutable
+- must not be deleted
+
+There is currently no operation to return an issued or voided Invoice to draft.
+
+There is currently no general Invoice reopen operation.
+
+Do not introduce arbitrary client-controlled Invoice status mutation.
+
+Prefer explicit business operations such as:
+
+```text
+issueInvoice
+voidInvoice
+deleteDraftInvoice
+```
+
+Issued and voided Invoice data must remain historical financial records.
+
+---
+
+## Invoice Numbering
+
+Draft Invoices do not have Invoice numbers.
+
+An Invoice number is allocated only when a draft is successfully issued.
+
+The current format is:
+
+```text
+INV-000001
+INV-000002
+INV-000003
+```
+
+Invoice numbers must never be reused.
+
+Voiding an Invoice does not free or recycle its number.
+
+Deleting a draft does not consume an Invoice number because drafts have no number.
+
+Do not allocate Invoice numbers in the browser or trust a browser-submitted Invoice number.
+
+Number allocation is a server-side concern.
+
+---
+
+## Multi-Job Invoices
+
+An Invoice may contain one or more Jobs.
+
+All Jobs on one Invoice must belong to the same Customer.
+
+The Invoice Customer is derived from the selected Jobs.
+
+Do not trust a browser-submitted `customerId` when creating or changing an Invoice's Job selection.
+
+The server must validate that all selected Jobs exist and belong to one Customer.
+
+The relationship between Invoices and Jobs is stored explicitly through `invoice_jobs`.
+
+A Job may not belong to more than one active Invoice at the same time.
+
+For this rule, active Invoice associations are those whose `invoice_jobs.released_at` is null.
+
+Draft and issued Invoices hold active Job associations.
+
+When an issued Invoice is voided, its historical `invoice_jobs` rows are preserved and their `releasedAt` value is populated.
+
+A released Job may then be invoiced again.
+
+Deleting a draft removes its `invoice_jobs` rows and releases those Jobs.
+
+The database should reinforce the single-active-Invoice-per-Job invariant using the existing partial unique index on active `invoice_jobs` rows.
+
+Do not weaken this invariant to make UI flows easier.
+
+---
+
+## Creating Draft Invoices
+
+The primary creation flow is conceptually:
+
+```text
+/invoices/new
+-> choose Customer in the UI
+-> choose one or more eligible Jobs for that Customer
+-> create draft
+-> redirect to /invoices/:invoiceId
+```
+
+The Customer selector is a UI convenience only.
+
+The mutation should submit selected Job ids and derive the Customer server-side.
+
+A Job-detail shortcut may navigate to:
+
+```text
+/invoices/new?jobId=<jobId>
+```
+
+This preselects an eligible Job but does not bypass server validation.
+
+Do not create an Invoice immediately from a Job-detail POST simply because the shortcut originates from a Job.
+
+Current Invoice creation does not impose a Job-status restriction.
+
+Do not silently restrict invoicing to completed Jobs unless a later product decision explicitly adds that rule.
+
+When a draft Invoice is created, current Job Items for all selected Jobs are snapshotted into Invoice Items.
+
+Each Invoice Item records its source Job using `jobId`.
+
+Invoice Items intentionally do not currently store `jobItemId`.
+
+---
+
+## Editing a Draft Invoice's Job Selection
+
+Only draft Invoices may change their selected Jobs.
+
+Issued and voided Invoices must reject this operation server-side.
+
+The Customer of an existing Invoice does not change during draft Job-selection editing.
+
+Newly selected Jobs must belong to the existing Invoice Customer.
+
+Jobs assigned to another active Invoice must be rejected.
+
+When editing a draft's Job selection:
+
+- Jobs that remain selected keep their existing Invoice Items unchanged.
+- Removing a Job removes that Job's Invoice Items from the draft.
+- Removing a Job removes that Invoice's active `invoice_jobs` association for the Job.
+- A removed Job becomes available for another active Invoice.
+- Adding a Job creates a new active `invoice_jobs` association.
+- Adding a Job snapshots that Job's current Job Items into new Invoice Items.
+
+Do not rebuild or refresh Invoice Items for Jobs that remain selected.
+
+This preservation rule is important because draft Invoice Items may themselves be edited.
+
+A no-op Job-selection update should not destroy or regenerate Invoice Items.
+
+---
+
+## Draft Invoice Item Rules
+
+Invoice Items belong to an Invoice and carry Job context through `jobId`.
+
+Current Invoice Item fields are conceptually:
+
+```text
+invoiceId
+jobId
+description
+amountCents
+```
+
+Invoice Items do not currently contain `jobItemId`.
+
+A draft Invoice may have its Invoice Items:
+
+- added
+- edited
+- removed
+
+Issued and voided Invoice Items are immutable.
+
+All Invoice Item mutations must enforce `invoices.manage` server-side.
+
+For a nested Invoice Item route, both:
+
+```text
+invoiceId
+itemId
+```
+
+must identify the same stored Invoice Item.
+
+Do not allow an Invoice Item belonging to one Invoice to be edited or removed through another Invoice's route.
+
+A newly added Invoice Item must belong to one of the Jobs currently selected on that draft Invoice.
+
+Do not accept an arbitrary `jobId` that is not an active Job association for that Invoice.
+
+For an existing Invoice Item, its `jobId` is source context and should remain immutable through normal Invoice Item editing.
+
+Normal Invoice Item editing should change only fields it is allowed to modify, currently:
+
+```text
+description
+amountCents
+```
+
+Invoice Item amounts may be zero.
+
+Negative Invoice Item amounts are not currently supported.
+
+Do not introduce discounts or negative Invoice Items without a later explicit product decision.
+
+Removing an Invoice Item from a draft currently performs a real deletion.
+
+That deletion rule applies only to mutable draft Invoice Items.
+
+It must never be used to erase line items from issued or voided Invoices.
+
+When a Job is removed from a draft Invoice, all Invoice Items carrying that Job's `jobId` are removed with it, including Invoice Items that were manually added or edited on the draft.
+
+Current conceptual routes for draft Invoice Item maintenance are:
+
+```text
+GET/POST /invoices/:invoiceId/items/new
+GET/POST /invoices/:invoiceId/items/:itemId/edit
+POST     /invoices/:invoiceId/items/:itemId/delete
+```
+
+Prefer explicit operations such as:
+
+```text
+createInvoiceItem
+updateInvoiceItem
+deleteInvoiceItem
+```
+
+rather than a generic Invoice mutation endpoint.
+
+---
+
+## Invoice Queries and UI
+
+The main Invoice list is:
+
+```text
+/invoices
+```
+
+Invoice creation is:
+
+```text
+/invoices/new
+```
+
+Invoice detail is:
+
+```text
+/invoices/:invoiceId
+```
+
+Draft Job-selection editing is:
+
+```text
+/invoices/:invoiceId/edit
+```
+
+Invoice detail should show:
+
+- Invoice number or Draft label
+- status
+- Customer
+- selected Jobs
+- Invoice Items grouped by Job where useful
+- derived total
+- lifecycle actions appropriate to status and permission
+
+Draft lifecycle controls may include:
+
+```text
+Issue invoice
+Edit draft
+Delete draft
+```
+
+Issued lifecycle controls may include:
+
+```text
+Void invoice
+```
+
+Voided Invoices have no mutation controls under the current rules.
+
+Hiding controls in the UI is not authorization.
+
+The server must independently enforce state and permission rules.
+
+---
+
+## Invoice Lifecycle Routes
+
+Prefer dedicated action routes for lifecycle operations:
+
+```text
+POST /invoices/:invoiceId/issue
+POST /invoices/:invoiceId/void
+POST /invoices/:invoiceId/delete
+```
+
+Routes remain thin adapters.
+
+Known domain errors should be mapped consistently to the project's existing HTTP response patterns, including:
+
+- not found
+- permission denied
+- invalid state/conflict
+- invalid Job selection
+- active Invoice Job conflict
+
+Do not duplicate lifecycle business rules inside route modules or UI components.
 
 ---
 
@@ -1295,6 +1638,46 @@ For Job editing specifically, test at minimum:
 - Customer cannot be changed through the update operation
 
 - editing metadata does not alter status history
+
+---
+
+## Invoice Testing
+
+Invoice behaviour should be covered with focused tests for:
+
+- draft creation from one Job
+- draft creation from multiple same-Customer Jobs
+- mixed-Customer selection rejection
+- missing and duplicate Job ids
+- active-Invoice Job conflicts
+- Invoice Item snapshot creation
+- derived totals
+- draft numbering remaining null
+- sequential number allocation on issue
+- number preservation on void
+- issued Invoice immutability
+- voided Invoice immutability
+- draft deletion
+- Job release after void
+- Job release after draft deletion
+- Job-detail Invoice shortcut eligibility
+- draft Job-selection add/remove behaviour
+- preservation of Invoice Items for retained Jobs
+- snapshotting of current Job Items only for newly-added Jobs
+- removal of Invoice Items when their Job is removed from a draft
+- draft Invoice Item add/edit/remove
+- Invoice Item amount validation including zero and negative values
+- nested Invoice/Item ownership
+- Invoice Item Job membership validation
+- authorization for Invoice reads and mutations
+- route status/redirect behaviour
+- lifecycle controls rendered only for appropriate statuses and permissions
+
+When testing returned route action data, remember React Router actions may return either a `Response` or data-with-response-init. Narrow the result before accessing `.data` when TypeScript requires it.
+
+For Drizzle `INSERT ... SELECT`, raw SQL expressions selected into inserted columns must be assigned aliases when required by Drizzle's type system.
+
+Use imported Drizzle predicates such as `eq(...)` in `.where(...)`; do not use unsupported callback-style predicates.
 
 ---
 
@@ -1427,6 +1810,20 @@ Before considering work complete:
 17. Confirm new UI follows existing visual and structural conventions.
 
 18. Confirm no unnecessary abstractions were introduced.
+
+19. Confirm draft Invoices have no Invoice number and numbers are allocated only on issue.
+
+20. Confirm one Job cannot belong to more than one active Invoice.
+
+21. Confirm all Jobs on one Invoice belong to the same Customer.
+
+22. Confirm issued and voided Invoices and Invoice Items are immutable.
+
+23. Confirm voiding preserves historical Invoice/Job associations while releasing Jobs for reinvoicing.
+
+24. Confirm changing a draft's Job selection preserves Invoice Items for retained Jobs, removes items for removed Jobs, and snapshots only newly-added Jobs.
+
+25. Confirm any Invoice Item mutation is limited to draft Invoices and enforces nested Invoice/Item ownership.
 
 Report:
 

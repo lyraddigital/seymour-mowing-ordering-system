@@ -69,7 +69,7 @@
 }
 
 .detailCard h2,
-.itemsSection > h2 {
+.itemsHeader h2 {
   margin: 0 0 20px;
   color: #263c2d;
   font-size: 18px;
@@ -287,4 +287,37 @@
 
 .secondaryAction:hover {
   background: #f4f6ef;
+}
+
+.itemsHeader,
+.itemActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 12px;
+}
+.itemsHeader {
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.itemsHeader h2 {
+  margin: 0;
+}
+.items li {
+  flex-wrap: wrap;
+}
+.items li > span {
+  flex: 1;
+  min-width: 160px;
+  overflow-wrap: anywhere;
+}
+.itemActions {
+  align-items: flex-start;
+}
+.itemActions a:focus-visible,
+.itemActions summary:focus-visible,
+.itemActions button:focus-visible,
+.itemsHeader a:focus-visible {
+  outline: 3px solid #62793d;
+  outline-offset: 3px;
 }

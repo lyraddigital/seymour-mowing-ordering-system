@@ -1,3 +1,5 @@
+import { updateInvoiceItem } from "../../../../../../app/server/features/invoices/services/update-invoice-item.server";
+import { createInvoiceItem } from "../../../../../../app/server/features/invoices/services/create-invoice-item.server";
 import { env } from "cloudflare:workers";
 import { eq } from "drizzle-orm";
 import { beforeEach, expect, it } from "vitest";
@@ -383,4 +385,38 @@ it("requires invoice management permission", async () => {
       },
     ),
   ).rejects.toBeInstanceOf(PermissionDeniedError);
+});
+
+it("preserves manual and edited items for retained jobs, then removes them with their job", async () => {
+  await createJobItem(env.DB, admin, firstJobId, {
+    description: "Original",
+    amountCents: 1000,
+  });
+  const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
+    jobIds: [firstJobId],
+  });
+  const db = createDb(env.DB);
+  const snapshot = (await db.select().from(invoiceItems))[0];
+  await updateInvoiceItem(env.DB, admin, invoiceId, snapshot.id, {
+    description: "Edited snapshot",
+    amountCents: 1200,
+  });
+  await createInvoiceItem(env.DB, admin, invoiceId, {
+    jobId: firstJobId,
+    description: "Manual",
+    amountCents: 500,
+  });
+  const before = await db.select().from(invoiceItems);
+  await updateDraftInvoiceJobs(env.DB, admin, invoiceId, {
+    jobIds: [firstJobId],
+  });
+  expect(await db.select().from(invoiceItems)).toEqual(before);
+  await updateDraftInvoiceJobs(env.DB, admin, invoiceId, {
+    jobIds: [firstJobId, secondJobId],
+  });
+  expect(await db.select().from(invoiceItems)).toEqual(before);
+  await updateDraftInvoiceJobs(env.DB, admin, invoiceId, {
+    jobIds: [secondJobId],
+  });
+  expect(await db.select().from(invoiceItems)).toEqual([]);
 });
