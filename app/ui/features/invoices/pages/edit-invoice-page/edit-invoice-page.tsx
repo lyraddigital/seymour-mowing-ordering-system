@@ -57,8 +57,9 @@ export default function EditInvoicePage({
           <legend>Jobs</legend>
 
           <p className={styles.fieldHint}>
-            Select one or more Jobs to include. Invoice items will be refreshed
-            from the current Job Items when you save.
+            Select one or more Jobs to include. Existing invoice items are
+            preserved for Jobs that remain selected. Newly added Jobs snapshot
+            their current Job Items.
           </p>
 
           <div className={styles.jobList}>

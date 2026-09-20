@@ -136,15 +136,10 @@ it("removes a job from a draft invoice", async () => {
   ]);
 });
 
-it("rebuilds invoice item snapshots from the selected jobs", async () => {
+it("preserves invoice item snapshots for jobs that remain selected", async () => {
   const { id: firstItemId } = await createJobItem(env.DB, admin, firstJobId, {
     description: "Front lawn mow",
     amountCents: 4500,
-  });
-
-  await createJobItem(env.DB, admin, secondJobId, {
-    description: "Back lawn mow",
-    amountCents: 3500,
   });
 
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
@@ -167,24 +162,43 @@ it("rebuilds invoice item snapshots from the selected jobs", async () => {
     .from(invoiceItems)
     .where(eq(invoiceItems.invoiceId, invoiceId));
 
-  expect(snapshots).toEqual(
-    expect.arrayContaining([
-      expect.objectContaining({
-        invoiceId,
-        jobId: firstJobId,
-        description: "Front lawn mow",
-        amountCents: 5000,
-      }),
-      expect.objectContaining({
-        invoiceId,
-        jobId: secondJobId,
-        description: "Back lawn mow",
-        amountCents: 3500,
-      }),
-    ]),
+  expect(snapshots).toContainEqual(
+    expect.objectContaining({
+      invoiceId,
+      jobId: firstJobId,
+      description: "Front lawn mow",
+      amountCents: 4500,
+    }),
   );
+});
 
-  expect(snapshots).toHaveLength(2);
+it("snapshots current job items when a job is newly added", async () => {
+  await createJobItem(env.DB, admin, secondJobId, {
+    description: "Back lawn mow",
+    amountCents: 3500,
+  });
+
+  const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
+    jobIds: [firstJobId],
+  });
+
+  await updateDraftInvoiceJobs(env.DB, admin, invoiceId, {
+    jobIds: [firstJobId, secondJobId],
+  });
+
+  const snapshots = await createDb(env.DB)
+    .select()
+    .from(invoiceItems)
+    .where(eq(invoiceItems.invoiceId, invoiceId));
+
+  expect(snapshots).toContainEqual(
+    expect.objectContaining({
+      invoiceId,
+      jobId: secondJobId,
+      description: "Back lawn mow",
+      amountCents: 3500,
+    }),
+  );
 });
 
 it("removes snapshots belonging to removed jobs", async () => {

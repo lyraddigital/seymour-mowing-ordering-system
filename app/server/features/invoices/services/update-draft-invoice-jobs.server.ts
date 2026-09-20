@@ -100,52 +100,154 @@ export async function updateDraftInvoiceJobs(
     );
   }
 
+  const currentAssignments = await db
+    .select({
+      jobId: invoiceJobs.jobId,
+    })
+    .from(invoiceJobs)
+    .where(
+      and(eq(invoiceJobs.invoiceId, invoiceId), isNull(invoiceJobs.releasedAt)),
+    );
+
+  const currentJobIds = new Set(
+    currentAssignments.map((assignment) => assignment.jobId),
+  );
+
+  const selectedJobIds = new Set(jobIds);
+
+  const addedJobIds = jobIds.filter((jobId) => !currentJobIds.has(jobId));
+
+  const removedJobIds = [...currentJobIds].filter(
+    (jobId) => !selectedJobIds.has(jobId),
+  );
+
+  if (addedJobIds.length === 0 && removedJobIds.length === 0) {
+    return {
+      id: invoiceId,
+    };
+  }
+
   const now = Date.now();
 
+  const updateInvoice = db
+    .update(invoices)
+    .set({
+      updatedAt: now,
+    })
+    .where(and(eq(invoices.id, invoiceId), eq(invoices.status, "draft")));
+
   try {
-    await db.batch([
-      db.delete(invoiceItems).where(eq(invoiceItems.invoiceId, invoiceId)),
-
-      db.delete(invoiceJobs).where(eq(invoiceJobs.invoiceId, invoiceId)),
-
-      db.insert(invoiceJobs).values(
-        jobIds.map((jobId) => ({
-          invoiceId,
-          jobId,
-          releasedAt: null,
-        })),
-      ),
-
-      db.insert(invoiceItems).select(
+    if (addedJobIds.length > 0 && removedJobIds.length > 0) {
+      await db.batch([
         db
-          .select({
-            id: sql<string>`
-              ${invoiceId} || ':' || ${jobItems.id}
-            `.as("id"),
+          .delete(invoiceItems)
+          .where(
+            and(
+              eq(invoiceItems.invoiceId, invoiceId),
+              inArray(invoiceItems.jobId, removedJobIds),
+            ),
+          ),
 
-            invoiceId: sql<string>`
-              ${invoiceId}
-            `.as("invoice_id"),
+        db
+          .delete(invoiceJobs)
+          .where(
+            and(
+              eq(invoiceJobs.invoiceId, invoiceId),
+              inArray(invoiceJobs.jobId, removedJobIds),
+            ),
+          ),
 
-            jobId: jobItems.jobId,
-            description: jobItems.description,
-            amountCents: jobItems.amountCents,
+        db.insert(invoiceJobs).values(
+          addedJobIds.map((jobId) => ({
+            invoiceId,
+            jobId,
+            releasedAt: null,
+          })),
+        ),
 
-            createdAt: sql<number>`
-              ${now}
-            `.as("created_at"),
-          })
-          .from(jobItems)
-          .where(inArray(jobItems.jobId, jobIds)),
-      ),
+        db.insert(invoiceItems).select(
+          db
+            .select({
+              id: sql<string>`
+                ${invoiceId} || ':' || ${jobItems.id}
+              `.as("id"),
 
-      db
-        .update(invoices)
-        .set({
-          updatedAt: now,
-        })
-        .where(and(eq(invoices.id, invoiceId), eq(invoices.status, "draft"))),
-    ]);
+              invoiceId: sql<string>`
+                ${invoiceId}
+              `.as("invoice_id"),
+
+              jobId: jobItems.jobId,
+              description: jobItems.description,
+              amountCents: jobItems.amountCents,
+
+              createdAt: sql<number>`
+                ${now}
+              `.as("created_at"),
+            })
+            .from(jobItems)
+            .where(inArray(jobItems.jobId, addedJobIds)),
+        ),
+
+        updateInvoice,
+      ]);
+    } else if (addedJobIds.length > 0) {
+      await db.batch([
+        db.insert(invoiceJobs).values(
+          addedJobIds.map((jobId) => ({
+            invoiceId,
+            jobId,
+            releasedAt: null,
+          })),
+        ),
+
+        db.insert(invoiceItems).select(
+          db
+            .select({
+              id: sql<string>`
+                ${invoiceId} || ':' || ${jobItems.id}
+              `.as("id"),
+
+              invoiceId: sql<string>`
+                ${invoiceId}
+              `.as("invoice_id"),
+
+              jobId: jobItems.jobId,
+              description: jobItems.description,
+              amountCents: jobItems.amountCents,
+
+              createdAt: sql<number>`
+                ${now}
+              `.as("created_at"),
+            })
+            .from(jobItems)
+            .where(inArray(jobItems.jobId, addedJobIds)),
+        ),
+
+        updateInvoice,
+      ]);
+    } else {
+      await db.batch([
+        db
+          .delete(invoiceItems)
+          .where(
+            and(
+              eq(invoiceItems.invoiceId, invoiceId),
+              inArray(invoiceItems.jobId, removedJobIds),
+            ),
+          ),
+
+        db
+          .delete(invoiceJobs)
+          .where(
+            and(
+              eq(invoiceJobs.invoiceId, invoiceId),
+              inArray(invoiceJobs.jobId, removedJobIds),
+            ),
+          ),
+
+        updateInvoice,
+      ]);
+    }
   } catch (error) {
     if (
       error instanceof Error &&
