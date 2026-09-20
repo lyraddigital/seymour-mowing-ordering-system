@@ -1,0 +1,138 @@
+.page {
+  width: 100%;
+  max-width: 1060px;
+  margin: 0 auto;
+  container-type: inline-size;
+}
+
+.header {
+  margin-bottom: 28px;
+}
+
+.intro {
+  margin: 10px 0 0;
+  color: #596955;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.emptyState {
+  border: 1px solid #dce2d5;
+  border-radius: 8px;
+  background: #fffefa;
+  padding: 52px 28px;
+  text-align: center;
+}
+
+.emptyState h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.emptyState p {
+  margin: 12px auto 20px;
+  color: #596955;
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.emptyState a,
+.context a {
+  color: #263c2d;
+  text-underline-offset: 3px;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: #fffefa;
+  border: 1px solid #dce2d5;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.payment {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.4fr) minmax(180px, 1fr);
+  align-items: start;
+  gap: 24px;
+  padding: 24px;
+  overflow-wrap: anywhere;
+}
+
+.payment + .payment {
+  border-top: 1px solid #e1e6d9;
+}
+
+.payment:focus-within {
+  background: #f4f6ef;
+}
+
+.identity {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.amount {
+  color: #263c2d;
+  font-size: 17px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.5;
+}
+
+.status {
+  display: inline-flex;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.active {
+  color: #31583b;
+  background: #e4eee2;
+}
+
+.voided {
+  color: #7a3d3d;
+  background: #f2e3e3;
+}
+
+.context {
+  display: grid;
+  gap: 14px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.context > div {
+  display: grid;
+  gap: 3px;
+}
+
+.label {
+  color: #65745f;
+  font-size: 12px;
+}
+
+@container (max-width: 700px) {
+  .payment {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+    padding: 20px;
+  }
+
+  .context {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@container (max-width: 420px) {
+  .context {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

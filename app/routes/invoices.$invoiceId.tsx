@@ -25,6 +25,7 @@ export async function loader({ context, params }: Route.LoaderArgs) {
     return {
       invoice: result.invoice,
       items: result.items,
+      payments: result.payments,
       canManage: can(user, "invoices.manage"),
     };
   } catch (error) {
@@ -43,6 +44,7 @@ export default function InvoiceRoute({ loaderData }: Route.ComponentProps) {
     <InvoicePage
       invoice={loaderData.invoice}
       items={loaderData.items}
+      payments={loaderData.payments}
       canManage={loaderData.canManage}
     />
   );

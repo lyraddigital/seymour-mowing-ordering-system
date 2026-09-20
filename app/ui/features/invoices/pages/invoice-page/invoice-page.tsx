@@ -1,5 +1,7 @@
 import { Form, Link, useNavigation } from "react-router";
 
+import InvoicePayments from "../../components/invoice-payments/invoice-payments";
+import type { InvoiceDetailResult } from "../../../../../server/features/invoices/types/invoice-detail-result";
 import type { InvoiceItemSummary } from "../../../../../server/features/invoices/types/invoice-item-summary";
 import type { InvoiceSummary } from "../../../../../server/features/invoices/types/invoice-summary";
 import styles from "./invoice-page.module.css";
@@ -23,7 +25,8 @@ const scheduledDateFormatter = new Intl.DateTimeFormat("en-AU", {
 });
 
 interface InvoicePageProps {
-  invoice: InvoiceSummary;
+  invoice: InvoiceDetailResult["invoice"];
+  payments: InvoiceDetailResult["payments"];
   items: InvoiceItemSummary[];
   canManage: boolean;
 }
@@ -44,6 +47,7 @@ function formatStatus(status: InvoiceSummary["status"]) {
 export default function InvoicePage({
   invoice,
   items,
+  payments,
   canManage,
 }: InvoicePageProps) {
   const navigation = useNavigation();
@@ -274,6 +278,11 @@ export default function InvoicePage({
           <strong>{currencyFormatter.format(invoice.totalCents / 100)}</strong>
         </div>
       </section>
+      <InvoicePayments
+        invoice={invoice}
+        payments={payments}
+        canManage={canManage}
+      />
     </section>
   );
 }

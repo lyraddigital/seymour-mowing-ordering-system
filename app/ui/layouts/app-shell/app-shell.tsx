@@ -23,10 +23,7 @@ export default function AppShell({ currentUser, children }: AppShellProps) {
           <NavLink to="/jobs">Jobs</NavLink>
           <NavLink to="/invoices">Invoices</NavLink>
 
-          <span className="nav-pending" aria-disabled="true">
-            Payments
-            <small>Coming soon</small>
-          </span>
+          <NavLink to="/payments">Payments</NavLink>
         </nav>
         <div className="account">
           <strong>{currentUser.displayName}</strong>

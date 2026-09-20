@@ -1,3 +1,8 @@
+import { voidInvoice } from "../../../../../../app/server/features/invoices/services/void-invoice.server";
+import { issueInvoice } from "../../../../../../app/server/features/invoices/services/issue-invoice.server";
+import { voidPayment } from "../../../../../../app/server/features/payments/services/void-payment.server";
+import { recordPayment } from "../../../../../../app/server/features/payments/services/record-payment.server";
+import { payments } from "../../../../../../app/server/db/schema/payments";
 import { env } from "cloudflare:workers";
 import { beforeEach, expect, it } from "vitest";
 
@@ -25,6 +30,7 @@ let secondJobId: string;
 beforeEach(async () => {
   const db = createDb(env.DB);
 
+  await db.delete(payments);
   await db.delete(invoiceItems);
   await db.delete(invoiceJobs);
   await db.delete(invoices);
@@ -66,6 +72,7 @@ it("returns invoice detail with multiple jobs", async () => {
   const result = await getInvoiceById(env.DB, admin, invoiceId);
 
   expect(result).toEqual({
+    payments: [],
     invoice: expect.objectContaining({
       id: invoiceId,
       customerId: "customer",
@@ -175,4 +182,43 @@ it("requires invoice read permission", async () => {
       "invoice",
     ),
   ).rejects.toBeInstanceOf(PermissionDeniedError);
+});
+
+it("derives totals without multiplying item/payment rows and keeps ordered history after invoice void", async () => {
+  await createJobItem(env.DB, admin, firstJobId, {
+    description: "Mow",
+    amountCents: 6000,
+  });
+  await createJobItem(env.DB, admin, secondJobId, {
+    description: "Edge",
+    amountCents: 4000,
+  });
+  const { id } = await createDraftInvoice(env.DB, admin, {
+    jobIds: [firstJobId, secondJobId],
+  });
+  await issueInvoice(env.DB, admin, id);
+  const first = await recordPayment(env.DB, admin, id, { amountCents: 1000 });
+  await recordPayment(env.DB, admin, id, { amountCents: 2000 });
+  await recordPayment(env.DB, admin, id, { amountCents: 3000 });
+  await voidPayment(env.DB, admin, id, first.id);
+  let result = await getInvoiceById(env.DB, admin, id);
+  expect(result!.invoice).toMatchObject({
+    totalCents: 10000,
+    paidCents: 5000,
+    balanceCents: 5000,
+  });
+  expect(result!.payments).toHaveLength(3);
+  const sorted = [...result!.payments].sort(
+    (a, b) => a.receivedAt - b.receivedAt || a.id.localeCompare(b.id),
+  );
+  expect(result!.payments).toEqual(sorted);
+  const history = result!.payments;
+  await voidInvoice(env.DB, admin, id);
+  result = await getInvoiceById(env.DB, admin, id);
+  expect(result!.payments).toEqual(history);
+  expect(result!.invoice).toMatchObject({
+    totalCents: 10000,
+    paidCents: 5000,
+    balanceCents: 5000,
+  });
 });

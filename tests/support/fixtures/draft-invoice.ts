@@ -1,3 +1,4 @@
+import { payments } from "../../../app/server/db/schema/payments";
 import { env } from "cloudflare:workers";
 import { createDb } from "../../../app/server/db/client/create-db.server";
 import { customers } from "../../../app/server/db/schema/customers";
@@ -15,6 +16,7 @@ import { internalUser } from "./internal-user";
 export async function draftInvoiceFixture() {
   const db = createDb(env.DB);
   for (const table of [
+    payments,
     invoiceItems,
     invoiceJobs,
     invoices,

@@ -1539,13 +1539,107 @@ A Payment belongs to exactly one Invoice.
 
 An Invoice may have multiple Payments.
 
+Payments are financial history. Once recorded, a Payment is not edited in place or hard-deleted.
+
+Incorrect Payments are voided so the original record remains auditable.
+
+For the current Payment slice, keep the model deliberately small. Conceptually a Payment contains:
+
+```text
+id
+invoiceId
+amountCents
+receivedAt
+voidedAt
+createdAt
+```
+
+Do not add payment methods, transaction references, notes, allocations across multiple Invoices, refunds, or external payment-provider integration unless a later task explicitly requires them.
+
+Money must be stored as integer cents.
+
+A recorded Payment amount must be greater than zero.
+
+Negative and zero-value Payments are not valid Payment records.
+
+A new Payment may only be recorded against an issued Invoice.
+
+Do not allow new Payments on draft or voided Invoices.
+
+The server must enforce Invoice status; hiding controls in the UI is insufficient.
+
+The current Payment received timestamp is assigned server-side when the Payment is recorded. Do not trust a browser-supplied accounting timestamp unless a later product decision adds editable payment dates.
+
+A Payment may be voided only once.
+
+Voiding a Payment preserves:
+
+- its id
+- Invoice relationship
+- original amount
+- original received timestamp
+- original creation information
+
+Voiding populates `voidedAt`; it does not rewrite the original Payment amount.
+
+Do not hard-delete Payment history.
+
+An active Payment is a Payment whose `voidedAt` is null.
+
+Only active Payments contribute to the amount paid.
+
+The amount paid is conceptually:
+
+```text
+sum(payments.amount_cents where voided_at is null)
+```
+
+The Invoice balance is derived from the Invoice total and active Payments:
+
+```text
+balanceCents = invoiceTotalCents - activePaymentTotalCents
+```
+
+Do not introduce mutable stored `paid` or `balance` fields as independent sources of truth.
+
 Overpayments are not allowed.
 
-Incorrect Payments are voided rather than destructively altered or deleted in a way that destroys history.
+When recording a Payment, the server must reject any amount that would make active Payments exceed the current Invoice total.
 
-Invoice balances are derived from Invoice and Payment data.
+The overpayment rule must be enforced in the server feature layer and should be implemented atomically enough that concurrent Payment creation cannot knowingly violate the invariant. Follow the repository's existing D1/Drizzle transaction or batch conventions rather than adding a new persistence abstraction.
 
-Do not introduce a mutable balance field as an independent source of truth without an explicit architectural decision requiring it.
+Current Payment operations should be explicit, for example:
+
+```text
+recordPayment
+voidPayment
+```
+
+Do not create a generic Payment mutation endpoint that accepts an arbitrary operation or status from the browser.
+
+Current conceptual routes are:
+
+```text
+GET/POST /invoices/:invoiceId/payments/new
+POST     /invoices/:invoiceId/payments/:paymentId/void
+```
+
+For nested Payment routes, both:
+
+```text
+invoiceId
+paymentId
+```
+
+must identify the same stored Payment.
+
+Do not allow a Payment belonging to one Invoice to be voided through another Invoice's route.
+
+Payment mutations require the existing Invoice management permission unless the repository already defines a more specific Payment permission. Do not invent a new permission solely for this slice.
+
+Invoice detail should display Payment history and derived totals. A manageable issued Invoice with remaining balance may expose a `Record payment` action. Active Payments may expose a `Void payment` action where permitted. Draft Invoices do not expose Payment mutation controls.
+
+Do not change the existing Invoice-void lifecycle semantics as part of the first Payment slice unless required to make the implementation internally consistent. If an interaction between Invoice voiding and existing Payments is not already specified in code or tests, preserve current Invoice behaviour and call the limitation out rather than inventing broader accounting rules.
 
 ---
 
@@ -1674,6 +1768,27 @@ Invoice behaviour should be covered with focused tests for:
 - lifecycle controls rendered only for appropriate statuses and permissions
 
 When testing returned route action data, remember React Router actions may return either a `Response` or data-with-response-init. Narrow the result before accessing `.data` when TypeScript requires it.
+
+## Payment Testing
+
+Payment behaviour should be covered with focused tests for:
+
+- recording a positive Payment on an issued Invoice
+- rejecting Payments on draft Invoices
+- rejecting Payments on voided Invoices
+- rejecting zero and negative amounts
+- rejecting overpayments
+- allowing multiple Payments up to exactly the Invoice total
+- derived active amount paid
+- derived remaining balance
+- voiding a Payment
+- voided Payments no longer contributing to amount paid
+- preserving voided Payment history
+- rejecting repeated Payment voids
+- nested Invoice/Payment ownership
+- authorization
+- route validation/status/redirect behaviour
+- Payment controls rendered only for appropriate Invoice states and permissions
 
 For Drizzle `INSERT ... SELECT`, raw SQL expressions selected into inserted columns must be assigned aliases when required by Drizzle's type system.
 

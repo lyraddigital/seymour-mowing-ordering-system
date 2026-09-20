@@ -9,6 +9,7 @@ import { invoiceItems } from "../../../db/schema/invoice-items";
 import { invoiceJobs } from "../../../db/schema/invoice-jobs";
 import { invoices } from "../../../db/schema/invoices";
 import { jobs } from "../../../db/schema/jobs";
+import { payments } from "../../../db/schema/payments";
 import type { InvoiceDetailResult } from "../types/invoice-detail-result";
 
 export async function getInvoiceById(
@@ -53,7 +54,7 @@ export async function getInvoiceById(
     return null;
   }
 
-  const [invoiceJobRows, items] = await Promise.all([
+  const [invoiceJobRows, items, paymentHistory] = await Promise.all([
     db
       .select({
         id: jobs.id,
@@ -77,11 +78,24 @@ export async function getInvoiceById(
       .from(invoiceItems)
       .where(eq(invoiceItems.invoiceId, invoiceId))
       .orderBy(asc(invoiceItems.createdAt), asc(invoiceItems.id)),
+    db
+      .select()
+      .from(payments)
+      .where(eq(payments.invoiceId, invoiceId))
+      .orderBy(asc(payments.receivedAt), asc(payments.id)),
   ]);
 
+  const paidCents = paymentHistory.reduce(
+    (total, payment) =>
+      total + (payment.voidedAt === null ? payment.amountCents : 0),
+    0,
+  );
   return {
+    payments: paymentHistory,
     invoice: {
       ...invoice,
+      paidCents,
+      balanceCents: invoice.totalCents - paidCents,
       jobs: invoiceJobRows,
     },
     items,

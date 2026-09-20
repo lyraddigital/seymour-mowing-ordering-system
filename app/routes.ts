@@ -38,7 +38,16 @@ export default [
       "invoices/:invoiceId/items/:itemId/delete",
       "routes/invoices.$invoiceId.items.$itemId.delete.tsx",
     ),
+    route(
+      "invoices/:invoiceId/payments/new",
+      "routes/invoices.$invoiceId.payments.new.tsx",
+    ),
+    route(
+      "invoices/:invoiceId/payments/:paymentId/void",
+      "routes/invoices.$invoiceId.payments.$paymentId.void.ts",
+    ),
     route("invoices", "routes/invoices.tsx"),
+    route("payments", "routes/payments.tsx"),
     route("invoices/:invoiceId", "routes/invoices.$invoiceId.tsx"),
     route("invoices/:invoiceId/edit", "routes/invoices.$invoiceId.edit.tsx"),
     route("invoices/:invoiceId/issue", "routes/invoices.$invoiceId.issue.ts"),

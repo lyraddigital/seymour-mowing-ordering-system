@@ -1,3 +1,6 @@
+import { voidPayment } from "../../../app/server/features/payments/services/void-payment.server";
+import { recordPayment } from "../../../app/server/features/payments/services/record-payment.server";
+import { payments } from "../../../app/server/db/schema/payments";
 import { deleteInvoiceItem } from "../../../app/server/features/invoices/services/delete-invoice-item.server";
 import { updateInvoiceItem } from "../../../app/server/features/invoices/services/update-invoice-item.server";
 import { createInvoiceItem } from "../../../app/server/features/invoices/services/create-invoice-item.server";
@@ -86,6 +89,7 @@ beforeEach(async () => {
 
   const db = createDb(env.DB);
 
+  await db.delete(payments);
   await db.delete(invoiceItems);
   await db.delete(invoiceJobs);
   await db.delete(invoices);
@@ -125,6 +129,7 @@ it("loads invoice details", async () => {
   const result = await loader(loaderArgs(invoiceId));
 
   expect(result).toEqual({
+    payments: [],
     invoice: expect.objectContaining({
       id: invoiceId,
       customerId: "customer",
@@ -319,4 +324,71 @@ it("renders derived totals after adding, editing and deleting an item", async ()
   result = await loader(loaderArgs(invoiceId));
   expect(result.invoice.totalCents).toBe(0);
   expect(renderPage(result)).toContain("$0.00");
+});
+
+it("shows payment history, balances and appropriate controls through payment and invoice lifecycle", async () => {
+  const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
+    jobIds: [jobId],
+  });
+  await createInvoiceItem(env.DB, admin, invoiceId, {
+    jobId,
+    description: "Charge",
+    amountCents: 10000,
+  });
+  let html = renderPage(await loader(loaderArgs(invoiceId)));
+  expect(html).not.toContain("Record payment");
+  expect(html).not.toContain("Void payment");
+  await issueInvoice(env.DB, admin, invoiceId);
+  html = renderPage(await loader(loaderArgs(invoiceId)));
+  expect(html).toContain(`/invoices/${invoiceId}/payments/new`);
+  const first = await recordPayment(env.DB, admin, invoiceId, {
+    amountCents: 2500,
+  });
+  html = renderPage(await loader(loaderArgs(invoiceId)));
+  expect(html).toContain("$25.00");
+  expect(html).toContain("$75.00");
+  expect(html).toContain("Record payment");
+  expect(html).toContain(`/invoices/${invoiceId}/payments/${first.id}/void`);
+  const second = await recordPayment(env.DB, admin, invoiceId, {
+    amountCents: 7500,
+  });
+  html = renderPage(await loader(loaderArgs(invoiceId)));
+  expect(html).not.toContain("Record payment");
+  expect(html).toContain("$0.00");
+  await voidPayment(env.DB, admin, invoiceId, second.id);
+  html = renderPage(await loader(loaderArgs(invoiceId)));
+  expect(html).toContain("Record payment");
+  expect(html).not.toContain(`/payments/${second.id}/void`);
+  expect(html).toContain("Voided");
+  await voidInvoice(env.DB, admin, invoiceId);
+  const result = await loader(loaderArgs(invoiceId));
+  expect(result.invoice).toMatchObject({ paidCents: 2500, balanceCents: 7500 });
+  expect(result.payments).toHaveLength(2);
+  html = renderPage(result);
+  expect(html).toContain("Historical balance");
+  expect(html).not.toContain("Record payment");
+  expect(html).toContain(`/payments/${first.id}/void`);
+  expect(html).not.toContain(`/payments/${second.id}/void`);
+  context.set(currentUserContext, { ...admin, role: "operator" });
+  html = renderPage(await loader(loaderArgs(invoiceId)));
+  expect(html).toContain("$25.00");
+  expect(html).toContain("$75.00");
+  expect(html).toContain("Received");
+  expect(html).not.toContain("Record payment");
+  expect(html).not.toContain("Void payment");
+});
+it("hides Record payment from non-managers on an issued unpaid invoice", async () => {
+  const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
+    jobIds: [jobId],
+  });
+  await createInvoiceItem(env.DB, admin, invoiceId, {
+    jobId,
+    description: "Charge",
+    amountCents: 10000,
+  });
+  await issueInvoice(env.DB, admin, invoiceId);
+  context.set(currentUserContext, { ...admin, role: "operator" });
+  const html = renderPage(await loader(loaderArgs(invoiceId)));
+  expect(html).not.toContain("Record payment");
+  expect(html).toContain("$100.00");
 });
