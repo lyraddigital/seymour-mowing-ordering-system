@@ -32,7 +32,7 @@ it("creates an active customer, trims text, and stores optional blanks as null",
     addressLine1: "1 Main St",
     addressLine2: null,
     suburb: null,
-    state: null,
+    state: "VIC",
     postcode: null,
     notes: "hello",
     archivedAt: null,
@@ -64,4 +64,11 @@ it("enforces required names at the database boundary", async () => {
       .insert(customers)
       .values({ id: "bad", name: " ", createdAt: 1, updatedAt: 1 }),
   ).rejects.toThrow();
+});
+it("owns state server-side even when an input contains another state", async () => {
+  const input = { name: "Victorian customer", state: "NSW" };
+  await createCustomer(env.DB, user, input);
+  expect(await createDb(env.DB).select().from(customers).get()).toMatchObject({
+    state: "VIC",
+  });
 });

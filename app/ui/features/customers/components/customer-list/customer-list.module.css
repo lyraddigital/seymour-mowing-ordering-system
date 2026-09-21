@@ -1,97 +1,17 @@
-.list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  background: #fffefa;
-  border: 1px solid #dce2d5;
-  border-radius: 8px;
-  overflow: hidden;
+.name {
+  min-width: 180px;
+  font-size: 15px;
 }
-
-.customer {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 1.2fr);
-  align-items: start;
-  gap: 20px;
-  padding: 24px;
-  overflow-wrap: anywhere;
-}
-
-.customer + .customer {
-  border-top: 1px solid #e1e6d9;
-}
-
-.customer:focus-within {
-  background: #f4f6ef;
-}
-
-.customerName {
-  margin: 0;
-  font-size: 17px;
+.name a {
   font-weight: 600;
-  line-height: 1.5;
 }
-
-.contact,
+.phone {
+  white-space: nowrap;
+}
 .address {
-  margin: 0;
-  display: grid;
-  gap: 12px;
-  font-size: 14px;
-  line-height: 1.6;
+  min-width: 220px;
+  max-width: 360px;
 }
-
-.contact {
-  grid-column: 2;
-}
-
-.address {
-  grid-column: 3;
-}
-
-.customer dt {
-  margin-bottom: 2px;
-  color: #65745f;
-  font-size: 12px;
-}
-
-.customer dd {
-  margin: 0;
-}
-
-.contact a {
-  text-decoration-color: #b0bba8;
-  text-underline-offset: 3px;
-}
-
-.contact a:hover {
-  text-decoration-color: currentColor;
-}
-
-.contact a:focus-visible {
-  outline: 3px solid #62793d;
-  outline-offset: 3px;
-}
-
-@container (max-width: 620px) {
-  .customer {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 16px;
-    padding: 20px;
-  }
-
-  .contact,
-  .address {
-    grid-column: 1;
-  }
-
-  .contact {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@container (max-width: 360px) {
-  .contact {
-    grid-template-columns: minmax(0, 1fr);
-  }
+.missing {
+  color: var(--text-muted);
 }

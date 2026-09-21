@@ -11,11 +11,12 @@ export default function AppShell({ currentUser, children }: AppShellProps) {
         Skip to content
       </a>
       <aside className="sidebar">
-        <div className="brand">
-          <span className="brand-mark" aria-hidden="true">
-            s
-          </span>
-          Seymour<span className="brand-dot">.</span>
+        <div className="brand" aria-label="Seymour Mowing and Maintenance">
+          <div className="brand-placeholder">
+            <strong>Seymour</strong>
+            <span>Mowing &amp; Maintenance</span>
+            <small>Logo placeholder</small>
+          </div>
         </div>
         <nav className="sidebar-nav" aria-label="Main navigation">
           <NavLink to="/dashboard">Dashboard</NavLink>

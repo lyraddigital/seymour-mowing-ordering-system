@@ -88,4 +88,19 @@ it("renders the form with accessible validation feedback", () => {
   expect(html).toContain('role="alert"');
   expect(html).toContain('value="123"');
   expect(html).toContain("Create customer");
+  expect(html).not.toContain('name="state"');
+  expect(html).not.toContain('for="state"');
 });
+it.each([undefined, "NSW"])(
+  "persists VIC without accepting state %s from the browser",
+  async (state) => {
+    await submit({
+      name: "Local customer",
+      suburb: "Seymour",
+      ...(state ? { state } : {}),
+    });
+    expect(await createDb(env.DB).select().from(customers).get()).toMatchObject(
+      { state: "VIC" },
+    );
+  },
+);

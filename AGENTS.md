@@ -382,9 +382,9 @@ Avoid feature-wide CSS dumping grounds.
 
 Do not move unrelated styles while implementing a feature.
 
-Reuse existing design patterns and visual conventions before inventing new ones.
+Follow the established project UX/design direction before inventing new page-specific patterns.
 
-The UI should remain consistent with the existing Customers and Jobs features.
+When `UX-DESIGN.md` is present in the repository, treat it as the visual and interaction source of truth for UI work. Preserve domain behaviour while migrating older screens onto those conventions.
 
 ---
 
@@ -533,6 +533,12 @@ Current Customer operations include:
 New behaviour must preserve these semantics.
 
 Do not introduce hard-delete Customer behaviour.
+
+## Customer Address State
+
+The current business operates in Victoria. Customer create/edit forms must not expose State as an editable field.
+
+Persist `state = "VIC"` server-side for Customer address create/update operations. Do not rely on a hidden browser-submitted field for this invariant. Keep the database column for future flexibility and continue displaying `VIC` in formatted addresses where appropriate.
 
 ---
 
@@ -1922,7 +1928,7 @@ Before considering work complete:
 
 16. Confirm tests mirror production structure.
 
-17. Confirm new UI follows existing visual and structural conventions.
+17. Confirm new UI follows `UX-DESIGN.md` and established shared visual/structural conventions when that document is present.
 
 18. Confirm no unnecessary abstractions were introduced.
 

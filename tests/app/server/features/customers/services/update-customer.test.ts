@@ -71,7 +71,6 @@ it("clears all optional blank fields", async () => {
     addressLine1: "old",
     addressLine2: "old",
     suburb: "old",
-    state: "old",
     postcode: "old",
     notes: "old",
   };
@@ -83,6 +82,7 @@ it("clears all optional blank fields", async () => {
   const saved = await createDb(env.DB).select().from(customers).get();
   for (const key of Object.keys(fields) as (keyof typeof fields)[])
     expect(saved![key]).toBeNull();
+  expect(saved!.state).toBe("VIC");
 });
 it.each(["", "  ", "\t\n"])(
   "rejects blank name %j without changing the row",
@@ -123,5 +123,14 @@ it("requires restoration before editing archived customers", async () => {
   expect(await createDb(env.DB).select().from(customers).get()).toMatchObject({
     ...original,
     archivedAt: 3,
+  });
+});
+it("replaces an old state with VIC and ignores client-supplied state", async () => {
+  await createDb(env.DB).update(customers).set({ state: "NSW" });
+  const input = { name: "Updated", suburb: "Seymour", state: "QLD" };
+  await updateCustomer(env.DB, user, original.id, input);
+  expect(await createDb(env.DB).select().from(customers).get()).toMatchObject({
+    state: "VIC",
+    suburb: "Seymour",
   });
 });

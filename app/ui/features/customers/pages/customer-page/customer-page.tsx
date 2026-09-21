@@ -1,17 +1,15 @@
+import { Link } from "react-router";
 import type { CustomerDetails } from "../../../../../server/features/customers/types/customer-details";
 import type { CustomerFinancialHistory } from "../../../../../server/features/customers/types/customer-financial-history";
 import CustomerFinances from "../../components/customer-finances/customer-finances";
 import CustomerArchiveActions from "../../components/customer-archive-actions/customer-archive-actions";
-import { Link } from "react-router";
-
+import ui from "../../../../styles/product.module.css";
 import styles from "./customer-page.module.css";
-
 type CustomerPageProps = {
   customer: CustomerDetails;
   canManage: boolean;
   financialHistory: CustomerFinancialHistory | null;
 };
-
 export default function CustomerPage({
   customer,
   canManage,
@@ -21,51 +19,48 @@ export default function CustomerPage({
   const locality = [customer.suburb, customer.state, customer.postcode]
     .filter(Boolean)
     .join(" ");
-
   const address = [
     customer.addressLine1,
     customer.addressLine2,
     locality,
   ].filter(Boolean);
-
   return (
-    <section className={styles.page}>
+    <section className={ui.page}>
       <Link
-        className={styles.backLink}
+        className={ui.breadcrumb}
         to={archived ? "/customers/archived" : "/customers"}
       >
-        {archived ? "← Archived customers" : "← Customers"}
+        {archived ? "← Archived customers" : "← Customers"} / Customer details
       </Link>
-
-      <header className={styles.header}>
+      <header className={ui.header}>
         <div>
-          <h1 className="page-title">{customer.name}</h1>
-          <p className={styles.intro}>Customer details</p>
-          {archived && (
-            <p className={styles.archivedStatus}>
-              Archived — restore this customer before editing.
-            </p>
-          )}
+          <div className={styles.title}>
+            <h1 className="page-title">{customer.name}</h1>
+            <span className={archived ? ui.archived : ui.active}>
+              {archived ? "Archived" : "Active"}
+            </span>
+          </div>
+          <p className={ui.intro}>
+            {archived
+              ? "Customer details and financial history are preserved. Restore this customer before editing."
+              : "Contact details, service address and financial history."}
+          </p>
         </div>
-        {canManage && !archived && (
-          <Link
-            className={styles.primaryAction}
-            to={`/customers/${customer.id}/edit`}
-          >
-            Edit customer
-          </Link>
-        )}
+        {canManage &&
+          (archived ? (
+            <CustomerArchiveActions customerId={customer.id} archived />
+          ) : (
+            <Link
+              className={ui.primaryAction}
+              to={`/customers/${customer.id}/edit`}
+            >
+              Edit customer
+            </Link>
+          ))}
       </header>
-
-      {canManage && archived && (
-        <div className={styles.restoreAction}>
-          <CustomerArchiveActions customerId={customer.id} archived />
-        </div>
-      )}
-      <div className={styles.detailsGrid}>
-        <section className={styles.detailCard}>
+      <div className={styles.details}>
+        <section className={styles.info}>
           <h2>Contact</h2>
-
           {customer.email || customer.phone ? (
             <dl className={styles.detailList}>
               {customer.email && (
@@ -76,7 +71,6 @@ export default function CustomerPage({
                   </dd>
                 </div>
               )}
-
               {customer.phone && (
                 <div>
                   <dt>Phone</dt>
@@ -87,38 +81,44 @@ export default function CustomerPage({
               )}
             </dl>
           ) : (
-            <p className={styles.mutedDetail}>No contact details added.</p>
+            <p className={styles.muted}>No contact details added.</p>
           )}
         </section>
-
-        <section className={styles.detailCard}>
-          <h2>Address</h2>
-
+        <section className={styles.info}>
+          <h2>Service address</h2>
           {address.length ? (
-            <address className={styles.customerAddress}>
+            <address className={styles.address}>
               {address.map((line) => (
                 <div key={line}>{line}</div>
               ))}
             </address>
           ) : (
-            <p className={styles.mutedDetail}>No address added.</p>
+            <p className={styles.muted}>No address added.</p>
           )}
         </section>
-
-        <section className={`${styles.detailCard} ${styles.notesCard}`}>
+        <section className={styles.notes}>
           <h2>Notes</h2>
-
           {customer.notes ? (
-            <p className={styles.customerNotes}>{customer.notes}</p>
+            <p className={styles.noteText}>{customer.notes}</p>
           ) : (
-            <p className={styles.mutedDetail}>No notes added.</p>
+            <p className={styles.muted}>No notes added.</p>
           )}
         </section>
       </div>
-      {canManage && !archived && (
-        <CustomerArchiveActions customerId={customer.id} archived={false} />
-      )}
       {financialHistory && <CustomerFinances history={financialHistory} />}
+      {canManage && !archived && (
+        <section
+          className={styles.danger}
+          aria-labelledby="customer-danger-heading"
+        >
+          <h2 id="customer-danger-heading">Danger zone</h2>
+          <p>
+            Archive customers who are no longer active. Their records and
+            financial history will be kept.
+          </p>
+          <CustomerArchiveActions customerId={customer.id} archived={false} />
+        </section>
+      )}
     </section>
   );
 }

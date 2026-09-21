@@ -1,6 +1,6 @@
-import { Link } from "react-router/internal/react-server-client";
-
+import { Link } from "react-router";
 import type { CustomerSummary } from "../../../../../server/features/customers/types/customer-summary";
+import ui from "../../../../styles/product.module.css";
 import styles from "./customer-list.module.css";
 
 export default function CustomerList({
@@ -11,60 +11,73 @@ export default function CustomerList({
   label?: string;
 }) {
   return (
-    <ul className={styles.list} aria-label={label}>
-      {customers.map((customer) => {
-        const locality = [customer.suburb, customer.state, customer.postcode]
-          .filter(Boolean)
-          .join(" ");
-
-        const address = [customer.addressLine1, customer.addressLine2, locality]
-          .filter(Boolean)
-          .join(", ");
-
-        return (
-          <li key={customer.id} className={styles.customer}>
-            <h2 className={styles.customerName}>
-              <Link
-                className={styles.customerLink}
-                to={`/customers/${customer.id}`}
-              >
-                {customer.name}
-              </Link>
-            </h2>
-
-            {(customer.email || customer.phone) && (
-              <dl className={styles.contact}>
-                {customer.email && (
-                  <div>
-                    <dt>Email</dt>
-                    <dd>
-                      <a href={"mailto:" + customer.email}>{customer.email}</a>
-                    </dd>
-                  </div>
-                )}
-
-                {customer.phone && (
-                  <div>
-                    <dt>Phone</dt>
-                    <dd>
-                      <a href={"tel:" + customer.phone}>{customer.phone}</a>
-                    </dd>
-                  </div>
-                )}
-              </dl>
-            )}
-
-            {address && (
-              <dl className={styles.address}>
-                <div>
-                  <dt>Address</dt>
-                  <dd>{address}</dd>
-                </div>
-              </dl>
-            )}
-          </li>
-        );
-      })}
-    </ul>
+    <div
+      className={ui.tableScroll}
+      role="region"
+      aria-label={label}
+      tabIndex={0}
+    >
+      <table className={ui.table} aria-label={label}>
+        <thead>
+          <tr>
+            <th scope="col">Customer</th>
+            <th scope="col">Email</th>
+            <th scope="col">Phone</th>
+            <th scope="col">Address</th>
+            <th scope="col">Details</th>
+          </tr>
+        </thead>
+        <tbody>
+          {customers.map((customer) => {
+            const locality = [
+              customer.suburb,
+              customer.state,
+              customer.postcode,
+            ]
+              .filter(Boolean)
+              .join(" ");
+            const address = [
+              customer.addressLine1,
+              customer.addressLine2,
+              locality,
+            ]
+              .filter(Boolean)
+              .join(", ");
+            return (
+              <tr key={customer.id}>
+                <th scope="row" className={styles.name}>
+                  <Link to={`/customers/${customer.id}`}>{customer.name}</Link>
+                </th>
+                <td>
+                  {customer.email ? (
+                    <a href={`mailto:${customer.email}`}>{customer.email}</a>
+                  ) : (
+                    <span className={styles.missing}>—</span>
+                  )}
+                </td>
+                <td className={styles.phone}>
+                  {customer.phone ? (
+                    <a href={`tel:${customer.phone}`}>{customer.phone}</a>
+                  ) : (
+                    <span className={styles.missing}>—</span>
+                  )}
+                </td>
+                <td className={styles.address}>
+                  {address || "No address added"}
+                </td>
+                <td className={ui.view}>
+                  <Link
+                    to={`/customers/${customer.id}`}
+                    aria-label={`View ${customer.name}`}
+                  >
+                    View →
+                  </Link>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
   );
 }

@@ -1,7 +1,18 @@
 :root {
+  --brand-forest: #184329;
+  --brand-forest-dark: #12351f;
+  --brand-lawn: #4caf50;
+  --brand-lawn-soft: #e7f3e2;
+  --background: #f7f8f3;
+  --surface: #ffffff;
+  --border: #dde4d8;
+  --text: #173126;
+  --text-muted: #66776c;
+  --danger: #c62828;
+  --danger-soft: #fdecec;
   font-family: "Segoe UI", Arial, sans-serif;
-  color: #243d2d;
-  background: #f3f4ee;
+  color: var(--text);
+  background: var(--background);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -16,21 +27,30 @@ body {
 a {
   color: inherit;
 }
-a:focus-visible {
-  outline: 3px solid #819952;
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+summary:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid var(--brand-lawn);
   outline-offset: 4px;
 }
 .app-shell {
   display: grid;
-  grid-template-columns: 250px 1fr;
+  grid-template-columns: 240px minmax(0, 1fr);
   min-height: 100svh;
 }
 .sidebar {
   display: flex;
   flex-direction: column;
-  background: #fffefa;
-  border-right: 1px solid #e1e6d9;
-  padding: 32px 24px;
+  background: var(--brand-forest-dark);
+  color: #f3f8ef;
+  padding: 32px 20px 24px;
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  overflow-y: auto;
 }
 .brand {
   display: flex;
@@ -55,6 +75,29 @@ a:focus-visible {
 .brand-dot {
   color: #819952;
 }
+.brand-placeholder {
+  display: grid;
+  gap: 6px;
+  letter-spacing: normal;
+  padding: 8px 12px;
+}
+.brand-placeholder strong {
+  font-size: 26px;
+  letter-spacing: -0.5px;
+}
+.brand-placeholder span {
+  font-size: 12px;
+  font-weight: 400;
+  color: #d5e2cd;
+}
+.brand-placeholder small {
+  margin-top: 8px;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-weight: 400;
+  color: #b6c9b0;
+}
 .sidebar-nav {
   display: grid;
   gap: 8px;
@@ -67,8 +110,27 @@ a:focus-visible {
   text-decoration: none;
 }
 .sidebar-nav a.active {
-  background: #e9eedf;
+  color: #ffffff;
+  background: #285c35;
+  box-shadow: inset 3px 0 var(--brand-lawn);
   font-weight: 600;
+}
+.sidebar-nav a:hover {
+  background: #234d30;
+}
+.sidebar-nav a {
+  min-height: 46px;
+  padding: 13px 16px;
+}
+.sidebar-nav {
+  gap: 6px;
+}
+.brand img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 150px;
+  object-fit: contain;
 }
 .nav-pending {
   color: #65745f;
@@ -83,17 +145,17 @@ a:focus-visible {
   margin-top: auto;
   display: grid;
   gap: 8px;
-  border-top: 1px solid #e1e6d9;
+  border-top: 1px solid #365740;
   padding-top: 24px;
   overflow-wrap: anywhere;
 }
 .role {
   text-transform: capitalize;
-  color: #65745f;
+  color: #c1cfbf;
   font-size: 14px;
 }
 .workspace {
-  padding: 56px;
+  padding: 40px clamp(20px, 3vw, 48px);
   min-width: 0;
 }
 .eyebrow {
@@ -149,6 +211,8 @@ pre {
     grid-template-columns: 1fr;
   }
   .sidebar {
+    position: static;
+    height: auto;
     border-right: 0;
     border-bottom: 1px solid #e1e6d9;
     padding: 24px;
@@ -156,6 +220,13 @@ pre {
   .sidebar-nav {
     margin: 24px 0;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .sidebar .brand {
+    max-width: 180px;
+  }
+  .account {
+    font-size: 13px;
+    gap: 4px;
   }
   .workspace {
     padding: 32px 24px;

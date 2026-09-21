@@ -51,6 +51,9 @@ beforeEach(async () => {
     .set({
       email: "john@example.test",
       addressLine1: "1 Lawn Street",
+      suburb: "Seymour",
+      state: "VIC",
+      postcode: "3660",
       notes: "Close the gate",
     })
     .where(eq(customers.id, "customer"));
@@ -96,10 +99,11 @@ it.each(["admin", "operator"] as const)(
       "john@example.test",
       "1 Lawn Street",
       "Close the gate",
-      "Financial summary",
+      "Financial overview",
+      "Seymour VIC 3660",
       "Total invoiced",
       "$120.00",
-      "Active payments received",
+      "Payments received",
       "$25.00",
       "Outstanding balance",
       "$20.00",
@@ -115,9 +119,9 @@ it.each(["admin", "operator"] as const)(
       expect(html).toContain(`href="/invoices/${id}"`);
     const paymentList =
       html.match(
-        /<ul[^>]*aria-label="Customer payments"[^>]*>([\s\S]*?)<\/ul>/,
+        /<table[^>]*aria-label="Customer payments"[^>]*>[\s\S]*?<tbody>([\s\S]*?)<\/tbody>/,
       )?.[1] ?? "";
-    const rows = paymentList.match(/<li\b[^>]*>[\s\S]*?<\/li>/g) ?? [];
+    const rows = paymentList.match(/<tr\b[^>]*>[\s\S]*?<\/tr>/g) ?? [];
     expect(rows).toHaveLength(2);
     expect(rows.find((row) => row.includes("$25.00"))).toContain(
       ">Active</span>",
@@ -128,7 +132,6 @@ it.each(["admin", "operator"] as const)(
     for (const row of rows) {
       expect(row).toContain(`href="/invoices/${fixture.invoiceId}"`);
       expect(row).toContain("INV-000001");
-      expect(row).toContain("Received");
       expect(row).toContain("dateTime=");
     }
     for (const payment of result.financialHistory!.payments) {
@@ -144,11 +147,15 @@ it.each(["admin", "operator"] as const)(
     }
     const finances = html.slice(
       html.indexOf('aria-labelledby="financial-summary-heading"'),
+      html.indexOf('aria-labelledby="customer-danger-heading"'),
     );
     expect(finances).not.toContain("<form");
     expect(finances).not.toContain("<button");
     expect(html).toContain("Edit customer");
     expect(html).toContain("Confirm archive");
+    expect(html.indexOf("Danger zone")).toBeGreaterThan(
+      html.indexOf("Payment history"),
+    );
   },
 );
 
@@ -188,7 +195,7 @@ it.each(["invoices.read", "payments.read"] as const)(
     expect(result.financialHistory).toBeNull();
     const html = render(result);
     expect(html).toContain("John Smith");
-    expect(html).not.toContain("Financial summary");
+    expect(html).not.toContain("Financial overview");
     expect(html).not.toContain("INV-000001");
   },
 );

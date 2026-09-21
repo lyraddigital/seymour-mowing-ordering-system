@@ -18,5 +18,11 @@ it.each(["/payments", "/invoices", "/customers", "/jobs"])(
     expect(activeLinks).toHaveLength(1);
     expect(activeLinks![0]).toContain(`href="${path}"`);
     expect(html).not.toContain("Coming soon");
+    expect(html).toContain("Mowing &amp; Maintenance");
+    expect(html).toContain("Logo placeholder");
+    expect(html).not.toContain("brand-mark");
+    expect(html).not.toContain("Settings");
+    expect(html).not.toContain("Log out");
+    expect(html).toContain(internalUser().email);
   },
 );

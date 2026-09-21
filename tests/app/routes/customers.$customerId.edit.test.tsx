@@ -61,6 +61,8 @@ it("loads existing data into the form and links cancel back to detail", async ()
   expect(html).toContain('value="123"');
   expect(html).toContain('href="/customers/customer"');
   expect(html).toContain("Save changes");
+  expect(html).not.toContain('name="state"');
+  expect(html).not.toContain('for="state"');
 });
 it("redirects a valid save to detail", async () => {
   const response = await submit({ name: "Changed" });
@@ -128,3 +130,18 @@ it("redirects archived edit loads and rejects direct update POSTs", async () => 
     status: 409,
   });
 });
+it.each([undefined, "NSW"])(
+  "saves server-owned VIC without accepting state %s",
+  async (state) => {
+    await createDb(env.DB).update(customers).set({ state: "QLD" });
+    await submit({
+      name: "Local customer",
+      suburb: "Seymour",
+      ...(state ? { state } : {}),
+    });
+    expect((await loader(args())).customer).toMatchObject({
+      state: "VIC",
+      suburb: "Seymour",
+    });
+  },
+);

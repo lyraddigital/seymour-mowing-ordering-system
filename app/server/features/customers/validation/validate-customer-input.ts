@@ -15,7 +15,7 @@ export function validateCustomerInput(input: CreateCustomerInput) {
     addressLine1: input.addressLine1?.trim() || null,
     addressLine2: input.addressLine2?.trim() || null,
     suburb: input.suburb?.trim() || null,
-    state: input.state?.trim() || null,
+    state: "VIC",
     postcode: input.postcode?.trim() || null,
     notes: input.notes?.trim() || null,
   };

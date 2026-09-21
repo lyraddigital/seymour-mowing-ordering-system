@@ -71,7 +71,9 @@ export default function CustomerForm({
       </fieldset>
       <fieldset className={styles.section}>
         <legend>Address</legend>
-        <p className={styles.sectionHint}>Where to find this customer.</p>
+        <p className={styles.sectionHint}>
+          Service address in Victoria. All address fields are optional.
+        </p>
         <div className={styles.addressFields}>
           <div className={styles.fullField}>
             <label htmlFor="addressLine1">Address line 1</label>
@@ -101,16 +103,6 @@ export default function CustomerForm({
               type="text"
               autoComplete="address-level2"
               defaultValue={values?.suburb ?? ""}
-            />
-          </div>
-          <div className={styles.field}>
-            <label htmlFor="state">State</label>
-            <input
-              id="state"
-              name="state"
-              type="text"
-              autoComplete="address-level1"
-              defaultValue={values?.state ?? ""}
             />
           </div>
           <div className={styles.field}>

@@ -28,7 +28,6 @@ export async function action({ request, context }: Route.ActionArgs) {
     addressLine1: text("addressLine1"),
     addressLine2: text("addressLine2"),
     suburb: text("suburb"),
-    state: text("state"),
     postcode: text("postcode"),
     notes: text("notes"),
   };

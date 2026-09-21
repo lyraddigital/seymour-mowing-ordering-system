@@ -1,9 +1,7 @@
 import { Link } from "react-router";
-
 import type { CustomerSummary } from "../../../../../server/features/customers/types/customer-summary";
 import CustomerList from "../../components/customer-list/customer-list";
-import styles from "./customers-page.module.css";
-
+import styles from "../../../../styles/product.module.css";
 export default function CustomersPage({
   customers,
 }: {
@@ -15,19 +13,19 @@ export default function CustomersPage({
         <div>
           <h1 className="page-title">Customers</h1>
           <p className={styles.intro}>
-            Your active customers and their contact details.
+            Your customers, contact details and service addresses.
           </p>
         </div>
-
         <Link className={styles.primaryAction} to="/customers/new">
           New customer
         </Link>
       </header>
-
-      <Link className={styles.archivedLink} to="/customers/archived">
-        Archived customers
-      </Link>
-
+      <nav className={styles.tabs} aria-label="Customer lists">
+        <Link to="/customers" aria-current="page">
+          Active customers
+        </Link>
+        <Link to="/customers/archived">Archived customers</Link>
+      </nav>
       {customers.length ? (
         <CustomerList customers={customers} />
       ) : (
@@ -37,9 +35,8 @@ export default function CustomersPage({
             Add your first customer to keep their contact and address details in
             one place.
           </p>
-
           <Link className={styles.primaryAction} to="/customers/new">
-            Create customer
+            New customer
           </Link>
         </div>
       )}

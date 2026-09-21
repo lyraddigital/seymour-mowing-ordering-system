@@ -38,4 +38,11 @@ it("renders customers returned by the loader and a creation link", async () => {
   );
   expect(html).toContain("Visible customer");
   expect(html).toContain('href="/customers/new"');
+  expect(html).toContain("<table");
+  expect(html).toContain('aria-label="Active customers"');
+  expect(html).toContain('scope="col">Email');
+  expect(html).toContain('scope="col">Phone');
+  expect(html).toContain('scope="col">Address');
+  expect(html).toContain('aria-label="View Visible customer"');
+  expect(html).toContain('href="/customers/archived"');
 });

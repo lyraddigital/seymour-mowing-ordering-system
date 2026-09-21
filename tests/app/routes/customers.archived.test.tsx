@@ -39,4 +39,8 @@ it("renders archived customers and a link to the active list", async () => {
   );
   expect(html).toContain("Visible customer");
   expect(html).toContain('href="/customers"');
+  expect(html).toContain("<table");
+  expect(html).toContain('aria-label="Archived customers"');
+  expect(html).toContain('href="/customers/customer"');
+  expect(html).not.toContain("<form");
 });

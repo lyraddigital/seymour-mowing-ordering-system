@@ -1,7 +1,7 @@
 import { Link } from "react-router";
 import type { CustomerFinancialHistory } from "../../../../../server/features/customers/types/customer-financial-history";
+import ui from "../../../../styles/product.module.css";
 import styles from "./customer-finances.module.css";
-
 const currency = new Intl.NumberFormat("en-AU", {
   style: "currency",
   currency: "AUD",
@@ -19,26 +19,21 @@ const dateTime = new Intl.DateTimeFormat("en-AU", {
   minute: "2-digit",
 });
 const invoiceStatus = { draft: "Draft", issued: "Issued", voided: "Voided" };
-
 interface CustomerFinancesProps {
   history: CustomerFinancialHistory;
 }
-
 export default function CustomerFinances({ history }: CustomerFinancesProps) {
   return (
     <div className={styles.finances}>
-      <section
-        className={styles.card}
-        aria-labelledby="financial-summary-heading"
-      >
-        <h2 id="financial-summary-heading">Financial summary</h2>
-        <dl className={styles.summary}>
+      <section aria-labelledby="financial-summary-heading">
+        <h2 id="financial-summary-heading">Financial overview</h2>
+        <dl className={ui.metrics}>
           <div>
             <dt>Total invoiced</dt>
             <dd>{currency.format(history.summary.totalInvoicedCents / 100)}</dd>
           </div>
           <div>
-            <dt>Active payments received</dt>
+            <dt>Payments received</dt>
             <dd>{currency.format(history.summary.paidCents / 100)}</dd>
           </div>
           <div>
@@ -47,100 +42,166 @@ export default function CustomerFinances({ history }: CustomerFinancesProps) {
           </div>
         </dl>
         <p className={styles.note}>
-          Total invoiced includes issued and voided invoices. Active payments
-          include payments on voided invoices. Only issued invoices contribute
-          to outstanding balance.
+          Total invoiced includes issued and voided invoices. Payments received
+          includes active payments, including those on voided invoices. Only
+          issued invoices contribute to outstanding balance.
         </p>
       </section>
-
-      <section
-        className={styles.card}
-        aria-labelledby="customer-invoices-heading"
-      >
-        <h2 id="customer-invoices-heading">Invoices</h2>
+      <section aria-labelledby="customer-invoices-heading">
+        <h2 id="customer-invoices-heading">
+          Invoice history{" "}
+          <span className={styles.count}>{history.invoices.length}</span>
+        </h2>
         {history.invoices.length ? (
-          <ul className={styles.list} aria-label="Customer invoices">
-            {history.invoices.map((invoice) => (
-              <li className={styles.row} key={invoice.id}>
-                <div className={styles.identity}>
-                  <Link to={`/invoices/${invoice.id}`}>
-                    {invoice.invoiceNumber ?? "Draft invoice"}
-                  </Link>
-                  <span
-                    className={`${styles.status} ${styles[invoice.status]}`}
-                  >
-                    {invoiceStatus[invoice.status]}
-                  </span>
-                  <span className={styles.note}>
-                    {invoice.issuedAt === null ? "Created " : "Issued "}
-                    <time
-                      dateTime={new Date(
-                        invoice.issuedAt ?? invoice.createdAt,
-                      ).toISOString()}
-                    >
-                      {date.format(
-                        new Date(invoice.issuedAt ?? invoice.createdAt),
+          <div
+            className={ui.tableScroll}
+            role="region"
+            aria-label="Customer invoice history"
+            tabIndex={0}
+          >
+            <table className={ui.table} aria-label="Customer invoices">
+              <thead>
+                <tr>
+                  <th scope="col">Invoice</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">Date</th>
+                  <th scope="col" className={ui.numeric}>
+                    Total
+                  </th>
+                  <th scope="col" className={ui.numeric}>
+                    Paid
+                  </th>
+                  <th scope="col" className={ui.numeric}>
+                    Balance
+                  </th>
+                  <th scope="col">Details</th>
+                </tr>
+              </thead>
+              <tbody>
+                {history.invoices.map((invoice) => (
+                  <tr key={invoice.id}>
+                    <th scope="row">
+                      <Link to={`/invoices/${invoice.id}`}>
+                        {invoice.invoiceNumber ?? "Draft invoice"}
+                      </Link>
+                    </th>
+                    <td>
+                      <span className={ui[invoice.status]}>
+                        {invoiceStatus[invoice.status]}
+                      </span>
+                    </td>
+                    <td className={styles.date}>
+                      <span className={styles.dateLabel}>
+                        {invoice.issuedAt === null ? "Created" : "Issued"}
+                      </span>
+                      <time
+                        dateTime={new Date(
+                          invoice.issuedAt ?? invoice.createdAt,
+                        ).toISOString()}
+                      >
+                        {date.format(
+                          new Date(invoice.issuedAt ?? invoice.createdAt),
+                        )}
+                      </time>
+                    </td>
+                    <td className={ui.numeric}>
+                      {currency.format(invoice.totalCents / 100)}
+                    </td>
+                    <td className={ui.numeric}>
+                      {currency.format(invoice.paidCents / 100)}
+                    </td>
+                    <td className={ui.numeric}>
+                      {invoice.status === "issued" ? (
+                        currency.format(invoice.balanceCents / 100)
+                      ) : (
+                        <span className={styles.note}>Not payable</span>
                       )}
-                    </time>
-                  </span>
-                </div>
-                <dl className={styles.amounts}>
-                  <div>
-                    <dt>Total</dt>
-                    <dd>{currency.format(invoice.totalCents / 100)}</dd>
-                  </div>
-                  <div>
-                    <dt>Paid</dt>
-                    <dd>{currency.format(invoice.paidCents / 100)}</dd>
-                  </div>
-                  {invoice.status === "issued" && (
-                    <div>
-                      <dt>Remaining balance</dt>
-                      <dd>{currency.format(invoice.balanceCents / 100)}</dd>
-                    </div>
-                  )}
-                </dl>
-              </li>
-            ))}
-          </ul>
+                    </td>
+                    <td className={ui.view}>
+                      <Link
+                        to={`/invoices/${invoice.id}`}
+                        aria-label={`View ${invoice.invoiceNumber ?? "draft invoice"}`}
+                      >
+                        View →
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         ) : (
-          <p className={styles.note}>No invoices for this customer yet.</p>
+          <p className={styles.empty}>No invoices for this customer yet.</p>
         )}
       </section>
-
-      <section
-        className={styles.card}
-        aria-labelledby="customer-payments-heading"
-      >
-        <h2 id="customer-payments-heading">Payments</h2>
+      <section aria-labelledby="customer-payments-heading">
+        <h2 id="customer-payments-heading">
+          Payment history{" "}
+          <span className={styles.count}>{history.payments.length}</span>
+        </h2>
         {history.payments.length ? (
-          <ul className={styles.list} aria-label="Customer payments">
-            {history.payments.map((payment) => (
-              <li className={styles.row} key={payment.id}>
-                <div className={styles.identity}>
-                  <strong>{currency.format(payment.amountCents / 100)}</strong>
-                  <span
-                    className={`${styles.status} ${payment.voidedAt === null ? styles.active : styles.voided}`}
-                  >
-                    {payment.voidedAt === null ? "Active" : "Voided"}
-                  </span>
-                </div>
-                <div className={styles.identity}>
-                  <Link to={`/invoices/${payment.invoiceId}`}>
-                    {payment.invoiceNumber ?? "Invoice"}
-                  </Link>
-                  <span className={styles.note}>
-                    Received{" "}
-                    <time dateTime={new Date(payment.receivedAt).toISOString()}>
-                      {dateTime.format(new Date(payment.receivedAt))}
-                    </time>
-                  </span>
-                </div>
-              </li>
-            ))}
-          </ul>
+          <div
+            className={ui.tableScroll}
+            role="region"
+            aria-label="Customer payment history"
+            tabIndex={0}
+          >
+            <table className={ui.table} aria-label="Customer payments">
+              <thead>
+                <tr>
+                  <th scope="col" className={ui.numeric}>
+                    Amount
+                  </th>
+                  <th scope="col">Invoice</th>
+                  <th scope="col">Received</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">Details</th>
+                </tr>
+              </thead>
+              <tbody>
+                {history.payments.map((payment) => (
+                  <tr key={payment.id}>
+                    <td className={ui.numeric}>
+                      <strong>
+                        {currency.format(payment.amountCents / 100)}
+                      </strong>
+                    </td>
+                    <td>
+                      <Link to={`/invoices/${payment.invoiceId}`}>
+                        {payment.invoiceNumber ?? "Invoice"}
+                      </Link>
+                    </td>
+                    <td className={styles.date}>
+                      <time
+                        dateTime={new Date(payment.receivedAt).toISOString()}
+                      >
+                        {dateTime.format(new Date(payment.receivedAt))}
+                      </time>
+                    </td>
+                    <td>
+                      <span
+                        className={
+                          payment.voidedAt === null ? ui.active : ui.voided
+                        }
+                      >
+                        {payment.voidedAt === null ? "Active" : "Voided"}
+                      </span>
+                    </td>
+                    <td className={ui.view}>
+                      <Link
+                        to={`/invoices/${payment.invoiceId}`}
+                        aria-label={`View invoice for payment of ${currency.format(payment.amountCents / 100)}`}
+                      >
+                        View invoice →
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         ) : (
-          <p className={styles.note}>
+          <p className={styles.empty}>
             No payments recorded for this customer yet.
           </p>
         )}

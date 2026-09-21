@@ -1,8 +1,7 @@
 import { Link } from "react-router";
 import type { CustomerSummary } from "../../../../../server/features/customers/types/customer-summary";
 import CustomerList from "../../components/customer-list/customer-list";
-import styles from "./archived-customers-page.module.css";
-
+import styles from "../../../../styles/product.module.css";
 export default function ArchivedCustomersPage({
   customers,
 }: {
@@ -10,17 +9,20 @@ export default function ArchivedCustomersPage({
 }) {
   return (
     <section className={styles.page}>
-      <Link className={styles.archivedLink} to="/customers">
-        ← Active customers
-      </Link>
       <header className={styles.header}>
         <div>
           <h1 className="page-title">Archived customers</h1>
           <p className={styles.intro}>
-            Inactive customers. Their details are preserved and can be restored.
+            Historical details are preserved. Open a customer to restore them.
           </p>
         </div>
       </header>
+      <nav className={styles.tabs} aria-label="Customer lists">
+        <Link to="/customers">Active customers</Link>
+        <Link to="/customers/archived" aria-current="page">
+          Archived customers
+        </Link>
+      </nav>
       {customers.length ? (
         <CustomerList customers={customers} label="Archived customers" />
       ) : (
