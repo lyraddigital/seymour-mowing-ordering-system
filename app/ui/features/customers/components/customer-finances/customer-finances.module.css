@@ -29,7 +29,13 @@
 .date {
   white-space: nowrap;
 }
-.dateLabel { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.dateLabel {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
 .count {
   font-size: 12px;
   font-weight: 500;
