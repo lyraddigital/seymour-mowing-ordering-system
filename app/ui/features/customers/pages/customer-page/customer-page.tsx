@@ -1,4 +1,6 @@
 import type { CustomerDetails } from "../../../../../server/features/customers/types/customer-details";
+import type { CustomerFinancialHistory } from "../../../../../server/features/customers/types/customer-financial-history";
+import CustomerFinances from "../../components/customer-finances/customer-finances";
 import CustomerArchiveActions from "../../components/customer-archive-actions/customer-archive-actions";
 import { Link } from "react-router";
 
@@ -7,11 +9,13 @@ import styles from "./customer-page.module.css";
 type CustomerPageProps = {
   customer: CustomerDetails;
   canManage: boolean;
+  financialHistory: CustomerFinancialHistory | null;
 };
 
 export default function CustomerPage({
   customer,
   canManage,
+  financialHistory,
 }: CustomerPageProps) {
   const archived = customer.archivedAt !== null;
   const locality = [customer.suburb, customer.state, customer.postcode]
@@ -114,6 +118,7 @@ export default function CustomerPage({
       {canManage && !archived && (
         <CustomerArchiveActions customerId={customer.id} archived={false} />
       )}
+      {financialHistory && <CustomerFinances history={financialHistory} />}
     </section>
   );
 }

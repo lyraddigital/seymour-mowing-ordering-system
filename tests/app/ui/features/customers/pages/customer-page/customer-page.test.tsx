@@ -21,7 +21,13 @@ it("exposes the edit action to managers", () => {
       router={createMemoryRouter([
         {
           path: "/",
-          element: <CustomerPage customer={customer} canManage={true} />,
+          element: (
+            <CustomerPage
+              customer={customer}
+              canManage={true}
+              financialHistory={null}
+            />
+          ),
         },
       ])}
     />,
@@ -38,7 +44,13 @@ it("hides the edit action without manage permission", () => {
       router={createMemoryRouter([
         {
           path: "/",
-          element: <CustomerPage customer={customer} canManage={false} />,
+          element: (
+            <CustomerPage
+              customer={customer}
+              canManage={false}
+              financialHistory={null}
+            />
+          ),
         },
       ])}
     />,
@@ -56,6 +68,7 @@ it("shows archived status and restore without editing or archive", () => {
             <CustomerPage
               customer={{ ...customer, archivedAt: 3 }}
               canManage={true}
+              financialHistory={null}
             />
           ),
         },

@@ -1,0 +1,128 @@
+.finances {
+  display: grid;
+  gap: 20px;
+  margin-top: 28px;
+}
+
+.card {
+  min-width: 0;
+  padding: 24px;
+  background: #fffefa;
+  border: 1px solid #dce2d5;
+  border-radius: 8px;
+}
+
+.card h2 {
+  margin: 0 0 20px;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.summary,
+.amounts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin: 0;
+}
+
+.summary dt,
+.amounts dt {
+  margin-bottom: 4px;
+  color: #65745f;
+  font-size: 12px;
+}
+
+.summary dd,
+.amounts dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.summary dd {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.note {
+  color: #65745f;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+p.note {
+  margin: 16px 0 0;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
+  gap: 24px;
+  padding: 20px 0;
+  overflow-wrap: anywhere;
+}
+
+.row + .row {
+  border-top: 1px solid #e1e6d9;
+}
+
+.row:focus-within {
+  background: #f4f6ef;
+}
+
+.identity {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.identity a {
+  color: #263c2d;
+  text-underline-offset: 3px;
+  font-weight: 600;
+}
+
+.status {
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.draft {
+  color: #5c5547;
+  background: #eee9de;
+}
+
+.issued,
+.active {
+  color: #31583b;
+  background: #e4eee2;
+}
+
+.voided {
+  color: #7a3d3d;
+  background: #f2e3e3;
+}
+
+@container (max-width: 700px) {
+  .row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+  }
+}
+
+@container (max-width: 420px) {
+  .summary,
+  .amounts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
