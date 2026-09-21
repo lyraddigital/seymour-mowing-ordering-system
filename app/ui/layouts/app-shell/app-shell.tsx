@@ -1,6 +1,7 @@
 import type { PropsWithChildren } from "react";
 import type { CurrentUser } from "~/server/auth/principal/types/current-user";
 import { NavLink } from "react-router";
+import Icon from "../../components/icon/icon";
 
 type AppShellProps = PropsWithChildren<{ currentUser: CurrentUser }>;
 
@@ -12,24 +13,44 @@ export default function AppShell({ currentUser, children }: AppShellProps) {
       </a>
       <aside className="sidebar">
         <div className="brand" aria-label="Seymour Mowing and Maintenance">
-          <div className="brand-placeholder">
-            <strong>Seymour</strong>
-            <span>Mowing &amp; Maintenance</span>
-            <small>Logo placeholder</small>
-          </div>
+          <img
+            src="/seymour-logo-800.png"
+            alt="Seymour Mowing & Maintenance"
+            width="315"
+            height="358"
+          />
         </div>
         <nav className="sidebar-nav" aria-label="Main navigation">
-          <NavLink to="/dashboard">Dashboard</NavLink>
-          <NavLink to="/customers">Customers</NavLink>
-          <NavLink to="/jobs">Jobs</NavLink>
-          <NavLink to="/invoices">Invoices</NavLink>
-
-          <NavLink to="/payments">Payments</NavLink>
+          <NavLink to="/dashboard">
+            <Icon name="dashboard" />
+            Dashboard
+          </NavLink>
+          <NavLink to="/customers">
+            <Icon name="customers" />
+            Customers
+          </NavLink>
+          <NavLink to="/jobs">
+            <Icon name="jobs" />
+            Jobs
+          </NavLink>
+          <NavLink to="/invoices">
+            <Icon name="invoice" />
+            Invoices
+          </NavLink>
+          <NavLink to="/payments">
+            <Icon name="payment" />
+            Payments
+          </NavLink>
         </nav>
         <div className="account">
-          <strong>{currentUser.displayName}</strong>
-          <span>{currentUser.email}</span>
-          <span className="role">{currentUser.role}</span>
+          <span className="account-avatar">
+            <Icon name="user" />
+          </span>
+          <div className="account-details">
+            <strong>{currentUser.displayName}</strong>
+            <span>{currentUser.email}</span>
+            <span className="role">{currentUser.role}</span>
+          </div>
         </div>
       </aside>
       <main id="main-content" className="workspace">

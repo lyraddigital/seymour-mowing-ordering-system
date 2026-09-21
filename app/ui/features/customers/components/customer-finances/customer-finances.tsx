@@ -1,4 +1,5 @@
 import { Link } from "react-router";
+import Icon from "../../../../components/icon/icon";
 import type { CustomerFinancialHistory } from "../../../../../server/features/customers/types/customer-financial-history";
 import ui from "../../../../styles/product.module.css";
 import styles from "./customer-finances.module.css";
@@ -25,33 +26,62 @@ interface CustomerFinancesProps {
 export default function CustomerFinances({ history }: CustomerFinancesProps) {
   return (
     <div className={styles.finances}>
-      <section aria-labelledby="financial-summary-heading">
-        <h2 id="financial-summary-heading">Financial overview</h2>
+      <section
+        className={styles.overview}
+        aria-labelledby="financial-summary-heading"
+      >
+        <header className={ui.sectionHeading}>
+          <span className={ui.iconCircle}>
+            <Icon name="finance" />
+          </span>
+          <div>
+            <h2 id="financial-summary-heading">Financial overview</h2>
+            <p>Issued history, active payments and current balance.</p>
+          </div>
+        </header>
         <dl className={ui.metrics}>
           <div>
             <dt>Total invoiced</dt>
-            <dd>{currency.format(history.summary.totalInvoicedCents / 100)}</dd>
+            <dd>
+              <Icon name="invoice" />
+              {currency.format(history.summary.totalInvoicedCents / 100)}
+            </dd>
           </div>
           <div>
             <dt>Payments received</dt>
-            <dd>{currency.format(history.summary.paidCents / 100)}</dd>
+            <dd>
+              <Icon name="payment" />
+              {currency.format(history.summary.paidCents / 100)}
+            </dd>
           </div>
           <div>
             <dt>Outstanding balance</dt>
-            <dd>{currency.format(history.summary.outstandingCents / 100)}</dd>
+            <dd>
+              <Icon name="balance" />
+              {currency.format(history.summary.outstandingCents / 100)}
+            </dd>
           </div>
         </dl>
-        <p className={styles.note}>
-          Total invoiced includes issued and voided invoices. Payments received
-          includes active payments, including those on voided invoices. Only
-          issued invoices contribute to outstanding balance.
-        </p>
       </section>
-      <section aria-labelledby="customer-invoices-heading">
-        <h2 id="customer-invoices-heading">
-          Invoice history{" "}
-          <span className={styles.count}>{history.invoices.length}</span>
-        </h2>
+      <section
+        className={styles.historySection}
+        aria-labelledby="customer-invoices-heading"
+      >
+        <header className={ui.sectionHeading}>
+          <span className={ui.iconCircle}>
+            <Icon name="invoice" />
+          </span>
+          <div>
+            <h2 id="customer-invoices-heading">
+              Invoice history{" "}
+              <span className={styles.count}>{history.invoices.length}</span>
+            </h2>
+            <p>
+              All invoices for this customer, including drafts, issued and
+              voided invoices.
+            </p>
+          </div>
+        </header>
         {history.invoices.length ? (
           <div
             className={ui.tableScroll}
@@ -134,11 +164,25 @@ export default function CustomerFinances({ history }: CustomerFinancesProps) {
           <p className={styles.empty}>No invoices for this customer yet.</p>
         )}
       </section>
-      <section aria-labelledby="customer-payments-heading">
-        <h2 id="customer-payments-heading">
-          Payment history{" "}
-          <span className={styles.count}>{history.payments.length}</span>
-        </h2>
+      <section
+        className={styles.historySection}
+        aria-labelledby="customer-payments-heading"
+      >
+        <header className={ui.sectionHeading}>
+          <span className={ui.iconCircle}>
+            <Icon name="payment" />
+          </span>
+          <div>
+            <h2 id="customer-payments-heading">
+              Payment history{" "}
+              <span className={styles.count}>{history.payments.length}</span>
+            </h2>
+            <p>
+              All recorded payments, including voided payments and payments on
+              voided invoices.
+            </p>
+          </div>
+        </header>
         {history.payments.length ? (
           <div
             className={ui.tableScroll}

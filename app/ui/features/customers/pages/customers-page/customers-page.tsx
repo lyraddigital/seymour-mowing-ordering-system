@@ -1,4 +1,5 @@
 import { Link } from "react-router";
+import Icon from "../../../../components/icon/icon";
 import type { CustomerSummary } from "../../../../../server/features/customers/types/customer-summary";
 import CustomerList from "../../components/customer-list/customer-list";
 import styles from "../../../../styles/product.module.css";
@@ -17,6 +18,7 @@ export default function CustomersPage({
           </p>
         </div>
         <Link className={styles.primaryAction} to="/customers/new">
+          <Icon name="plus" />
           New customer
         </Link>
       </header>

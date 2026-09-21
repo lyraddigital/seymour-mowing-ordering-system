@@ -1,4 +1,5 @@
 import { Form, useNavigation } from "react-router";
+import Icon from "../../../../components/icon/icon";
 import styles from "./customer-archive-actions.module.css";
 
 type CustomerArchiveActionsProps = {
@@ -26,7 +27,10 @@ export default function CustomerArchiveActions({
   }
   return (
     <details className={styles.confirmation}>
-      <summary>Archive customer</summary>
+      <summary>
+        <Icon name="archive" />
+        Archive customer
+      </summary>
       <p>
         This customer will leave the active list. Their details will be
         preserved, and you can restore them later.

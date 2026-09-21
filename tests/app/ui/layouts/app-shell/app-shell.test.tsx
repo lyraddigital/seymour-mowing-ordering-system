@@ -13,13 +13,15 @@ it.each(["/payments", "/invoices", "/customers", "/jobs"])(
         <AppShell currentUser={internalUser()}>Content</AppShell>
       </MemoryRouter>,
     );
-    expect(html).toMatch(/<a[^>]*href="\/payments"[^>]*>Payments<\/a>/);
+    expect(html).toMatch(/<a[^>]*href="\/payments"[^>]*>[\s\S]*?Payments<\/a>/);
     const activeLinks = html.match(/<a[^>]*aria-current="page"[^>]*>/g);
     expect(activeLinks).toHaveLength(1);
     expect(activeLinks![0]).toContain(`href="${path}"`);
     expect(html).not.toContain("Coming soon");
     expect(html).toContain("Mowing &amp; Maintenance");
-    expect(html).toContain("Logo placeholder");
+    expect(html).toContain('src="/seymour-logo-800.png"');
+    expect(html).not.toContain("Logo placeholder");
+    expect(html).toContain('aria-hidden="true"');
     expect(html).not.toContain("brand-mark");
     expect(html).not.toContain("Settings");
     expect(html).not.toContain("Log out");

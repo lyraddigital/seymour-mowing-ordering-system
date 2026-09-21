@@ -1,21 +1,39 @@
 .confirmation {
-  margin-top: 20px;
-  padding: 20px;
-  border: 1px solid #edcccc;
-  border-radius: 8px;
-  background: var(--surface);
+  margin: 0;
 }
 .confirmation summary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  list-style: none;
   cursor: pointer;
-  color: var(--danger);
+  color: #b9202b;
   font-weight: 600;
   font-size: 14px;
+  border: 1px solid #dc6b74;
+  border-radius: 6px;
+  padding: 11px 16px;
+  background: #fffafa;
+}
+.confirmation summary::-webkit-details-marker {
+  display: none;
+}
+.confirmation summary:hover {
+  background: #ffe4e7;
+}
+.confirmation[open] {
+  flex-basis: 100%;
+}
+.confirmation[open] summary {
+  width: fit-content;
 }
 .confirmation p {
   max-width: 600px;
   line-height: 1.6;
-  color: var(--text-muted);
+  color: #9b4249;
   font-size: 14px;
+  margin: 16px 0;
 }
 .actions {
   display: flex;
