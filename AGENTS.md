@@ -542,6 +542,154 @@ Persist `state = "VIC"` server-side for Customer address create/update operation
 
 ---
 
+
+# Dashboard UX Rules
+
+The Dashboard is a financial and operational attention screen, not an entity-count dashboard.
+
+Follow `UX-DESIGN.md` and these reference images:
+
+```text
+docs/ux/dashboard-populated-reference.png
+docs/ux/dashboard-empty-reference.png
+```
+
+The written rules below are authoritative where a reference image contains an older incidental detail.
+
+## Dashboard primary metrics
+
+Render these four primary metrics in this order:
+
+1. Outstanding balance
+2. Overdue balance
+3. Invoices overdue
+4. Payments received this month
+
+Do not use:
+
+- Active Customers as a primary Dashboard metric
+- Customers overdue as a primary Dashboard metric
+- generic entity counts as primary Dashboard metrics
+
+`Invoices overdue` is an Invoice count, not a Customer count.
+
+## Dashboard desktop composition
+
+Below the four metric cards, preserve this layout:
+
+- large `Needs attention` section on the left
+- `Partially paid / unpaid invoices` at upper right
+- `Recent payments` below it at lower right
+- full-width `Today's jobs` section across the bottom
+
+Do not rearrange the Dashboard when a section is empty. Populated and empty states must use the same overall geometry.
+
+## Needs attention
+
+This section is for overdue Invoices requiring action.
+
+When populated, show a compact table/list with:
+
+- Customer
+- Invoice
+- Due date
+- Days overdue
+- Balance
+
+When empty, keep the section visible and show:
+
+- title: `All caught up!`
+- supporting text: `There are no invoices that need attention right now.`
+
+## Partially paid / unpaid invoices
+
+When populated, show:
+
+- Customer
+- Invoice
+- payment state/status
+- Balance
+
+When empty, keep the section visible and show:
+
+- title: `No unpaid invoices`
+- supporting text: `All invoices are paid in full. Great work!`
+
+## Recent payments
+
+When populated, show recent Payments with:
+
+- Date
+- Customer
+- Invoice
+- Amount
+
+When there are no recent Payments, the section must be empty. Do not leave sample/payment rows visible.
+
+Empty copy:
+
+- title: `No recent payments`
+- supporting text: `Payments you receive will appear here.`
+
+## Today's jobs
+
+This is the full-width lower operational section.
+
+When populated, follow the approved reference and summarise today's work using the existing Job lifecycle/status data.
+
+When empty, keep the section visible and show:
+
+- title: `No jobs scheduled today`
+- supporting text: `Enjoy the day! New jobs will appear here when they're scheduled.`
+
+## Dashboard shell
+
+Preserve the accepted Seymour shell and existing placeholder logo/image asset for this phase.
+
+Do not:
+
+- render `LOGO PLACEHOLDER` as text
+- swap in the final company logo in this task
+- add Settings
+- add Log out
+- add a login/user block or account menu in the top-right of the Dashboard
+
+Do not change authentication behaviour.
+
+## Dashboard data
+
+Dashboard values are derived. Do not add stored Dashboard totals.
+
+- Outstanding balance derives from remaining balances on payable issued Invoices.
+- Payments received this month sums active/non-voided Payments received in the current calendar month.
+- Overdue balance and Invoices overdue require an authoritative Invoice due-date rule.
+- Recent Payments must follow existing Payment history semantics.
+- Today's Jobs must use the existing Job lifecycle/status source of truth.
+
+Do not fabricate overdue values. If authoritative Invoice due-date support does not exist, do not silently present `$0.00`, `0 invoices`, or fake overdue rows as real production data. Report the missing prerequisite clearly.
+
+## Dashboard styling
+
+Reuse the shared Seymour UX system.
+
+Use:
+
+- deep forest sidebar
+- warm off-white workspace
+- white/light cards and tables
+- lawn-green accents
+- dark green primary text
+- restrained red/amber for attention states
+- consistent icons, spacing, borders, radii, shadows, and table treatment
+
+Do not create a second dashboard-only design system.
+
+Each empty state should use the same section container as its populated state, with a centred icon, clear title, and short supporting sentence.
+
+Do not add a graph/cash-flow chart to this Dashboard design.
+
+---
+
 # Jobs Domain Rules
 
 Jobs preserve status history.
@@ -1945,6 +2093,8 @@ Before considering work complete:
 24. Confirm changing a draft's Job selection preserves Invoice Items for retained Jobs, removes items for removed Jobs, and snapshots only newly-added Jobs.
 
 25. Confirm any Invoice Item mutation is limited to draft Invoices and enforces nested Invoice/Item ownership.
+
+26. Confirm Dashboard UI follows the approved populated/empty reference layouts, uses Invoices overdue rather than Customers overdue, and does not fabricate overdue data when due-date support is absent.
 
 Report:
 

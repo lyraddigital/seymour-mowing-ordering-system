@@ -10,11 +10,11 @@ The current UX work should be treated as a design-system migration, not a collec
 
 ## Brand Assets
 
-Use the real Seymour Mowing & Maintenance company logo supplied by the project owner.
+For the current UX migration phase, use the existing placeholder logo/image asset already present in the repository's application shell.
 
-Do not invent, redraw, simplify, or substitute a mascot/logo unless explicitly requested.
+Do not render `LOGO PLACEHOLDER` as text, generate a substitute logo, or replace the current placeholder image with a generic `S`. The final Seymour company logo will be integrated in a later dedicated pass.
 
-For the application shell, use a web-appropriate exported version of the supplied logo. Preserve its proportions and legibility.
+Preserve the placeholder image's proportions and legibility.
 
 Do not add Settings or Log out navigation entries unless they become real product requirements.
 
@@ -316,6 +316,196 @@ For archived Customers:
 - expose Restore customer prominently
 - do not show normal edit/archive actions
 
+
+## Dashboard Reference Direction
+
+The Dashboard is a financial/operational attention screen. Its job is to show cash exposure, invoices that need action, recent money received, and today's work.
+
+### Reference files
+
+Use both references:
+
+```text
+docs/ux/dashboard-populated-reference.png
+docs/ux/dashboard-empty-reference.png
+```
+
+`dashboard-populated-reference.png` is the reference for the populated layout and density.
+
+`dashboard-empty-reference.png` is the reference for the zero-data state.
+
+Important written overrides to the populated reference:
+
+- the third metric is `Invoices overdue`, not `Customers overdue`
+- do not add/show a top-right login/user block
+- the current application placeholder image remains the sidebar brand asset for this phase
+- no Settings or Log out navigation items
+- do not add a graph/cash-flow chart
+
+### Header
+
+Use:
+
+- title: `Dashboard`
+- supporting copy: `Financial health and operational activity at a glance.`
+
+Keep the header visually clean. Do not add login/account UI in the top-right.
+
+A date control should only exist if it is backed by real Dashboard behaviour. Do not add a decorative/non-functional date picker just because one appears in a concept image.
+
+### Primary metrics
+
+Render four equal-weight metric cards in this order:
+
+1. `Outstanding balance`
+2. `Overdue balance`
+3. `Invoices overdue`
+4. `Payments received this month`
+
+Do not show entity-count KPIs such as Active Customers.
+
+Suggested semantics:
+
+- Outstanding balance: remaining balance across payable issued Invoices
+- Overdue balance: remaining balance on overdue issued Invoices
+- Invoices overdue: count of overdue issued Invoices
+- Payments received this month: active/non-voided Payments received in the current calendar month
+
+### Populated desktop composition
+
+Immediately below the metric row:
+
+#### Left — Needs attention
+
+Large primary section.
+
+Heading:
+
+`Needs attention`
+
+Supporting text:
+
+`Invoices that need your focus.`
+
+Primary content is overdue Invoices.
+
+Useful columns:
+
+- Customer
+- Invoice
+- Due date
+- Days overdue
+- Balance
+
+#### Upper right — Partially paid / unpaid invoices
+
+Compact table.
+
+Useful columns:
+
+- Customer
+- Invoice
+- Status
+- Balance
+
+#### Lower right — Recent payments
+
+Compact table.
+
+Useful columns:
+
+- Date
+- Customer
+- Invoice
+- Amount
+
+#### Full-width bottom — Today's jobs
+
+Use the existing Job lifecycle/status data.
+
+The populated reference uses compact status summaries for today's scheduled/in-progress/completed/remaining work. Preserve that operational-summary feel instead of turning it into another financial table unless the existing Job UI already has an equivalent established pattern.
+
+### Empty-state composition
+
+The empty Dashboard uses the same geometry as the populated Dashboard. Do not move or resize sections because there is no data.
+
+#### Needs attention
+
+Title:
+
+`All caught up!`
+
+Supporting text:
+
+`There are no invoices that need attention right now.`
+
+#### Partially paid / unpaid invoices
+
+Title:
+
+`No unpaid invoices`
+
+Supporting text:
+
+`All invoices are paid in full. Great work!`
+
+#### Recent payments
+
+Title:
+
+`No recent payments`
+
+Supporting text:
+
+`Payments you receive will appear here.`
+
+There must be no sample Payment rows in this state.
+
+#### Today's jobs
+
+Title:
+
+`No jobs scheduled today`
+
+Supporting text:
+
+`Enjoy the day! New jobs will appear here when they're scheduled.`
+
+### Empty-state visual treatment
+
+Empty states should remain inside the normal section card.
+
+Use:
+
+- a restrained semantic icon
+- centred title
+- one short explanatory sentence
+- generous but not excessive whitespace
+
+Do not add charts to fill empty space.
+
+### Data integrity
+
+Dashboard values are derived, not stored.
+
+Do not fabricate overdue data.
+
+If the repository does not contain an authoritative Invoice due-date rule, overdue totals/counts/rows cannot be treated as known zeros. The implementation must use existing due-date domain support or report that prerequisite rather than inventing a due-date policy in a UX task.
+
+### Shell consistency
+
+The Dashboard must use the same accepted shell as Customers:
+
+- existing placeholder image in the sidebar for this phase
+- Dashboard
+- Customers
+- Jobs
+- Invoices
+- Payments
+- no Settings
+- no Log out
+- no top-right login/user block
+
 ## Job Detail Reference Direction
 
 The Job detail screen should eventually use this hierarchy:
@@ -397,9 +587,9 @@ Implement:
 
 Do not redesign Jobs, Invoices, or Payments in Phase 1 except for shell-level changes that naturally affect every page.
 
-### Phase 2 — Operational/financial screens
+### Phase 2 — Dashboard + operational/financial screens
 
-After Phase 1 is reviewed and accepted, migrate:
+After Phase 1 is reviewed and accepted, migrate the Dashboard first using the approved Dashboard references, then migrate:
 
 - Jobs
 - Invoices
