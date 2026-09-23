@@ -2,6 +2,7 @@ import { PermissionDeniedError } from "../server/auth/authorization/errors/permi
 import { can } from "../server/auth/authorization/policies/can";
 import { currentUserContext } from "../server/auth/context/current-user-context";
 import { runtimeContext } from "../server/auth/context/runtime-context";
+import { getActiveInvoiceForJob } from "../server/features/invoices/queries/get-active-invoice-for-job.server";
 import { isJobInvoiceable } from "../server/features/invoices/queries/is-job-invoiceable.server";
 import { getJobById } from "../server/features/jobs/queries/get-job-by-id.server";
 import { listJobItems } from "../server/features/jobs/queries/list-job-items.server";
@@ -24,16 +25,24 @@ export async function loader({ context, params }: Route.LoaderArgs) {
       });
     }
 
+    const canReadInvoices = can(user, "invoices.read");
     const canManageInvoices = can(user, "invoices.manage");
 
-    const invoiceable = canManageInvoices
-      ? await isJobInvoiceable(binding, user, job.id)
-      : false;
+    const [invoice, invoiceable] = await Promise.all([
+      canReadInvoices
+        ? getActiveInvoiceForJob(binding, user, job.id)
+        : Promise.resolve(null),
+
+      canManageInvoices
+        ? isJobInvoiceable(binding, user, job.id)
+        : Promise.resolve(false),
+    ]);
 
     return {
       job,
       jobItems: jobItems.items,
       jobTotalCents: jobItems.totalCents,
+      invoice,
       canManage: can(user, "jobs.manage"),
       canCreateInvoice: canManageInvoices && invoiceable,
     };
@@ -54,6 +63,7 @@ export default function JobRoute({ loaderData }: Route.ComponentProps) {
       job={loaderData.job}
       jobItems={loaderData.jobItems}
       jobTotalCents={loaderData.jobTotalCents}
+      invoice={loaderData.invoice}
       canManage={loaderData.canManage}
       canCreateInvoice={loaderData.canCreateInvoice}
     />

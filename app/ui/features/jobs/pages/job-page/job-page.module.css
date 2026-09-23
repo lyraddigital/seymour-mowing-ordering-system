@@ -1,103 +1,236 @@
-.page {
-  width: 100%;
-  max-width: 1060px;
-  margin: 0 auto;
-  container-type: inline-size;
-  overflow-wrap: anywhere;
-}
-.backLink {
-  display: inline-block;
-  color: #596955;
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  color: var(--text-muted);
   font-size: 14px;
-  margin-bottom: 24px;
-  text-decoration: none;
-}
-.backLink:hover {
-  text-decoration: underline;
-}
-.page a:focus-visible {
-  outline: 3px solid #62793d;
-  outline-offset: 3px;
-}
-.header {
-  margin-bottom: 28px;
-}
-.intro {
-  margin: 10px 0 0;
-  color: #596955;
-  font-size: 15px;
-  line-height: 1.6;
-}
-.detailsGrid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 20px;
-}
-.detailCard {
-  min-width: 0;
-  padding: 24px;
-  background: #fffefa;
-  border: 1px solid #dce2d5;
-  border-radius: 8px;
-}
-.detailCard h2 {
-  margin: 0 0 20px;
-  font-size: 17px;
-  font-weight: 600;
-}
-.detailList {
-  display: grid;
-  gap: 18px;
-  margin: 0;
-}
-.detailList dt {
-  margin-bottom: 4px;
-  color: #65745f;
-  font-size: 12px;
-}
-.detailList dd {
-  margin: 0;
-}
-.detailList a {
-  text-decoration-color: #b0bba8;
-  text-underline-offset: 3px;
-}
-.detailList a:hover {
-  text-decoration-color: currentColor;
-}
-.description {
-  margin: 0;
-  white-space: pre-wrap;
-  line-height: 1.7;
-}
-.status {
-  text-transform: capitalize;
-}
-@container (max-width: 620px) {
-  .detailsGrid {
-    grid-template-columns: minmax(0, 1fr);
-  }
 }
 
-.pageActions {
+.breadcrumb a {
+  margin: 0;
+  color: var(--brand-forest);
+  font-weight: 600;
+}
+
+.title {
   display: flex;
   align-items: center;
   gap: 16px;
-  margin-top: 24px;
+  flex-wrap: wrap;
 }
 
-.invoiceAction {
+.title h1 {
+  font-size: clamp(30px, 2.7vw, 38px);
+  font-weight: 650;
+  letter-spacing: -0.8px;
+}
+
+.status {
   display: inline-flex;
   align-items: center;
-  min-height: 42px;
-  padding: 9px 16px;
-  border-radius: 6px;
-  background: #365941;
-  color: #fff;
+  width: fit-content;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.status::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  margin-right: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.scheduled {
+  color: #805311;
+  background: #fff3dc;
+}
+
+.in_progress {
+  color: #1459a7;
+  background: #edf5ff;
+}
+
+.completed {
+  color: var(--brand-forest);
+  background: var(--brand-lawn-soft);
+}
+
+.cancelled {
+  color: var(--danger);
+  background: var(--danger-soft);
+}
+
+.context {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-wrap: wrap;
+  margin: 10px 0 0;
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.context a {
+  color: var(--brand-forest);
   font-weight: 600;
   text-decoration: none;
 }
 
-.invoiceAction:hover {
+.context a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.description,
+.invoice {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: 0 2px 10px #17312604;
+}
+
+.description h2,
+.invoice h2 {
+  margin: 3px 0 8px;
+  font-size: 17px;
+  font-weight: 650;
+}
+
+.description p,
+.invoice p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.description p {
+  color: var(--text);
+  white-space: pre-wrap;
+}
+
+.sectionIcon {
+  composes: iconCircle from "../../../../styles/product.module.css";
+}
+
+.invoice {
+  margin-top: 32px;
+}
+
+.invoiceContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.invoiceRelationship {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  min-width: 0;
+}
+
+.invoiceTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.invoiceTitle a {
+  color: var(--brand-forest);
+  font-size: 16px;
+  font-weight: 650;
   text-decoration: none;
+}
+
+.invoiceTitle a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.noInvoice {
+  color: var(--text-muted);
+}
+
+.danger {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-top: 32px;
+  padding: 18px 20px;
+  border: 1px solid #f3c6c9;
+  border-radius: 8px;
+  background: #fff0f1;
+  flex-wrap: wrap;
+}
+
+.dangerIcon {
+  composes: iconCircle from "../../../../styles/product.module.css";
+  color: #b9202b;
+  background: #ffdde1;
+}
+
+.dangerCopy {
+  flex: 1;
+  min-width: 240px;
+}
+
+.danger h2 {
+  margin: 0 0 6px;
+  color: #b9202b;
+  font-size: 17px;
+  font-weight: 650;
+}
+
+.danger p {
+  max-width: 620px;
+  margin: 0;
+  color: #9b4249;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+@container (max-width: 760px) {
+  .headerActions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .invoiceRelationship {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@container (max-width: 620px) {
+  .description,
+  .invoice {
+    padding: 18px;
+  }
+
+  .danger {
+    align-items: flex-start;
+  }
 }
