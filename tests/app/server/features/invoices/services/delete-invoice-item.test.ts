@@ -48,7 +48,9 @@ it("updates the parent timestamp after a successful mutation", async () => {
 it.each(["issued", "voided"] as const)(
   "rejects %s invoices without changing data",
   async (status) => {
-    await issueInvoice(env.DB, fixture.admin, fixture.invoiceId);
+    await issueInvoice(env.DB, fixture.admin, fixture.invoiceId, {
+      dueDate: "2026-10-01",
+    });
     if (status === "voided")
       await voidInvoice(env.DB, fixture.admin, fixture.invoiceId);
     const db = createDb(env.DB);

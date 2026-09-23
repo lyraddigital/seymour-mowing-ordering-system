@@ -92,7 +92,9 @@ it("voids an issued invoice and redirects to the invoice", async () => {
     jobIds: [jobId],
   });
 
-  await issueInvoice(env.DB, admin, invoiceId);
+  await issueInvoice(env.DB, admin, invoiceId, {
+    dueDate: "2026-10-01",
+  });
 
   const response = await action(actionArgs(invoiceId));
 
@@ -123,7 +125,9 @@ it("releases the invoice jobs when voided", async () => {
     jobIds: [jobId],
   });
 
-  await issueInvoice(env.DB, admin, invoiceId);
+  await issueInvoice(env.DB, admin, invoiceId, {
+    dueDate: "2026-10-01",
+  });
 
   await action(actionArgs(invoiceId));
 
@@ -158,7 +162,9 @@ it("returns 403 without invoice management permission", async () => {
     jobIds: [jobId],
   });
 
-  await issueInvoice(env.DB, admin, invoiceId);
+  await issueInvoice(env.DB, admin, invoiceId, {
+    dueDate: "2026-10-01",
+  });
 
   context.set(currentUserContext, {
     ...admin,

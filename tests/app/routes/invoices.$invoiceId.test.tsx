@@ -211,7 +211,9 @@ it("shows only the void action for a manageable issued invoice", async () => {
     jobIds: [jobId],
   });
 
-  await issueInvoice(env.DB, admin, invoiceId);
+  await issueInvoice(env.DB, admin, invoiceId, {
+    dueDate: "2026-10-01",
+  });
 
   const result = await loader(loaderArgs(invoiceId));
 
@@ -230,7 +232,9 @@ it("shows no lifecycle actions for a voided invoice", async () => {
     jobIds: [jobId],
   });
 
-  await issueInvoice(env.DB, admin, invoiceId);
+  await issueInvoice(env.DB, admin, invoiceId, {
+    dueDate: "2026-10-01",
+  });
 
   await voidInvoice(env.DB, admin, invoiceId);
 
@@ -286,7 +290,10 @@ it.each([
       description: "Charge",
       amountCents: 100,
     });
-    if (status !== "draft") await issueInvoice(env.DB, admin, invoiceId);
+    if (status !== "draft")
+      await issueInvoice(env.DB, admin, invoiceId, {
+        dueDate: "2026-10-01",
+      });
     if (status === "voided") await voidInvoice(env.DB, admin, invoiceId);
     if (!manage)
       context.set(currentUserContext, { ...admin, role: "operator" });
@@ -338,7 +345,9 @@ it("shows payment history, balances and appropriate controls through payment and
   let html = renderPage(await loader(loaderArgs(invoiceId)));
   expect(html).not.toContain("Record payment");
   expect(html).not.toContain("Void payment");
-  await issueInvoice(env.DB, admin, invoiceId);
+  await issueInvoice(env.DB, admin, invoiceId, {
+    dueDate: "2026-10-01",
+  });
   html = renderPage(await loader(loaderArgs(invoiceId)));
   expect(html).toContain(`/invoices/${invoiceId}/payments/new`);
   const first = await recordPayment(env.DB, admin, invoiceId, {
@@ -386,7 +395,9 @@ it("hides Record payment from non-managers on an issued unpaid invoice", async (
     description: "Charge",
     amountCents: 10000,
   });
-  await issueInvoice(env.DB, admin, invoiceId);
+  await issueInvoice(env.DB, admin, invoiceId, {
+    dueDate: "2026-10-01",
+  });
   context.set(currentUserContext, { ...admin, role: "operator" });
   const html = renderPage(await loader(loaderArgs(invoiceId)));
   expect(html).not.toContain("Record payment");

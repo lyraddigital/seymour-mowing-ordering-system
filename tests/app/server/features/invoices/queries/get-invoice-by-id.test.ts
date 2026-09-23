@@ -196,7 +196,9 @@ it("derives totals without multiplying item/payment rows and keeps ordered histo
   const { id } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId, secondJobId],
   });
-  await issueInvoice(env.DB, admin, id);
+  await issueInvoice(env.DB, admin, id, {
+    dueDate: "2026-10-01",
+  });
   const first = await recordPayment(env.DB, admin, id, { amountCents: 1000 });
   await recordPayment(env.DB, admin, id, { amountCents: 2000 });
   await recordPayment(env.DB, admin, id, { amountCents: 3000 });

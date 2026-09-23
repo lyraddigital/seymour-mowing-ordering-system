@@ -211,6 +211,9 @@
 }
 
 .primaryAction {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-height: 42px;
   padding: 9px 16px;
   border: 1px solid #365941;
@@ -219,6 +222,7 @@
   color: #fff;
   font: inherit;
   font-weight: 600;
+  text-decoration: none;
   cursor: pointer;
 }
 

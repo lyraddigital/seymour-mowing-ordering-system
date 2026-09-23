@@ -131,7 +131,9 @@ it("returns 409 when an issued invoice is deleted", async () => {
     jobIds: [jobId],
   });
 
-  await issueInvoice(env.DB, admin, invoiceId);
+  await issueInvoice(env.DB, admin, invoiceId, {
+    dueDate: "2026-10-01",
+  });
 
   await expectResponseStatus(action(actionArgs(invoiceId)), 409);
 

@@ -80,7 +80,9 @@ it("orders across invoices by received time descending, then id descending", asy
   const second = await createDraftInvoice(env.DB, fixture.admin, {
     jobIds: [fixture.otherJobId],
   });
-  await issueInvoice(env.DB, fixture.admin, second.id);
+  await issueInvoice(env.DB, fixture.admin, second.id, {
+    dueDate: "2026-10-01",
+  });
   await createDb(env.DB)
     .insert(payments)
     .values([

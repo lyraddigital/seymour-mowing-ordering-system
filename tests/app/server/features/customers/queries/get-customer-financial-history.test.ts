@@ -73,7 +73,9 @@ it("includes drafts but excludes them from total invoiced and outstanding", asyn
 it.each([0, 2500, 10000])(
   "derives issued invoice balances with %i cents paid",
   async (amountCents) => {
-    await issueInvoice(env.DB, fixture.admin, fixture.invoiceId);
+    await issueInvoice(env.DB, fixture.admin, fixture.invoiceId, {
+      dueDate: "2026-10-01",
+    });
     if (amountCents)
       await recordPayment(env.DB, fixture.admin, fixture.invoiceId, {
         amountCents,
@@ -97,7 +99,9 @@ it.each([0, 2500, 10000])(
 );
 
 it("keeps voided invoices in invoiced history but excludes their balance; retains active and voided payments", async () => {
-  await issueInvoice(env.DB, fixture.admin, fixture.invoiceId);
+  await issueInvoice(env.DB, fixture.admin, fixture.invoiceId, {
+    dueDate: "2026-10-01",
+  });
   const active = await recordPayment(env.DB, fixture.admin, fixture.invoiceId, {
     amountCents: 2500,
   });
@@ -152,7 +156,9 @@ it("does not multiply multi-job invoice totals by multiple payments", async () =
     description: "Back lawn",
     amountCents: 5000,
   });
-  await issueInvoice(env.DB, fixture.admin, fixture.invoiceId);
+  await issueInvoice(env.DB, fixture.admin, fixture.invoiceId, {
+    dueDate: "2026-10-01",
+  });
   await recordPayment(env.DB, fixture.admin, fixture.invoiceId, {
     amountCents: 1000,
   });
@@ -174,7 +180,9 @@ it("does not multiply multi-job invoice totals by multiple payments", async () =
 });
 
 it("isolates invoices, payments and all totals between customers", async () => {
-  await issueInvoice(env.DB, fixture.admin, fixture.invoiceId);
+  await issueInvoice(env.DB, fixture.admin, fixture.invoiceId, {
+    dueDate: "2026-10-01",
+  });
   await recordPayment(env.DB, fixture.admin, fixture.invoiceId, {
     amountCents: 2500,
   });
@@ -195,7 +203,9 @@ it("isolates invoices, payments and all totals between customers", async () => {
     description: "Other charge",
     amountCents: 800,
   });
-  await issueInvoice(env.DB, fixture.admin, invoice.id);
+  await issueInvoice(env.DB, fixture.admin, invoice.id, {
+    dueDate: "2026-10-01",
+  });
   const payment = await recordPayment(env.DB, fixture.admin, invoice.id, {
     amountCents: 300,
   });
@@ -242,7 +252,9 @@ it("orders invoices by creation time then id, and payments by received time then
   expect((await history()).invoices.map((row) => row.id)).toEqual(
     [second.id, fixture.invoiceId].sort().reverse(),
   );
-  await issueInvoice(env.DB, fixture.admin, fixture.invoiceId);
+  await issueInvoice(env.DB, fixture.admin, fixture.invoiceId, {
+    dueDate: "2026-10-01",
+  });
   await db.insert(payments).values([
     {
       id: "z-old",

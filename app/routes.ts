@@ -50,7 +50,7 @@ export default [
     route("payments", "routes/payments.tsx"),
     route("invoices/:invoiceId", "routes/invoices.$invoiceId.tsx"),
     route("invoices/:invoiceId/edit", "routes/invoices.$invoiceId.edit.tsx"),
-    route("invoices/:invoiceId/issue", "routes/invoices.$invoiceId.issue.ts"),
+    route("invoices/:invoiceId/issue", "routes/invoices.$invoiceId.issue.tsx"),
     route("invoices/:invoiceId/void", "routes/invoices.$invoiceId.void.ts"),
     route("invoices/:invoiceId/delete", "routes/invoices.$invoiceId.delete.ts"),
     route("invoices/new", "routes/invoices.new.tsx"),

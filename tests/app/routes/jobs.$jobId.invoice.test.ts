@@ -96,7 +96,9 @@ it("does not allow invoice creation when the job belongs to an issued invoice", 
     jobIds: [jobId],
   });
 
-  await issueInvoice(env.DB, admin, invoiceId);
+  await issueInvoice(env.DB, admin, invoiceId, {
+    dueDate: "2026-10-01",
+  });
 
   const result = await loader(loaderArgs(jobId));
 
@@ -108,7 +110,9 @@ it("allows invoice creation again after the invoice is voided", async () => {
     jobIds: [jobId],
   });
 
-  await issueInvoice(env.DB, admin, invoiceId);
+  await issueInvoice(env.DB, admin, invoiceId, {
+    dueDate: "2026-10-01",
+  });
 
   await voidInvoice(env.DB, admin, invoiceId);
 

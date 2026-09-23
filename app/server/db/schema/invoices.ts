@@ -29,6 +29,8 @@ export const invoices = sqliteTable(
 
     issuedAt: integer("issued_at"),
 
+    dueDate: text("due_date"),
+
     voidedAt: integer("voided_at"),
 
     createdAt: integer("created_at").notNull(),
@@ -40,6 +42,8 @@ export const invoices = sqliteTable(
     index("invoices_customer_id_idx").on(table.customerId),
 
     index("invoices_status_idx").on(table.status),
+
+    index("invoices_status_due_date_idx").on(table.status, table.dueDate),
 
     check(
       "invoices_invoice_number_valid",
@@ -62,6 +66,15 @@ export const invoices = sqliteTable(
         or
         (${table.status} in ('issued', 'voided') and ${table.issuedAt} is not null)
       `,
+    ),
+
+    check(
+      "invoices_due_date_valid",
+      sql`
+    (${table.status} = 'draft' and ${table.dueDate} is null)
+    or
+    (${table.status} in ('issued', 'voided') and ${table.dueDate} is not null)
+  `,
     ),
 
     check(

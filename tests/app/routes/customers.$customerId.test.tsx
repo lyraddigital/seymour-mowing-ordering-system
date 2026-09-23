@@ -86,7 +86,9 @@ it.each(["admin", "operator"] as const)(
       description: "New service",
       amountCents: 2000,
     });
-    await issueInvoice(env.DB, fixture.admin, issued.id);
+    await issueInvoice(env.DB, fixture.admin, issued.id, {
+      dueDate: "2026-10-01",
+    });
     const result = await loader(args());
     expect(result.financialHistory?.summary).toEqual({
       totalInvoicedCents: 12000,

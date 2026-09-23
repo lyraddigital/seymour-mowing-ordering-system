@@ -68,7 +68,9 @@ it("returns false when the job belongs to an issued invoice", async () => {
     jobIds: [jobId],
   });
 
-  await issueInvoice(env.DB, admin, invoiceId);
+  await issueInvoice(env.DB, admin, invoiceId, {
+    dueDate: "2026-10-01",
+  });
 
   expect(await isJobInvoiceable(env.DB, admin, jobId)).toBe(false);
 });
@@ -78,7 +80,9 @@ it("returns true after the invoice is voided", async () => {
     jobIds: [jobId],
   });
 
-  await issueInvoice(env.DB, admin, invoiceId);
+  await issueInvoice(env.DB, admin, invoiceId, {
+    dueDate: "2026-10-01",
+  });
 
   await voidInvoice(env.DB, admin, invoiceId);
 

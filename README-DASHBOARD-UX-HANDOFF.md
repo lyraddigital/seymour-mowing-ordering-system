@@ -23,6 +23,7 @@ CODEX-DASHBOARD-UX-PROMPT.md
 ## What the two designs mean
 
 `docs/ux/dashboard-populated-reference.png`
+
 - populated Dashboard composition
 - metric row
 - Needs attention table
@@ -31,6 +32,7 @@ CODEX-DASHBOARD-UX-PROMPT.md
 - Today's Jobs populated treatment
 
 `docs/ux/dashboard-empty-reference.png`
+
 - same Dashboard geometry with zero-data content
 - Needs attention empty
 - partially paid/unpaid empty

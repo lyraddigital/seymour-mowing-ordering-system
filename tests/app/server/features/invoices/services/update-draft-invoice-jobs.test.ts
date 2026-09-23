@@ -334,7 +334,9 @@ it("rejects an issued invoice", async () => {
     jobIds: [firstJobId],
   });
 
-  await issueInvoice(env.DB, admin, invoiceId);
+  await issueInvoice(env.DB, admin, invoiceId, {
+    dueDate: "2026-10-01",
+  });
 
   await expect(
     updateDraftInvoiceJobs(env.DB, admin, invoiceId, {
@@ -348,7 +350,9 @@ it("rejects a voided invoice", async () => {
     jobIds: [firstJobId],
   });
 
-  await issueInvoice(env.DB, admin, invoiceId);
+  await issueInvoice(env.DB, admin, invoiceId, {
+    dueDate: "2026-10-01",
+  });
 
   await voidInvoice(env.DB, admin, invoiceId);
 

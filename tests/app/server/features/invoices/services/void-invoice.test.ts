@@ -75,7 +75,9 @@ it("voids an issued invoice", async () => {
     jobIds: [firstJobId],
   });
 
-  await issueInvoice(env.DB, admin, invoiceId);
+  await issueInvoice(env.DB, admin, invoiceId, {
+    dueDate: "2026-10-01",
+  });
 
   const result = await voidInvoice(env.DB, admin, invoiceId);
 
@@ -97,7 +99,9 @@ it("preserves the invoice number when voided", async () => {
     jobIds: [firstJobId],
   });
 
-  const issued = await issueInvoice(env.DB, admin, invoiceId);
+  const issued = await issueInvoice(env.DB, admin, invoiceId, {
+    dueDate: "2026-10-01",
+  });
 
   await voidInvoice(env.DB, admin, invoiceId);
 
@@ -112,7 +116,9 @@ it("preserves issuedAt when voided", async () => {
     jobIds: [firstJobId],
   });
 
-  await issueInvoice(env.DB, admin, invoiceId);
+  await issueInvoice(env.DB, admin, invoiceId, {
+    dueDate: "2026-10-01",
+  });
 
   const before = await getInvoice(invoiceId);
 
@@ -139,7 +145,9 @@ it("does not change invoice items when voided", async () => {
     jobIds: [firstJobId, secondJobId],
   });
 
-  await issueInvoice(env.DB, admin, invoiceId);
+  await issueInvoice(env.DB, admin, invoiceId, {
+    dueDate: "2026-10-01",
+  });
 
   const before = await createDb(env.DB)
     .select()
@@ -161,7 +169,9 @@ it("releases all jobs when the invoice is voided", async () => {
     jobIds: [firstJobId, secondJobId],
   });
 
-  await issueInvoice(env.DB, admin, invoiceId);
+  await issueInvoice(env.DB, admin, invoiceId, {
+    dueDate: "2026-10-01",
+  });
 
   await voidInvoice(env.DB, admin, invoiceId);
 
@@ -193,7 +203,9 @@ it("allows jobs from a voided invoice to be invoiced again", async () => {
     jobIds: [firstJobId, secondJobId],
   });
 
-  await issueInvoice(env.DB, admin, firstInvoiceId);
+  await issueInvoice(env.DB, admin, firstInvoiceId, {
+    dueDate: "2026-10-01",
+  });
 
   await voidInvoice(env.DB, admin, firstInvoiceId);
 
@@ -227,7 +239,9 @@ it("preserves the historical job relationships after voiding", async () => {
     jobIds: [firstJobId, secondJobId],
   });
 
-  await issueInvoice(env.DB, admin, invoiceId);
+  await issueInvoice(env.DB, admin, invoiceId, {
+    dueDate: "2026-10-01",
+  });
 
   await voidInvoice(env.DB, admin, invoiceId);
 
@@ -274,7 +288,9 @@ it("rejects voiding an already voided invoice", async () => {
     jobIds: [firstJobId],
   });
 
-  await issueInvoice(env.DB, admin, invoiceId);
+  await issueInvoice(env.DB, admin, invoiceId, {
+    dueDate: "2026-10-01",
+  });
 
   await voidInvoice(env.DB, admin, invoiceId);
 
@@ -299,7 +315,9 @@ it("requires invoice management permission", async () => {
     jobIds: [firstJobId],
   });
 
-  await issueInvoice(env.DB, admin, invoiceId);
+  await issueInvoice(env.DB, admin, invoiceId, {
+    dueDate: "2026-10-01",
+  });
 
   const beforeInvoice = await getInvoice(invoiceId);
 

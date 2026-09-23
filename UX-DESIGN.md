@@ -316,7 +316,6 @@ For archived Customers:
 - expose Restore customer prominently
 - do not show normal edit/archive actions
 
-
 ## Dashboard Reference Direction
 
 The Dashboard is a financial/operational attention screen. Its job is to show cash exposure, invoices that need action, recent money received, and today's work.

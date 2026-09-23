@@ -542,7 +542,6 @@ Persist `state = "VIC"` server-side for Customer address create/update operation
 
 ---
 
-
 # Dashboard UX Rules
 
 The Dashboard is a financial and operational attention screen, not an entity-count dashboard.

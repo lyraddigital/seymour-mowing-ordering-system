@@ -25,11 +25,14 @@ const admin = internalUser();
 let context: RouterContextProvider;
 let jobId: string;
 
-function actionArgs(invoiceId: string) {
+function actionArgs(invoiceId: string, dueDate = "2026-10-01") {
   return {
     context,
     request: new Request(`https://example.test/invoices/${invoiceId}/issue`, {
       method: "POST",
+      body: new URLSearchParams({
+        dueDate,
+      }),
     }),
     url: new URL(`https://example.test/invoices/${invoiceId}/issue`),
     params: {
@@ -111,6 +114,7 @@ it("issues a draft invoice and redirects to the invoice", async () => {
       status: "issued",
       invoiceNumber: expect.any(String),
       issuedAt: expect.any(Number),
+      dueDate: "2026-10-01",
       voidedAt: null,
     }),
   );
@@ -137,12 +141,72 @@ it("keeps the job assigned after issue", async () => {
   ]);
 });
 
+it("returns validation errors for an invalid due date", async () => {
+  const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
+    jobIds: [jobId],
+  });
+
+  const result = await action(actionArgs(invoiceId, "not-a-date"));
+
+  if (result instanceof Response) {
+    throw new Error("Expected validation data");
+  }
+
+  expect(result.init?.status).toBe(400);
+  expect(result.data).toEqual({
+    values: {
+      dueDate: "not-a-date",
+    },
+    fieldErrors: {
+      dueDate: "Enter a valid due date.",
+    },
+  });
+
+  const [invoice] = await createDb(env.DB)
+    .select()
+    .from(invoices)
+    .where(eq(invoices.id, invoiceId));
+
+  expect(invoice).toEqual(
+    expect.objectContaining({
+      status: "draft",
+      invoiceNumber: null,
+      issuedAt: null,
+      dueDate: null,
+    }),
+  );
+});
+
+it("returns validation errors when the due date is missing", async () => {
+  const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
+    jobIds: [jobId],
+  });
+
+  const result = await action(actionArgs(invoiceId, ""));
+
+  if (result instanceof Response) {
+    throw new Error("Expected validation data");
+  }
+
+  expect(result.init?.status).toBe(400);
+  expect(result.data).toEqual({
+    values: {
+      dueDate: "",
+    },
+    fieldErrors: {
+      dueDate: "Enter a due date.",
+    },
+  });
+});
+
 it("returns 409 when the invoice cannot be issued", async () => {
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [jobId],
   });
 
-  await issueInvoice(env.DB, admin, invoiceId);
+  await issueInvoice(env.DB, admin, invoiceId, {
+    dueDate: "2026-10-01",
+  });
 
   await expectResponseStatus(action(actionArgs(invoiceId)), 409);
 });

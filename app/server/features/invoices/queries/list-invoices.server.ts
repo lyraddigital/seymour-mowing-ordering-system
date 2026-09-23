@@ -29,6 +29,7 @@ export async function listInvoices(
       customerName: customers.name,
       invoiceNumber: invoices.invoiceNumber,
       status: invoices.status,
+      dueDate: invoices.dueDate,
       issuedAt: invoices.issuedAt,
       voidedAt: invoices.voidedAt,
       createdAt: invoices.createdAt,

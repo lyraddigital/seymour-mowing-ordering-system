@@ -74,7 +74,9 @@ it("returns 404 for a missing invoice", async () => {
 it.each(["issued", "voided"] as const)(
   "returns 409 for %s invoices",
   async (status) => {
-    await issueInvoice(env.DB, fixture.admin, fixture.invoiceId);
+    await issueInvoice(env.DB, fixture.admin, fixture.invoiceId, {
+      dueDate: "2026-10-01",
+    });
     if (status === "voided")
       await voidInvoice(env.DB, fixture.admin, fixture.invoiceId);
     await expect(action(args())).rejects.toMatchObject({ status: 409 });

@@ -75,15 +75,12 @@ export default function InvoicePage({
 
       {canManage && invoice.status === "draft" && (
         <div className={styles.actions}>
-          <Form method="post" action={`/invoices/${invoice.id}/issue`}>
-            <button
-              className={styles.primaryAction}
-              type="submit"
-              disabled={submitting}
-            >
-              {submitting ? "Working…" : "Issue invoice"}
-            </button>
-          </Form>
+          <Link
+            className={styles.primaryAction}
+            to={`/invoices/${invoice.id}/issue`}
+          >
+            Issue invoice
+          </Link>
 
           <Link
             className={styles.secondaryAction}
@@ -160,6 +157,17 @@ export default function InvoicePage({
               <div>
                 <dt>Issued</dt>
                 <dd>{dateFormatter.format(new Date(invoice.issuedAt))}</dd>
+              </div>
+            )}
+
+            {invoice.dueDate !== null && (
+              <div>
+                <dt>Due</dt>
+                <dd>
+                  {scheduledDateFormatter.format(
+                    new Date(`${invoice.dueDate}T00:00:00Z`),
+                  )}
+                </dd>
               </div>
             )}
 

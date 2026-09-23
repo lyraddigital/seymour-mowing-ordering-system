@@ -7,6 +7,8 @@ import { createDb } from "../../../db/client/create-db.server";
 import { invoices } from "../../../db/schema/invoices";
 import { InvoiceNotFoundError } from "../errors/invoice-not-found-error";
 import { InvoiceStateConflictError } from "../errors/invoice-state-conflict-error";
+import type { IssueInvoiceInput } from "../types/issue-invoice-input";
+import { validateIssueInvoice } from "../validation/validate-issue-invoice";
 
 const invoiceNumberPrefix = "INV-";
 const invoiceNumberDigits = 6;
@@ -29,6 +31,7 @@ export async function issueInvoice(
   binding: Env["DB"],
   user: CurrentUser,
   invoiceId: string,
+  input: IssueInvoiceInput,
 ) {
   if (!can(user, "invoices.manage")) {
     throw new PermissionDeniedError();
@@ -52,6 +55,8 @@ export async function issueInvoice(
   if (invoice.status !== "draft") {
     throw new InvoiceStateConflictError("Only a draft invoice can be issued.");
   }
+
+  const values = validateIssueInvoice(input);
 
   for (;;) {
     const numberResult = await db
@@ -84,6 +89,7 @@ export async function issueInvoice(
           invoiceNumber,
           status: "issued",
           issuedAt,
+          dueDate: values.dueDate,
           updatedAt: issuedAt,
         })
         .where(

@@ -211,7 +211,9 @@ it("rejects deleting an issued invoice", async () => {
     jobIds: [firstJobId],
   });
 
-  await issueInvoice(env.DB, admin, invoiceId);
+  await issueInvoice(env.DB, admin, invoiceId, {
+    dueDate: "2026-10-01",
+  });
 
   await expect(
     deleteDraftInvoice(env.DB, admin, invoiceId),
@@ -246,7 +248,9 @@ it("does not delete items from an issued invoice", async () => {
     jobIds: [firstJobId],
   });
 
-  await issueInvoice(env.DB, admin, invoiceId);
+  await issueInvoice(env.DB, admin, invoiceId, {
+    dueDate: "2026-10-01",
+  });
 
   await expect(
     deleteDraftInvoice(env.DB, admin, invoiceId),
@@ -272,7 +276,9 @@ it("rejects deleting a voided invoice", async () => {
     jobIds: [firstJobId],
   });
 
-  await issueInvoice(env.DB, admin, invoiceId);
+  await issueInvoice(env.DB, admin, invoiceId, {
+    dueDate: "2026-10-01",
+  });
 
   await voidInvoice(env.DB, admin, invoiceId);
 

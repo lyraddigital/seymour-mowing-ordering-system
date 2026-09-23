@@ -15,6 +15,8 @@ export async function issuedInvoiceFixture() {
     description: "Edging",
     amountCents: 4000,
   });
-  await issueInvoice(env.DB, fixture.admin, fixture.invoiceId);
+  await issueInvoice(env.DB, fixture.admin, fixture.invoiceId, {
+    dueDate: "2026-10-01",
+  });
   return fixture;
 }
