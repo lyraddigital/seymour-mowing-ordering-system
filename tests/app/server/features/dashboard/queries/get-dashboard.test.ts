@@ -1,19 +1,22 @@
 import { env } from "cloudflare:workers";
 import { eq } from "drizzle-orm";
 import { beforeEach, expect, it, vi } from "vitest";
-import { getDashboard } from "../../../../../../app/server/features/dashboard/queries/get-dashboard.server";
+
+import { PermissionDeniedError } from "../../../../../../app/server/auth/authorization/errors/permission-denied-error";
+import * as permissions from "../../../../../../app/server/auth/authorization/policies/can";
 import { createDb } from "../../../../../../app/server/db/client/create-db.server";
-import { payments } from "../../../../../../app/server/db/schema/payments";
 import { invoices } from "../../../../../../app/server/db/schema/invoices";
 import { jobs } from "../../../../../../app/server/db/schema/jobs";
 import { jobStatusHistory } from "../../../../../../app/server/db/schema/job-status-history";
-import { issuedInvoiceFixture } from "../../../../../support/fixtures/issued-invoice";
+import { payments } from "../../../../../../app/server/db/schema/payments";
+import { getDashboard } from "../../../../../../app/server/features/dashboard/queries/get-dashboard.server";
 import { draftInvoiceFixture } from "../../../../../support/fixtures/draft-invoice";
-import { PermissionDeniedError } from "../../../../../../app/server/auth/authorization/errors/permission-denied-error";
-import * as permissions from "../../../../../../app/server/auth/authorization/policies/can";
+import { issuedInvoiceFixture } from "../../../../../support/fixtures/issued-invoice";
 
 let fixture: Awaited<ReturnType<typeof issuedInvoiceFixture>>;
+
 const now = new Date("2026-09-22T00:00:00Z");
+
 beforeEach(async () => {
   vi.restoreAllMocks();
   fixture = await issuedInvoiceFixture();
@@ -23,6 +26,7 @@ it.each(["admin", "operator"] as const)(
   "derives balances without multiplying items/payments for %s",
   async (role) => {
     const db = createDb(env.DB);
+
     await db.insert(payments).values([
       {
         id: "a",
@@ -47,10 +51,13 @@ it.each(["admin", "operator"] as const)(
         voidedAt: 2,
       },
     ]);
+
     const result = await getDashboard(env.DB, { ...fixture.admin, role }, now);
+
     expect(result.outstandingCents).toBe(7000);
     expect(result.unpaidInvoiceCount).toBe(1);
     expect(result.paymentsReceivedThisMonthCents).toBe(3000);
+
     expect(result.unpaidInvoices).toEqual([
       expect.objectContaining({
         id: fixture.invoiceId,
@@ -59,14 +66,116 @@ it.each(["admin", "operator"] as const)(
         customerName: "John Smith",
       }),
     ]);
-    expect(result.recentPayments.map((p) => p.id)).toEqual(["c", "b", "a"]);
+
+    expect(result.recentPayments.map((payment) => payment.id)).toEqual([
+      "c",
+      "b",
+      "a",
+    ]);
     expect(result.recentPayments[0].voidedAt).toBe(2);
-    expect(result.overdue).toBeNull();
+
+    expect(result.overdue).toEqual({
+      balanceCents: 0,
+      invoiceCount: 0,
+      invoices: [],
+    });
   },
 );
 
-it("excludes paid and voided invoices while retaining active receipts on voided invoices", async () => {
+it("derives overdue balance, count, and attention rows", async () => {
   const db = createDb(env.DB);
+
+  await db
+    .update(invoices)
+    .set({
+      dueDate: "2026-09-10",
+    })
+    .where(eq(invoices.id, fixture.invoiceId));
+
+  await db.insert(payments).values({
+    id: "partial",
+    invoiceId: fixture.invoiceId,
+    amountCents: 3000,
+    receivedAt: now.getTime(),
+    createdAt: 1,
+  });
+
+  const result = await getDashboard(env.DB, fixture.admin, now);
+
+  expect(result.outstandingCents).toBe(7000);
+  expect(result.unpaidInvoiceCount).toBe(1);
+
+  expect(result.overdue).toEqual({
+    balanceCents: 7000,
+    invoiceCount: 1,
+    invoices: [
+      expect.objectContaining({
+        id: fixture.invoiceId,
+        invoiceNumber: "INV-000001",
+        customerName: "John Smith",
+        dueDate: "2026-09-10",
+        paidCents: 3000,
+        balanceCents: 7000,
+        daysOverdue: 12,
+      }),
+    ],
+  });
+});
+
+it("does not treat an invoice due today as overdue", async () => {
+  await createDb(env.DB)
+    .update(invoices)
+    .set({
+      dueDate: "2026-09-22",
+    })
+    .where(eq(invoices.id, fixture.invoiceId));
+
+  const result = await getDashboard(env.DB, fixture.admin, now);
+
+  expect(result.outstandingCents).toBe(10000);
+  expect(result.unpaidInvoiceCount).toBe(1);
+
+  expect(result.overdue).toEqual({
+    balanceCents: 0,
+    invoiceCount: 0,
+    invoices: [],
+  });
+});
+
+it("treats an unpaid invoice due before today as overdue", async () => {
+  await createDb(env.DB)
+    .update(invoices)
+    .set({
+      dueDate: "2026-09-21",
+    })
+    .where(eq(invoices.id, fixture.invoiceId));
+
+  const result = await getDashboard(env.DB, fixture.admin, now);
+
+  expect(result.overdue).toEqual({
+    balanceCents: 10000,
+    invoiceCount: 1,
+    invoices: [
+      expect.objectContaining({
+        id: fixture.invoiceId,
+        dueDate: "2026-09-21",
+        balanceCents: 10000,
+        daysOverdue: 1,
+      }),
+    ],
+  });
+});
+
+it("excludes paid and voided invoices from overdue and outstanding totals while retaining active receipts", async () => {
+  const db = createDb(env.DB);
+
+  await db
+    .update(invoices)
+    .set({
+      dueDate: "2026-09-10",
+    })
+    .where(eq(invoices.id, fixture.invoiceId));
+
   await db.insert(payments).values({
     id: "paid",
     invoiceId: fixture.invoiceId,
@@ -74,31 +183,59 @@ it("excludes paid and voided invoices while retaining active receipts on voided 
     receivedAt: now.getTime(),
     createdAt: 1,
   });
-  expect(
-    (await getDashboard(env.DB, fixture.admin, now)).unpaidInvoices,
-  ).toEqual([]);
+
+  let result = await getDashboard(env.DB, fixture.admin, now);
+
+  expect(result.outstandingCents).toBe(0);
+  expect(result.unpaidInvoiceCount).toBe(0);
+  expect(result.unpaidInvoices).toEqual([]);
+  expect(result.overdue).toEqual({
+    balanceCents: 0,
+    invoiceCount: 0,
+    invoices: [],
+  });
+
   await db
     .update(invoices)
-    .set({ status: "voided", voidedAt: 1 })
+    .set({
+      status: "voided",
+      voidedAt: 1,
+    })
     .where(eq(invoices.id, fixture.invoiceId));
-  const result = await getDashboard(env.DB, fixture.admin, now);
+
+  result = await getDashboard(env.DB, fixture.admin, now);
+
   expect(result.outstandingCents).toBe(0);
   expect(result.unpaidInvoiceCount).toBe(0);
   expect(result.paymentsReceivedThisMonthCents).toBe(10000);
   expect(result.recentPayments).toHaveLength(1);
+  expect(result.overdue).toEqual({
+    balanceCents: 0,
+    invoiceCount: 0,
+    invoices: [],
+  });
 });
 
-it("returns genuine financial/job zeros and empty rows, but unknown overdue data", async () => {
+it("returns genuine financial, overdue, and job zeros with empty rows", async () => {
   fixture = await draftInvoiceFixture();
+
   const result = await getDashboard(env.DB, fixture.admin, now);
+
   expect(result).toMatchObject({
     outstandingCents: 0,
     unpaidInvoiceCount: 0,
     paymentsReceivedThisMonthCents: 0,
-    overdue: null,
+    overdue: {
+      balanceCents: 0,
+      invoiceCount: 0,
+      invoices: [],
+    },
     unpaidInvoices: [],
     recentPayments: [],
-    todaysJobs: { total: 0, remaining: 0 },
+    todaysJobs: {
+      total: 0,
+      remaining: 0,
+    },
   });
 });
 
@@ -156,7 +293,9 @@ it.each([
           createdAt: 1,
         },
       ]);
+
     const result = await getDashboard(env.DB, fixture.admin, new Date(instant));
+
     expect(result.today).toBe(today);
     expect(result.paymentsReceivedThisMonthCents).toBe(110);
   },
@@ -164,7 +303,11 @@ it.each([
 
 it("summarises only today's jobs from latest history, including timestamp ties and cancellation", async () => {
   const db = createDb(env.DB);
-  await db.update(jobs).set({ scheduledDate: "2026-09-22" });
+
+  await db.update(jobs).set({
+    scheduledDate: "2026-09-22",
+  });
+
   await db.insert(jobStatusHistory).values([
     {
       id: "z-completed",
@@ -188,6 +331,7 @@ it("summarises only today's jobs from latest history, including timestamp ties a
       createdAt: 9999999999999,
     },
   ]);
+
   expect((await getDashboard(env.DB, fixture.admin, now)).todaysJobs).toEqual({
     scheduled: 0,
     in_progress: 0,
@@ -196,10 +340,13 @@ it("summarises only today's jobs from latest history, including timestamp ties a
     remaining: 0,
     total: 2,
   });
+
   await db
     .delete(jobStatusHistory)
     .where(eq(jobStatusHistory.id, "z-completed"));
+
   await db.delete(jobStatusHistory).where(eq(jobStatusHistory.id, "cancelled"));
+
   expect((await getDashboard(env.DB, fixture.admin, now)).todaysJobs).toEqual({
     scheduled: 1,
     in_progress: 1,
@@ -210,21 +357,22 @@ it("summarises only today's jobs from latest history, including timestamp ties a
   });
 });
 
-it("limits recent history to five with deterministic ordering", async () => {
+it("limits recent payment history to five with deterministic ordering", async () => {
   await createDb(env.DB)
     .insert(payments)
     .values(
-      Array.from({ length: 7 }, (_, i) => ({
-        id: `p${i}`,
+      Array.from({ length: 7 }, (_, index) => ({
+        id: `p${index}`,
         invoiceId: fixture.invoiceId,
         amountCents: 100,
-        receivedAt: now.getTime() + i,
+        receivedAt: now.getTime() + index,
         createdAt: 1,
       })),
     );
+
   expect(
     (await getDashboard(env.DB, fixture.admin, now)).recentPayments.map(
-      (p) => p.id,
+      (payment) => payment.id,
     ),
   ).toEqual(["p6", "p5", "p4", "p3", "p2"]);
 });
@@ -238,6 +386,7 @@ it.each([
   vi.spyOn(permissions, "can").mockImplementation(
     (_user, permission) => permission !== denied,
   );
+
   await expect(getDashboard(env.DB, fixture.admin, now)).rejects.toBeInstanceOf(
     PermissionDeniedError,
   );

@@ -159,18 +159,12 @@
       "indexes": {
         "invoice_items_invoice_id_idx": {
           "name": "invoice_items_invoice_id_idx",
-          "columns": [
-            "invoice_id",
-            "created_at",
-            "id"
-          ],
+          "columns": ["invoice_id", "created_at", "id"],
           "isUnique": false
         },
         "invoice_items_job_id_idx": {
           "name": "invoice_items_job_id_idx",
-          "columns": [
-            "job_id"
-          ],
+          "columns": ["job_id"],
           "isUnique": false
         }
       },
@@ -179,12 +173,8 @@
           "name": "invoice_items_invoice_id_invoices_id_fk",
           "tableFrom": "invoice_items",
           "tableTo": "invoices",
-          "columnsFrom": [
-            "invoice_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["invoice_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -192,12 +182,8 @@
           "name": "invoice_items_job_id_jobs_id_fk",
           "tableFrom": "invoice_items",
           "tableTo": "jobs",
-          "columnsFrom": [
-            "job_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["job_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -243,23 +229,17 @@
       "indexes": {
         "invoice_jobs_invoice_id_idx": {
           "name": "invoice_jobs_invoice_id_idx",
-          "columns": [
-            "invoice_id"
-          ],
+          "columns": ["invoice_id"],
           "isUnique": false
         },
         "invoice_jobs_job_id_idx": {
           "name": "invoice_jobs_job_id_idx",
-          "columns": [
-            "job_id"
-          ],
+          "columns": ["job_id"],
           "isUnique": false
         },
         "invoice_jobs_active_job_unique": {
           "name": "invoice_jobs_active_job_unique",
-          "columns": [
-            "job_id"
-          ],
+          "columns": ["job_id"],
           "isUnique": true,
           "where": "\"invoice_jobs\".\"released_at\" is null"
         }
@@ -269,12 +249,8 @@
           "name": "invoice_jobs_invoice_id_invoices_id_fk",
           "tableFrom": "invoice_jobs",
           "tableTo": "invoices",
-          "columnsFrom": [
-            "invoice_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["invoice_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -282,22 +258,15 @@
           "name": "invoice_jobs_job_id_jobs_id_fk",
           "tableFrom": "invoice_jobs",
           "tableTo": "jobs",
-          "columnsFrom": [
-            "job_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["job_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
         "invoice_jobs_invoice_id_job_id_pk": {
-          "columns": [
-            "invoice_id",
-            "job_id"
-          ],
+          "columns": ["invoice_id", "job_id"],
           "name": "invoice_jobs_invoice_id_job_id_pk"
         }
       },
@@ -375,31 +344,22 @@
       "indexes": {
         "invoices_invoice_number_unique": {
           "name": "invoices_invoice_number_unique",
-          "columns": [
-            "invoice_number"
-          ],
+          "columns": ["invoice_number"],
           "isUnique": true
         },
         "invoices_customer_id_idx": {
           "name": "invoices_customer_id_idx",
-          "columns": [
-            "customer_id"
-          ],
+          "columns": ["customer_id"],
           "isUnique": false
         },
         "invoices_status_idx": {
           "name": "invoices_status_idx",
-          "columns": [
-            "status"
-          ],
+          "columns": ["status"],
           "isUnique": false
         },
         "invoices_status_due_date_idx": {
           "name": "invoices_status_due_date_idx",
-          "columns": [
-            "status",
-            "due_date"
-          ],
+          "columns": ["status", "due_date"],
           "isUnique": false
         }
       },
@@ -408,12 +368,8 @@
           "name": "invoices_customer_id_customers_id_fk",
           "tableFrom": "invoices",
           "tableTo": "customers",
-          "columnsFrom": [
-            "customer_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["customer_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -492,11 +448,7 @@
       "indexes": {
         "job_items_job_id_idx": {
           "name": "job_items_job_id_idx",
-          "columns": [
-            "job_id",
-            "created_at",
-            "id"
-          ],
+          "columns": ["job_id", "created_at", "id"],
           "isUnique": false
         }
       },
@@ -505,12 +457,8 @@
           "name": "job_items_job_id_jobs_id_fk",
           "tableFrom": "job_items",
           "tableTo": "jobs",
-          "columnsFrom": [
-            "job_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["job_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -570,11 +518,7 @@
       "indexes": {
         "job_status_history_latest_idx": {
           "name": "job_status_history_latest_idx",
-          "columns": [
-            "job_id",
-            "created_at",
-            "id"
-          ],
+          "columns": ["job_id", "created_at", "id"],
           "isUnique": false
         }
       },
@@ -583,12 +527,8 @@
           "name": "job_status_history_job_id_jobs_id_fk",
           "tableFrom": "job_status_history",
           "tableTo": "jobs",
-          "columnsFrom": [
-            "job_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["job_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -596,12 +536,8 @@
           "name": "job_status_history_created_by_user_id_users_id_fk",
           "tableFrom": "job_status_history",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -671,17 +607,12 @@
       "indexes": {
         "jobs_customer_id_idx": {
           "name": "jobs_customer_id_idx",
-          "columns": [
-            "customer_id"
-          ],
+          "columns": ["customer_id"],
           "isUnique": false
         },
         "jobs_scheduled_date_idx": {
           "name": "jobs_scheduled_date_idx",
-          "columns": [
-            "scheduled_date",
-            "id"
-          ],
+          "columns": ["scheduled_date", "id"],
           "isUnique": false
         }
       },
@@ -690,12 +621,8 @@
           "name": "jobs_customer_id_customers_id_fk",
           "tableFrom": "jobs",
           "tableTo": "customers",
-          "columnsFrom": [
-            "customer_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["customer_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -762,11 +689,7 @@
       "indexes": {
         "payments_invoice_id_idx": {
           "name": "payments_invoice_id_idx",
-          "columns": [
-            "invoice_id",
-            "received_at",
-            "id"
-          ],
+          "columns": ["invoice_id", "received_at", "id"],
           "isUnique": false
         }
       },
@@ -775,12 +698,8 @@
           "name": "payments_invoice_id_invoices_id_fk",
           "tableFrom": "payments",
           "tableTo": "invoices",
-          "columnsFrom": [
-            "invoice_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["invoice_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -851,9 +770,7 @@
       "indexes": {
         "users_email_unique": {
           "name": "users_email_unique",
-          "columns": [
-            "email"
-          ],
+          "columns": ["email"],
           "isUnique": true
         }
       },
