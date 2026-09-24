@@ -1,41 +1,54 @@
 .page {
-  max-width: 760px;
+  max-width: 820px;
+  margin: 0 auto;
 }
 
-.backLink {
-  display: inline-block;
-  margin-bottom: 24px;
-  color: #365941;
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+  color: var(--text-muted);
   font-size: 14px;
-  font-weight: 600;
-  text-decoration: none;
 }
 
-.backLink:hover {
-  text-decoration: underline;
-}
-
-.header {
-  margin-bottom: 32px;
-}
-
-.intro {
-  margin: 8px 0 0;
-  color: #65745f;
-  line-height: 1.6;
+.breadcrumb a {
+  margin: 0;
 }
 
 .form {
-  padding: 28px;
-  border: 1px solid #d9dfd4;
+  border: 1px solid var(--border);
   border-radius: 10px;
-  background: #fff;
+  background: var(--surface);
+  box-shadow: 0 2px 10px #17312604;
+}
+
+.formSection {
+  padding: 28px;
+}
+
+.sectionHeader {
+  margin-bottom: 24px;
+}
+
+.sectionHeader h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 650;
+}
+
+.sectionHeader p {
+  margin: 6px 0 0;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .fields {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 24px;
+  gap: 22px;
 }
 
 .fullField {
@@ -46,127 +59,104 @@
 .label {
   display: block;
   margin-bottom: 7px;
-  color: #263c2d;
   font-size: 14px;
   font-weight: 600;
 }
 
 .fields input,
 .fields textarea {
-  width: 100%;
+  display: block;
   box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
   padding: 11px 12px;
-  border: 1px solid #b8c3b2;
+  border: 1px solid #adb9a5;
   border-radius: 6px;
   background: #fff;
-  color: #1f2f24;
+  color: var(--text);
   font: inherit;
-}
-
-.fields input:focus,
-.fields textarea:focus {
-  outline: 2px solid #6c8c6f;
-  outline-offset: 1px;
-  border-color: #6c8c6f;
+  font-size: 16px;
+  line-height: 1.4;
 }
 
 .fields textarea {
+  min-height: 120px;
   resize: vertical;
 }
 
-.readOnlyValue {
-  min-height: 44px;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  color: #263c2d;
-  line-height: 1.5;
+.fields input:hover,
+.fields textarea:hover {
+  border-color: #65745f;
 }
 
-.readOnlyValue a {
-  color: #365941;
+.fields input:focus-visible,
+.fields textarea:focus-visible {
+  outline: 3px solid #62793d;
+  outline-offset: 2px;
+}
+
+.fields [aria-invalid="true"] {
+  border: 2px solid var(--danger);
+  background: #fff9f7;
+}
+
+.readOnlyField {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--background);
+  color: var(--text);
+  font-size: 15px;
+}
+
+.readOnlyField a {
+  color: var(--brand-forest);
   font-weight: 600;
-  text-decoration-color: #b0bba8;
   text-underline-offset: 3px;
 }
 
-.readOnlyValue a:hover {
-  text-decoration-color: currentColor;
-}
-
-.fieldHint {
-  margin: 8px 0 0;
-  color: #65745f;
+.fieldHint,
+.fieldError {
+  margin: 7px 0 0;
   font-size: 13px;
   line-height: 1.5;
 }
 
+.fieldHint {
+  color: var(--text-muted);
+}
+
 .fieldError {
-  margin: 7px 0 0;
-  color: #a12d2d;
-  font-size: 13px;
-  line-height: 1.4;
+  color: var(--danger);
 }
 
 .actions {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-top: 28px;
-}
-
-.primaryAction,
-.secondaryAction {
-  min-height: 44px;
-  box-sizing: border-box;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 10px 18px;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.primaryAction {
-  border: 1px solid #365941;
-  background: #365941;
-  color: #fff;
-  cursor: pointer;
-}
-
-.primaryAction:hover:not(:disabled) {
-  background: #2d4b36;
-}
-
-.primaryAction:disabled {
-  cursor: not-allowed;
-  opacity: 0.65;
-}
-
-.secondaryAction {
-  border: 1px solid #adb9a5;
-  background: #fff;
-  color: #365941;
-  text-decoration: none;
-}
-
-.secondaryAction:hover {
-  background: #f3f6ef;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 20px 28px;
+  border-top: 1px solid var(--border);
+  background: var(--background);
+  border-radius: 0 0 10px 10px;
 }
 
 .savingStatus {
-  color: #65745f;
+  color: var(--text-muted);
   font-size: 13px;
 }
 
-@media (max-width: 640px) {
-  .form {
+@container (max-width: 620px) {
+  .formSection {
     padding: 20px;
   }
 
   .fields {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .fullField {
@@ -174,12 +164,6 @@
   }
 
   .actions {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .primaryAction,
-  .secondaryAction {
-    width: 100%;
+    padding: 18px 20px;
   }
 }
