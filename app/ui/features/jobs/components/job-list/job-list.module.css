@@ -1,74 +1,60 @@
-.list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  background: #fffefa;
-  border: 1px solid #dce2d5;
-  border-radius: 8px;
-  overflow: hidden;
-}
 .job {
-  display: grid;
-  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
-  gap: 24px;
-  padding: 24px;
-  overflow-wrap: anywhere;
+  min-width: 190px;
 }
-.job + .job {
-  border-top: 1px solid #e1e6d9;
-}
-.jobName {
-  margin: 0;
-  font-size: 17px;
-  font-weight: 600;
-  line-height: 1.5;
-}
-.customerName {
-  margin: 6px 0 0;
-  font-size: 14px;
-  color: #596955;
-  line-height: 1.6;
-}
+
 .job a {
-  text-decoration-color: #b0bba8;
-  text-underline-offset: 3px;
+  font-weight: 650;
 }
-.job a:focus-visible {
-  outline: 3px solid #62793d;
-  outline-offset: 3px;
+
+.customer {
+  min-width: 160px;
 }
-.description {
-  margin: 8px 0 0;
-  font-size: 14px;
-  line-height: 1.6;
-  white-space: pre-wrap;
+
+.customer a {
+  font-weight: 600;
 }
-.details {
-  margin: 0;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
-  font-size: 14px;
-  line-height: 1.6;
+
+.date {
+  min-width: 125px;
+  white-space: nowrap;
 }
-.details dt {
-  margin-bottom: 2px;
-  color: #65745f;
-  font-size: 12px;
+
+.scheduled {
+  composes: badge from "../../../../styles/product.module.css";
+  color: #805311;
+  background: #fff3dc;
 }
-.details dd {
-  margin: 0;
+
+.inProgress {
+  composes: badge from "../../../../styles/product.module.css";
+  color: #1459a7;
+  background: #edf5ff;
 }
-.status {
-  text-transform: capitalize;
+
+.completed {
+  composes: active from "../../../../styles/product.module.css";
 }
-.lifecycleActions {
-  grid-column: 1 / -1;
+
+.cancelled {
+  composes: voided from "../../../../styles/product.module.css";
 }
-@container (max-width: 620px) {
-  .job {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 16px;
-    padding: 20px;
-  }
+
+.actions {
+  min-width: 250px;
+  white-space: nowrap;
+}
+
+.actions > div {
+  display: inline-flex;
+  vertical-align: middle;
+}
+
+.editAction {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  margin-left: 10px;
+  padding: 5px 10px;
+  font-size: 13px;
+  font-weight: 600;
 }
