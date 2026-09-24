@@ -1,5 +1,11 @@
 import { env } from "cloudflare:workers";
-import { RouterContextProvider } from "react-router";
+import type { ComponentProps } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import {
+  createMemoryRouter,
+  RouterContextProvider,
+  RouterProvider,
+} from "react-router";
 import { beforeEach, expect, it } from "vitest";
 
 import { action, loader } from "../../../app/routes/invoices.$invoiceId.edit";
@@ -17,6 +23,7 @@ import { users } from "../../../app/server/db/schema/users";
 import { createDraftInvoice } from "../../../app/server/features/invoices/services/create-draft-invoice.server";
 import { issueInvoice } from "../../../app/server/features/invoices/services/issue-invoice.server";
 import { createJob } from "../../../app/server/features/jobs/services/create-job.server";
+import EditInvoicePage from "../../../app/ui/features/invoices/pages/edit-invoice-page/edit-invoice-page";
 import { internalUser } from "../../support/fixtures/internal-user";
 
 const admin = internalUser();
@@ -59,6 +66,22 @@ function actionArgs(invoiceId: string, jobIds: string[]) {
   };
 }
 
+function renderPage(props: ComponentProps<typeof EditInvoicePage>) {
+  const router = createMemoryRouter(
+    [
+      {
+        path: "/invoices/:invoiceId/edit",
+        element: <EditInvoicePage {...props} />,
+      },
+    ],
+    {
+      initialEntries: [`/invoices/${props.invoiceId}/edit`],
+    },
+  );
+
+  return renderToStaticMarkup(<RouterProvider router={router} />);
+}
+
 async function expectResponseStatus(promise: Promise<unknown>, status: number) {
   try {
     await promise;
@@ -74,7 +97,6 @@ beforeEach(async () => {
   context = new RouterContextProvider();
 
   context.set(currentUserContext, admin);
-
   context.set(runtimeContext, {
     env,
     ctx: {} as ExecutionContext,
@@ -156,6 +178,45 @@ it("loads the current jobs and other available jobs for the invoice customer", a
   });
 });
 
+it("renders the draft invoice edit workflow", async () => {
+  const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
+    jobIds: [firstJobId],
+  });
+
+  const result = await loader(loaderArgs(invoiceId));
+
+  const html = renderPage(result);
+
+  expect(html).toContain("Edit draft invoice");
+  expect(html).toContain("Update the jobs included on this draft invoice.");
+
+  expect(html).toContain("Customer");
+  expect(html).toContain("John Smith");
+  expect(html).toContain(
+    "The customer cannot be changed after the draft is created.",
+  );
+
+  expect(html).toContain("Jobs");
+  expect(html).toContain("Front lawn");
+  expect(html).toContain("Back lawn");
+
+  expect(html).toContain("19 Sept 2026");
+  expect(html).toContain("20 Sept 2026");
+
+  expect(html).toContain('name="jobId"');
+  expect(html).toContain(`value="${firstJobId}"`);
+  expect(html).toContain(`value="${secondJobId}"`);
+
+  expect(html).toContain("1");
+  expect(html).toContain("job selected");
+
+  expect(html).toContain("Save draft");
+  expect(html).toContain("Cancel");
+
+  expect(html).toContain('href="/invoices"');
+  expect(html).toContain(`href="/invoices/${invoiceId}"`);
+});
+
 it("excludes jobs belonging to another customer", async () => {
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
@@ -164,6 +225,10 @@ it("excludes jobs belonging to another customer", async () => {
   const result = await loader(loaderArgs(invoiceId));
 
   expect(result.jobs.some((job) => job.id === otherCustomerJobId)).toBe(false);
+
+  const html = renderPage(result);
+
+  expect(html).not.toContain("Nature strip");
 });
 
 it("excludes a job belonging to another active invoice", async () => {
@@ -178,6 +243,11 @@ it("excludes a job belonging to another active invoice", async () => {
   const result = await loader(loaderArgs(invoiceId));
 
   expect(result.jobs.map((job) => job.id)).toEqual([firstJobId]);
+
+  const html = renderPage(result);
+
+  expect(html).toContain("Front lawn");
+  expect(html).not.toContain("Back lawn");
 });
 
 it("updates the draft job selection and redirects", async () => {
@@ -190,9 +260,7 @@ it("updates the draft job selection and redirects", async () => {
   );
 
   expect(response).toBeInstanceOf(Response);
-
   expect((response as Response).status).toBe(302);
-
   expect((response as Response).headers.get("Location")).toBe(
     `/invoices/${invoiceId}`,
   );
@@ -204,16 +272,18 @@ it("updates the draft job selection and redirects", async () => {
       expect.objectContaining({
         invoiceId,
         jobId: firstJobId,
+        releasedAt: null,
       }),
       expect.objectContaining({
         invoiceId,
         jobId: secondJobId,
+        releasedAt: null,
       }),
     ]),
   );
 });
 
-it("returns 400 when no jobs are selected", async () => {
+it("returns and renders feedback when no jobs are selected", async () => {
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });
@@ -228,6 +298,7 @@ it("returns 400 when no jobs are selected", async () => {
       values: {
         jobIds: [],
       },
+      errorMessage: "At least one job must be selected.",
     },
   });
 
@@ -235,7 +306,19 @@ it("returns 400 when no jobs are selected", async () => {
     throw new Error("Expected validation data, received Response");
   }
 
-  expect(result.data.errorMessage).toBe("At least one job must be selected.");
+  const loaderResult = await loader(loaderArgs(invoiceId));
+
+  const html = renderPage({
+    ...loaderResult,
+    selectedJobIds: result.data.values.jobIds,
+    errorMessage: result.data.errorMessage,
+  });
+
+  expect(html).toContain('role="alert"');
+  expect(html).toContain("Draft could not be updated.");
+  expect(html).toContain("At least one job must be selected.");
+  expect(html).toContain("0");
+  expect(html).toContain("jobs selected");
 });
 
 it("returns 400 when another active invoice owns a selected job", async () => {
@@ -253,15 +336,14 @@ it("returns 400 when another active invoice owns a selected job", async () => {
     init: {
       status: 400,
     },
+    data: {
+      values: {
+        jobIds: [firstJobId, secondJobId],
+      },
+      errorMessage:
+        "One or more selected jobs are already included on another active invoice.",
+    },
   });
-
-  if (result instanceof Response) {
-    throw new Error("Expected validation data, received Response");
-  }
-
-  expect(result.data.errorMessage).toBe(
-    "One or more selected jobs are already included on another active invoice.",
-  );
 });
 
 it("returns 404 for a missing invoice", async () => {
@@ -297,4 +379,21 @@ it("returns 403 without invoice management permission", async () => {
   await expectResponseStatus(loader(loaderArgs(invoiceId)), 403);
 
   await expectResponseStatus(action(actionArgs(invoiceId, [firstJobId])), 403);
+});
+
+it("requires authenticated user context", async () => {
+  const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
+    jobIds: [firstJobId],
+  });
+
+  context = new RouterContextProvider();
+
+  context.set(runtimeContext, {
+    env,
+    ctx: {} as ExecutionContext,
+  });
+
+  await expect(loader(loaderArgs(invoiceId))).rejects.toThrow();
+
+  await expect(action(actionArgs(invoiceId, [firstJobId]))).rejects.toThrow();
 });

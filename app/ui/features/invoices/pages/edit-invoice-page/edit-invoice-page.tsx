@@ -1,6 +1,14 @@
 import { Form, Link, useNavigation } from "react-router";
 
+import ui from "../../../../styles/product.module.css";
 import styles from "./edit-invoice-page.module.css";
+
+const dateFormatter = new Intl.DateTimeFormat("en-AU", {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+  timeZone: "UTC",
+});
 
 interface InvoiceJobOption {
   id: string;
@@ -23,81 +31,129 @@ export default function EditInvoicePage({
   selectedJobIds,
   errorMessage,
 }: EditInvoicePageProps) {
-  const navigation = useNavigation();
-
-  const saving = navigation.state !== "idle";
+  const saving = useNavigation().state !== "idle";
 
   return (
-    <section className={styles.page}>
-      <Link className={styles.backLink} to={`/invoices/${invoiceId}`}>
-        ← Invoice
-      </Link>
+    <section className={`${ui.page} ${styles.page}`}>
+      <div className={styles.breadcrumb}>
+        <Link className={ui.breadcrumb} to="/invoices">
+          Invoices
+        </Link>
 
-      <header className={styles.header}>
-        <h1 className="page-title">Edit draft invoice</h1>
+        <span aria-hidden="true">›</span>
 
-        <p className={styles.intro}>
-          Update the Jobs included on this draft invoice.
-        </p>
+        <Link className={ui.breadcrumb} to={`/invoices/${invoiceId}`}>
+          Draft invoice
+        </Link>
+
+        <span aria-hidden="true">›</span>
+        <span>Edit</span>
+      </div>
+
+      <header className={ui.header}>
+        <div>
+          <h1 className="page-title">Edit draft invoice</h1>
+
+          <p className={ui.intro}>
+            Update the jobs included on this draft invoice.
+          </p>
+        </div>
       </header>
 
       <Form method="post" className={styles.form} aria-busy={saving}>
         {errorMessage && (
           <div className={styles.formError} role="alert">
-            {errorMessage}
+            <strong>Draft could not be updated.</strong>
+            <span>{errorMessage}</span>
           </div>
         )}
 
-        <div className={styles.customer}>
-          <span>Customer</span>
-          <strong>{customerName}</strong>
-        </div>
+        <section
+          className={styles.formSection}
+          aria-labelledby="invoice-customer-heading"
+        >
+          <header className={styles.sectionHeader}>
+            <h2 id="invoice-customer-heading">Customer</h2>
 
-        <fieldset className={styles.jobsFieldset}>
-          <legend>Jobs</legend>
+            <p>The customer cannot be changed after the draft is created.</p>
+          </header>
 
-          <p className={styles.fieldHint}>
-            Select one or more Jobs to include. Existing invoice items are
-            preserved for Jobs that remain selected. Newly added Jobs snapshot
-            their current Job Items.
-          </p>
+          <div className={styles.readOnlyField}>{customerName}</div>
+        </section>
 
-          <div className={styles.jobList}>
-            {jobs.map((job) => (
-              <label className={styles.job} key={job.id}>
-                <input
-                  type="checkbox"
-                  name="jobId"
-                  value={job.id}
-                  defaultChecked={selectedJobIds.includes(job.id)}
-                />
+        <section
+          className={styles.formSection}
+          aria-labelledby="invoice-jobs-heading"
+        >
+          <header className={styles.sectionHeader}>
+            <div>
+              <h2 id="invoice-jobs-heading">Jobs</h2>
 
-                <span className={styles.jobDetails}>
-                  <strong>{job.name}</strong>
+              <p>
+                Existing invoice items are preserved for jobs that remain
+                selected. Newly added jobs snapshot their current job items.
+              </p>
+            </div>
 
-                  <span>{job.scheduledDate}</span>
-                </span>
-              </label>
-            ))}
-          </div>
-        </fieldset>
+            <div className={styles.selectionSummary}>
+              <strong>{selectedJobIds.length}</strong>
+              <span>
+                {selectedJobIds.length === 1 ? "job selected" : "jobs selected"}
+              </span>
+            </div>
+          </header>
 
-        <div className={styles.actions}>
-          <button
-            className={styles.primaryAction}
-            type="submit"
-            disabled={saving}
-          >
+          <fieldset className={styles.jobsFieldset}>
+            <legend className={styles.visuallyHidden}>Jobs to include</legend>
+
+            <div className={styles.jobList}>
+              {jobs.map((job) => {
+                const selected = selectedJobIds.includes(job.id);
+
+                return (
+                  <label
+                    className={`${styles.job} ${
+                      selected ? styles.selectedJob : ""
+                    }`}
+                    key={job.id}
+                  >
+                    <input
+                      type="checkbox"
+                      name="jobId"
+                      value={job.id}
+                      defaultChecked={selected}
+                    />
+
+                    <span className={styles.jobDetails}>
+                      <strong>{job.name}</strong>
+
+                      <span>
+                        Scheduled{" "}
+                        {dateFormatter.format(
+                          new Date(`${job.scheduledDate}T00:00:00Z`),
+                        )}
+                      </span>
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+          </fieldset>
+        </section>
+
+        <footer className={styles.actions}>
+          <button className={ui.primaryAction} type="submit" disabled={saving}>
             {saving ? "Saving…" : "Save draft"}
           </button>
 
-          <Link
-            className={styles.secondaryAction}
-            to={`/invoices/${invoiceId}`}
-          >
+          <Link className={ui.secondaryAction} to={`/invoices/${invoiceId}`}>
             Cancel
           </Link>
-        </div>
+
+          <span className={styles.savingStatus} role="status">
+            {saving ? "Saving draft invoice…" : ""}
+          </span>
+        </footer>
       </Form>
     </section>
   );
