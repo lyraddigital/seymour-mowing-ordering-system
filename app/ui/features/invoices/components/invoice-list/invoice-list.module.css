@@ -1,151 +1,36 @@
-.list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  background: #fffefa;
-  border: 1px solid #dce2d5;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
 .invoice {
-  display: grid;
-  grid-template-columns:
-    minmax(0, 0.9fr)
-    minmax(0, 1.4fr)
-    minmax(180px, 0.7fr);
-  align-items: start;
-  gap: 24px;
-  padding: 24px;
-  overflow-wrap: anywhere;
+  min-width: 130px;
 }
 
-.invoice + .invoice {
-  border-top: 1px solid #e1e6d9;
+.invoice a {
+  font-weight: 650;
 }
 
-.invoice:focus-within {
-  background: #f4f6ef;
-}
-
-.identity {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 8px;
-}
-
-.invoiceNumber {
-  margin: 0;
-  font-size: 17px;
-  font-weight: 600;
-  line-height: 1.5;
-}
-
-.invoiceLink {
-  color: #263c2d;
-  text-underline-offset: 3px;
-}
-
-.status {
-  display: inline-flex;
-  align-items: center;
-  padding: 3px 8px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.draft {
-  color: #5c5547;
-  background: #eee9de;
-}
-
-.issued {
-  color: #31583b;
-  background: #e4eee2;
-}
-
-.voided {
-  color: #7a3d3d;
-  background: #f2e3e3;
-}
-
-.context,
-.summary {
-  display: grid;
-  gap: 14px;
-  font-size: 14px;
-  line-height: 1.5;
-}
-
-.context > div,
-.summary > div {
-  display: grid;
-  gap: 3px;
-}
-
-.label {
-  color: #65745f;
-  font-size: 12px;
-}
-
-.context a {
-  color: inherit;
-  text-decoration-color: #b0bba8;
-  text-underline-offset: 3px;
-}
-
-.context a:hover {
-  text-decoration-color: currentColor;
-}
-
-.total {
-  color: #263c2d;
-  font-size: 16px;
-  font-variant-numeric: tabular-nums;
-}
-
-@container (max-width: 700px) {
-  .invoice {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 18px;
-    padding: 20px;
-  }
-
-  .context {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .summary {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@container (max-width: 420px) {
-  .context,
-  .summary {
-    grid-template-columns: minmax(0, 1fr);
-  }
+.customer {
+  min-width: 160px;
 }
 
 .jobs {
+  min-width: 180px;
+  max-width: 300px;
+}
+
+.jobs ul {
   display: grid;
-  gap: 6px;
+  gap: 4px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.jobs li {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  flex-wrap: wrap;
+.jobs a {
+  font-size: 13px;
 }
 
-.jobDate {
-  color: #65745f;
-  font-size: 12px;
+.date {
   white-space: nowrap;
+}
+
+.missing {
+  color: var(--text-muted);
 }

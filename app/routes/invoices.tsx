@@ -1,10 +1,10 @@
-import type { Route } from "./+types/invoices";
 import { PermissionDeniedError } from "../server/auth/authorization/errors/permission-denied-error";
+import { can } from "../server/auth/authorization/policies/can";
 import { currentUserContext } from "../server/auth/context/current-user-context";
 import { runtimeContext } from "../server/auth/context/runtime-context";
 import { listInvoices } from "../server/features/invoices/queries/list-invoices.server";
 import InvoicesPage from "../ui/features/invoices/pages/invoices-page/invoices-page";
-import { can } from "../server/auth/authorization/policies/can";
+import type { Route } from "./+types/invoices";
 
 export async function loader({ context }: Route.LoaderArgs) {
   try {
@@ -16,7 +16,9 @@ export async function loader({ context }: Route.LoaderArgs) {
     };
   } catch (error) {
     if (error instanceof PermissionDeniedError) {
-      throw new Response("Forbidden", { status: 403 });
+      throw new Response("Forbidden", {
+        status: 403,
+      });
     }
 
     throw error;
