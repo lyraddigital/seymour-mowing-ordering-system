@@ -5,12 +5,12 @@ import { beforeEach, expect, it } from "vitest";
 import { PermissionDeniedError } from "../../../../../../app/server/auth/authorization/errors/permission-denied-error";
 import { createDb } from "../../../../../../app/server/db/client/create-db.server";
 import { payments } from "../../../../../../app/server/db/schema/payments";
+import { createDraftInvoice } from "../../../../../../app/server/features/invoices/services/create-draft-invoice.server";
+import { issueInvoice } from "../../../../../../app/server/features/invoices/services/issue-invoice.server";
+import { voidInvoice } from "../../../../../../app/server/features/invoices/services/void-invoice.server";
 import { listPayments } from "../../../../../../app/server/features/payments/queries/list-payments.server";
 import { recordPayment } from "../../../../../../app/server/features/payments/services/record-payment.server";
 import { voidPayment } from "../../../../../../app/server/features/payments/services/void-payment.server";
-import { voidInvoice } from "../../../../../../app/server/features/invoices/services/void-invoice.server";
-import { createDraftInvoice } from "../../../../../../app/server/features/invoices/services/create-draft-invoice.server";
-import { issueInvoice } from "../../../../../../app/server/features/invoices/services/issue-invoice.server";
 import { issuedInvoiceFixture } from "../../../../../support/fixtures/issued-invoice";
 
 let fixture: Awaited<ReturnType<typeof issuedInvoiceFixture>>;
@@ -20,7 +20,7 @@ beforeEach(async () => {
 });
 
 it.each(["admin", "operator"] as const)(
-  "returns active payments with amount, invoice and customer context for %s",
+  "returns active payments with bank date, invoice and customer context for %s",
   async (role) => {
     const { id } = await recordPayment(
       env.DB,
@@ -28,8 +28,10 @@ it.each(["admin", "operator"] as const)(
       fixture.invoiceId,
       {
         amountCents: 1234,
+        paymentDate: "2026-09-24",
       },
     );
+
     expect(await listPayments(env.DB, { ...fixture.admin, role })).toEqual([
       {
         id,
@@ -38,7 +40,7 @@ it.each(["admin", "operator"] as const)(
         customerId: "customer",
         customerName: "John Smith",
         amountCents: 1234,
-        receivedAt: expect.any(Number),
+        paymentDate: "2026-09-24",
         voidedAt: null,
       },
     ]);
@@ -48,9 +50,11 @@ it.each(["admin", "operator"] as const)(
 it("retains both active and voided payments after their invoice is voided", async () => {
   const active = await recordPayment(env.DB, fixture.admin, fixture.invoiceId, {
     amountCents: 1000,
+    paymentDate: "2026-09-23",
   });
   const voided = await recordPayment(env.DB, fixture.admin, fixture.invoiceId, {
     amountCents: 2000,
+    paymentDate: "2026-09-24",
   });
   await voidPayment(env.DB, fixture.admin, fixture.invoiceId, voided.id);
   await voidInvoice(env.DB, fixture.admin, fixture.invoiceId);
@@ -62,11 +66,13 @@ it("retains both active and voided payments after their invoice is voided", asyn
       expect.objectContaining({
         id: active.id,
         amountCents: 1000,
+        paymentDate: "2026-09-23",
         voidedAt: null,
       }),
       expect.objectContaining({
         id: voided.id,
         amountCents: 2000,
+        paymentDate: "2026-09-24",
         voidedAt: expect.any(Number),
       }),
     ]),
@@ -76,13 +82,14 @@ it("retains both active and voided payments after their invoice is voided", asyn
   ).toBe(true);
 });
 
-it("orders across invoices by received time descending, then id descending", async () => {
+it("orders across invoices by payment date, creation time and id descending", async () => {
   const second = await createDraftInvoice(env.DB, fixture.admin, {
     jobIds: [fixture.otherJobId],
   });
   await issueInvoice(env.DB, fixture.admin, second.id, {
     dueDate: "2026-10-01",
   });
+
   await createDb(env.DB)
     .insert(payments)
     .values([
@@ -90,24 +97,25 @@ it("orders across invoices by received time descending, then id descending", asy
         id: "z-old",
         invoiceId: fixture.invoiceId,
         amountCents: 100,
-        receivedAt: 100,
+        paymentDate: "2026-09-20",
         createdAt: 900,
       },
       {
         id: "a-new",
         invoiceId: second.id,
         amountCents: 200,
-        receivedAt: 200,
-        createdAt: 200,
+        paymentDate: "2026-09-24",
+        createdAt: 100,
       },
       {
         id: "b-new",
         invoiceId: fixture.invoiceId,
         amountCents: 300,
-        receivedAt: 200,
-        createdAt: 100,
+        paymentDate: "2026-09-24",
+        createdAt: 200,
       },
     ]);
+
   const result = await listPayments(env.DB, fixture.admin);
   expect(result.map((payment) => payment.id)).toEqual([
     "b-new",
@@ -130,19 +138,23 @@ it("requires payment read permission", async () => {
   ).rejects.toBeInstanceOf(PermissionDeniedError);
 });
 
-it("keeps the original received time when a payment is voided", async () => {
+it("keeps the original payment date when a payment is voided", async () => {
   const { id } = await recordPayment(env.DB, fixture.admin, fixture.invoiceId, {
     amountCents: 100,
+    paymentDate: "2026-09-20",
   });
+
   await createDb(env.DB)
     .update(payments)
-    .set({ receivedAt: 100 })
+    .set({ createdAt: 100 })
     .where(eq(payments.id, id));
+
   await voidPayment(env.DB, fixture.admin, fixture.invoiceId, id);
+
   expect(await listPayments(env.DB, fixture.admin)).toEqual([
     expect.objectContaining({
       id,
-      receivedAt: 100,
+      paymentDate: "2026-09-20",
       voidedAt: expect.any(Number),
     }),
   ]);

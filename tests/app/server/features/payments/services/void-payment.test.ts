@@ -21,6 +21,7 @@ beforeEach(async () => {
 it("voids once, preserves the original record and restores the balance", async () => {
   const { id } = await recordPayment(env.DB, fixture.admin, fixture.invoiceId, {
     amountCents: 2500,
+    paymentDate: "2026-09-24",
   });
   const [before] = await createDb(env.DB).select().from(payments);
   await voidPayment(env.DB, fixture.admin, fixture.invoiceId, id);
@@ -37,12 +38,13 @@ it("voids once, preserves the original record and restores the balance", async (
 it("preserves active and voided payments through invoice void, then allows explicit payment void", async () => {
   const active = await recordPayment(env.DB, fixture.admin, fixture.invoiceId, {
     amountCents: 2500,
+    paymentDate: "2026-09-24",
   });
   const inactive = await recordPayment(
     env.DB,
     fixture.admin,
     fixture.invoiceId,
-    { amountCents: 1000 },
+    { amountCents: 1000, paymentDate: "2026-09-24" },
   );
   await voidPayment(env.DB, fixture.admin, fixture.invoiceId, inactive.id);
   const before = await createDb(env.DB).select().from(payments);
@@ -62,7 +64,10 @@ it("preserves active and voided payments through invoice void, then allows expli
     true,
   );
   await expect(
-    recordPayment(env.DB, fixture.admin, fixture.invoiceId, { amountCents: 1 }),
+    recordPayment(env.DB, fixture.admin, fixture.invoiceId, {
+      amountCents: 1,
+      paymentDate: "2026-09-24",
+    }),
   ).rejects.toThrow("issued invoices");
   await voidPayment(env.DB, fixture.admin, fixture.invoiceId, active.id);
   const after = await getInvoiceById(env.DB, fixture.admin, fixture.invoiceId);
@@ -77,7 +82,7 @@ it("rejects a payment through a different invoice", async () => {
     env.DB,
     fixture.admin,
     fixture.invoiceId,
-    { amountCents: 100 },
+    { amountCents: 100, paymentDate: "2026-09-24" },
   );
   const { id } = await createDraftInvoice(env.DB, fixture.admin, {
     jobIds: [fixture.otherJobId],
@@ -102,6 +107,7 @@ it("rejects a missing invoice", async () => {
 it("requires management permission", async () => {
   const { id } = await recordPayment(env.DB, fixture.admin, fixture.invoiceId, {
     amountCents: 100,
+    paymentDate: "2026-09-24",
   });
   await expect(
     voidPayment(
@@ -115,6 +121,7 @@ it("requires management permission", async () => {
 it("only one concurrent void succeeds", async () => {
   const { id } = await recordPayment(env.DB, fixture.admin, fixture.invoiceId, {
     amountCents: 100,
+    paymentDate: "2026-09-24",
   });
   const results = await Promise.allSettled([
     voidPayment(env.DB, fixture.admin, fixture.invoiceId, id),

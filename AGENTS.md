@@ -660,7 +660,7 @@ Do not change authentication behaviour.
 Dashboard values are derived. Do not add stored Dashboard totals.
 
 - Outstanding balance derives from remaining balances on payable issued Invoices.
-- Payments received this month sums active/non-voided Payments received in the current calendar month.
+- Payments received this month sums active/non-voided Payments whose `paymentDate` falls in the current Melbourne calendar month.
 - Overdue balance and Invoices overdue require an authoritative Invoice due-date rule.
 - Recent Payments must follow existing Payment history semantics.
 - Today's Jobs must use the existing Job lifecycle/status source of truth.
@@ -1702,12 +1702,14 @@ For the current Payment slice, keep the model deliberately small. Conceptually a
 id
 invoiceId
 amountCents
-receivedAt
+paymentDate
 voidedAt
 createdAt
 ```
 
-Do not add payment methods, transaction references, notes, allocations across multiple Invoices, refunds, or external payment-provider integration unless a later task explicitly requires them.
+For v1, Payments represent bank transfers. Do not add a payment-method field yet.
+
+Do not add transaction references, notes, allocations across multiple Invoices, refunds, or external payment-provider integration unless a later task explicitly requires them.
 
 Money must be stored as integer cents.
 
@@ -1721,7 +1723,11 @@ Do not allow new Payments on draft or voided Invoices.
 
 The server must enforce Invoice status; hiding controls in the UI is insufficient.
 
-The current Payment received timestamp is assigned server-side when the Payment is recorded. Do not trust a browser-supplied accounting timestamp unless a later product decision adds editable payment dates.
+`paymentDate` is the calendar date the payment appears as received in the bank account. It is user-entered, stored as `YYYY-MM-DD`, and is the authoritative date for bank reconciliation and financial reporting.
+
+`createdAt` is assigned server-side when the Payment is recorded in Seymour and remains audit metadata.
+
+Do not allow a future `paymentDate`.
 
 A Payment may be voided only once.
 
@@ -1730,7 +1736,7 @@ Voiding a Payment preserves:
 - its id
 - Invoice relationship
 - original amount
-- original received timestamp
+- original payment date
 - original creation information
 
 Voiding populates `voidedAt`; it does not rewrite the original Payment amount.

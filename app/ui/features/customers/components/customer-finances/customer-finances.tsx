@@ -12,12 +12,11 @@ const date = new Intl.DateTimeFormat("en-AU", {
   month: "long",
   year: "numeric",
 });
-const dateTime = new Intl.DateTimeFormat("en-AU", {
+const paymentDate = new Intl.DateTimeFormat("en-AU", {
   day: "numeric",
   month: "long",
   year: "numeric",
-  hour: "numeric",
-  minute: "2-digit",
+  timeZone: "UTC",
 });
 const invoiceStatus = { draft: "Draft", issued: "Issued", voided: "Voided" };
 interface CustomerFinancesProps {
@@ -197,7 +196,7 @@ export default function CustomerFinances({ history }: CustomerFinancesProps) {
                     Amount
                   </th>
                   <th scope="col">Invoice</th>
-                  <th scope="col">Received</th>
+                  <th scope="col">Payment date</th>
                   <th scope="col">Status</th>
                   <th scope="col">Details</th>
                 </tr>
@@ -216,10 +215,10 @@ export default function CustomerFinances({ history }: CustomerFinancesProps) {
                       </Link>
                     </td>
                     <td className={styles.date}>
-                      <time
-                        dateTime={new Date(payment.receivedAt).toISOString()}
-                      >
-                        {dateTime.format(new Date(payment.receivedAt))}
+                      <time dateTime={payment.paymentDate}>
+                        {paymentDate.format(
+                          new Date(`${payment.paymentDate}T00:00:00Z`),
+                        )}
                       </time>
                     </td>
                     <td>

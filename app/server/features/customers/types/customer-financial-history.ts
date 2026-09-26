@@ -17,7 +17,7 @@ export interface CustomerFinancialHistory {
     | "invoiceId"
     | "invoiceNumber"
     | "amountCents"
-    | "receivedAt"
+    | "paymentDate"
     | "voidedAt"
   >[];
 }

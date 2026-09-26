@@ -1,6 +1,8 @@
+import type { RecordPaymentFieldErrors } from "../types/record-payment-input";
+
 export class PaymentValidationError extends Error {
-  constructor() {
-    super("Enter a valid payment amount greater than zero.");
+  constructor(public readonly fieldErrors: RecordPaymentFieldErrors) {
+    super("Check the payment details.");
     this.name = "PaymentValidationError";
   }
 }

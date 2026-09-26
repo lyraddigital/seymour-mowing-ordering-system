@@ -14,7 +14,7 @@ const dateFormatter = new Intl.DateTimeFormat("en-AU", {
   day: "numeric",
   month: "long",
   year: "numeric",
-  timeZone: "Australia/Melbourne",
+  timeZone: "UTC",
 });
 
 interface InvoicePaymentsProps {
@@ -74,7 +74,7 @@ export default function InvoicePayments({
           <table className={ui.table}>
             <thead>
               <tr>
-                <th scope="col">Received</th>
+                <th scope="col">Payment date</th>
                 <th scope="col">Status</th>
                 <th scope="col" className={ui.numeric}>
                   Amount
@@ -92,8 +92,10 @@ export default function InvoicePayments({
               {payments.map((payment) => (
                 <tr key={payment.id}>
                   <td>
-                    <time dateTime={new Date(payment.receivedAt).toISOString()}>
-                      {dateFormatter.format(new Date(payment.receivedAt))}
+                    <time dateTime={payment.paymentDate}>
+                      {dateFormatter.format(
+                        new Date(`${payment.paymentDate}T00:00:00Z`),
+                      )}
                     </time>
                   </td>
 

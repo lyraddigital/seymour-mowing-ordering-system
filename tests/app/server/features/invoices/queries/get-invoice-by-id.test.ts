@@ -199,9 +199,18 @@ it("derives totals without multiplying item/payment rows and keeps ordered histo
   await issueInvoice(env.DB, admin, id, {
     dueDate: "2026-10-01",
   });
-  const first = await recordPayment(env.DB, admin, id, { amountCents: 1000 });
-  await recordPayment(env.DB, admin, id, { amountCents: 2000 });
-  await recordPayment(env.DB, admin, id, { amountCents: 3000 });
+  const first = await recordPayment(env.DB, admin, id, {
+    amountCents: 1000,
+    paymentDate: "2026-09-24",
+  });
+  await recordPayment(env.DB, admin, id, {
+    amountCents: 2000,
+    paymentDate: "2026-09-24",
+  });
+  await recordPayment(env.DB, admin, id, {
+    amountCents: 3000,
+    paymentDate: "2026-09-24",
+  });
   await voidPayment(env.DB, admin, id, first.id);
   let result = await getInvoiceById(env.DB, admin, id);
   expect(result!.invoice).toMatchObject({
@@ -211,7 +220,10 @@ it("derives totals without multiplying item/payment rows and keeps ordered histo
   });
   expect(result!.payments).toHaveLength(3);
   const sorted = [...result!.payments].sort(
-    (a, b) => a.receivedAt - b.receivedAt || a.id.localeCompare(b.id),
+    (a, b) =>
+      a.paymentDate.localeCompare(b.paymentDate) ||
+      a.createdAt - b.createdAt ||
+      a.id.localeCompare(b.id),
   );
   expect(result!.payments).toEqual(sorted);
   const history = result!.payments;

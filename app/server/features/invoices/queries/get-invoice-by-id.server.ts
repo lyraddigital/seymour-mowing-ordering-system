@@ -83,7 +83,11 @@ export async function getInvoiceById(
       .select()
       .from(payments)
       .where(eq(payments.invoiceId, invoiceId))
-      .orderBy(asc(payments.receivedAt), asc(payments.id)),
+      .orderBy(
+        asc(payments.paymentDate),
+        asc(payments.createdAt),
+        asc(payments.id),
+      ),
   ]);
 
   const paidCents = paymentHistory.reduce(

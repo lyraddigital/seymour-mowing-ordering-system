@@ -22,7 +22,7 @@ export async function listPayments(
       id: payments.id,
       invoiceId: payments.invoiceId,
       amountCents: payments.amountCents,
-      receivedAt: payments.receivedAt,
+      paymentDate: payments.paymentDate,
       voidedAt: payments.voidedAt,
       invoiceNumber: invoices.invoiceNumber,
       customerId: customers.id,
@@ -31,5 +31,9 @@ export async function listPayments(
     .from(payments)
     .innerJoin(invoices, eq(invoices.id, payments.invoiceId))
     .innerJoin(customers, eq(customers.id, invoices.customerId))
-    .orderBy(desc(payments.receivedAt), desc(payments.id));
+    .orderBy(
+      desc(payments.paymentDate),
+      desc(payments.createdAt),
+      desc(payments.id),
+    );
 }

@@ -13,9 +13,7 @@ const dateFormatter = new Intl.DateTimeFormat("en-AU", {
   day: "numeric",
   month: "short",
   year: "numeric",
-  hour: "numeric",
-  minute: "2-digit",
-  timeZone: "Australia/Melbourne",
+  timeZone: "UTC",
 });
 
 interface PaymentsPageProps {
@@ -45,7 +43,7 @@ export default function PaymentsPage({ payments }: PaymentsPageProps) {
           <table className={ui.table} aria-label="Payments">
             <thead>
               <tr>
-                <th scope="col">Received</th>
+                <th scope="col">Payment date</th>
                 <th scope="col">Customer</th>
                 <th scope="col">Invoice</th>
                 <th scope="col">Status</th>
@@ -60,8 +58,10 @@ export default function PaymentsPage({ payments }: PaymentsPageProps) {
               {payments.map((payment) => (
                 <tr key={payment.id}>
                   <td className={styles.received}>
-                    <time dateTime={new Date(payment.receivedAt).toISOString()}>
-                      {dateFormatter.format(new Date(payment.receivedAt))}
+                    <time dateTime={payment.paymentDate}>
+                      {dateFormatter.format(
+                        new Date(`${payment.paymentDate}T00:00:00Z`),
+                      )}
                     </time>
                   </td>
 

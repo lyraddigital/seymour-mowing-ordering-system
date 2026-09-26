@@ -1,6 +1,7 @@
 import { Form, Link, useNavigation } from "react-router";
 
 import type { InvoiceDetailResult } from "../../../../../server/features/invoices/types/invoice-detail-result";
+import type { RecordPaymentFieldErrors } from "../../../../../server/features/payments/types/record-payment-input";
 import ui from "../../../../styles/product.module.css";
 import styles from "./record-payment-page.module.css";
 
@@ -11,16 +12,19 @@ const currencyFormatter = new Intl.NumberFormat("en-AU", {
 
 interface RecordPaymentPageProps {
   invoice: InvoiceDetailResult["invoice"];
+  defaultPaymentDate: string;
   values?: {
+    paymentDate: string;
     amount: string;
   };
-  errorMessage?: string;
+  fieldErrors?: RecordPaymentFieldErrors;
 }
 
 export default function RecordPaymentPage({
   invoice,
+  defaultPaymentDate,
   values,
-  errorMessage,
+  fieldErrors,
 }: RecordPaymentPageProps) {
   const saving = useNavigation().state !== "idle";
 
@@ -46,7 +50,7 @@ export default function RecordPaymentPage({
           <h1 className="page-title">Record payment</h1>
 
           <p className={ui.intro}>
-            Record a payment received for {invoice.invoiceNumber} from{" "}
+            Record a bank transfer received for {invoice.invoiceNumber} from{" "}
             {invoice.customerName}.
           </p>
         </div>
@@ -62,17 +66,52 @@ export default function RecordPaymentPage({
               <h2 id="payment-details-heading">Payment details</h2>
 
               <p>
-                Enter the amount received. The payment time is recorded
-                automatically when you submit this form.
+                Enter the bank payment date and amount received. Seymour
+                separately records when this payment entry was created.
               </p>
             </header>
+
+            <div className={styles.field}>
+              <label htmlFor="paymentDate">Payment date</label>
+
+              <input
+                className={styles.dateInput}
+                id="paymentDate"
+                name="paymentDate"
+                type="date"
+                required
+                max={defaultPaymentDate}
+                defaultValue={values?.paymentDate ?? defaultPaymentDate}
+                aria-invalid={!!fieldErrors?.paymentDate}
+                aria-describedby={
+                  fieldErrors?.paymentDate
+                    ? "paymentDate-error"
+                    : "paymentDate-hint"
+                }
+              />
+
+              {fieldErrors?.paymentDate ? (
+                <p
+                  className={styles.fieldError}
+                  id="paymentDate-error"
+                  role="alert"
+                >
+                  {fieldErrors.paymentDate}
+                </p>
+              ) : (
+                <p className={styles.fieldHint} id="paymentDate-hint">
+                  Use the date the payment appears as received in the bank
+                  account.
+                </p>
+              )}
+            </div>
 
             <div className={styles.field}>
               <label htmlFor="amount">Payment amount</label>
 
               <div
                 className={`${styles.moneyField} ${
-                  errorMessage ? styles.moneyFieldError : ""
+                  fieldErrors?.amount ? styles.moneyFieldError : ""
                 }`}
               >
                 <span aria-hidden="true">$</span>
@@ -86,16 +125,16 @@ export default function RecordPaymentPage({
                   placeholder="0.00"
                   autoComplete="off"
                   defaultValue={values?.amount ?? ""}
-                  aria-invalid={!!errorMessage}
+                  aria-invalid={!!fieldErrors?.amount}
                   aria-describedby={
-                    errorMessage ? "amount-error" : "amount-hint"
+                    fieldErrors?.amount ? "amount-error" : "amount-hint"
                   }
                 />
               </div>
 
-              {errorMessage ? (
+              {fieldErrors?.amount ? (
                 <p className={styles.fieldError} id="amount-error" role="alert">
-                  {errorMessage}
+                  {fieldErrors.amount}
                 </p>
               ) : (
                 <p className={styles.fieldHint} id="amount-hint">

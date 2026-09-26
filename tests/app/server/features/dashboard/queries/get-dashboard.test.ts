@@ -32,21 +32,21 @@ it.each(["admin", "operator"] as const)(
         id: "a",
         invoiceId: fixture.invoiceId,
         amountCents: 1000,
-        receivedAt: now.getTime(),
+        paymentDate: "2026-09-22",
         createdAt: 1,
       },
       {
         id: "b",
         invoiceId: fixture.invoiceId,
         amountCents: 2000,
-        receivedAt: now.getTime(),
+        paymentDate: "2026-09-22",
         createdAt: 1,
       },
       {
         id: "c",
         invoiceId: fixture.invoiceId,
         amountCents: 500,
-        receivedAt: now.getTime(),
+        paymentDate: "2026-09-22",
         createdAt: 1,
         voidedAt: 2,
       },
@@ -96,7 +96,7 @@ it("derives overdue balance, count, and attention rows", async () => {
     id: "partial",
     invoiceId: fixture.invoiceId,
     amountCents: 3000,
-    receivedAt: now.getTime(),
+    paymentDate: "2026-09-22",
     createdAt: 1,
   });
 
@@ -180,7 +180,7 @@ it("excludes paid and voided invoices from overdue and outstanding totals while 
     id: "paid",
     invoiceId: fixture.invoiceId,
     amountCents: 10000,
-    receivedAt: now.getTime(),
+    paymentDate: "2026-09-22",
     createdAt: 1,
   });
 
@@ -242,25 +242,31 @@ it("returns genuine financial, overdue, and job zeros with empty rows", async ()
 it.each([
   [
     "2026-09-30T14:30:00Z",
-    "2026-09-30T14:00:00Z",
-    "2026-10-31T13:00:00Z",
+    "2026-09-30",
+    "2026-10-01",
+    "2026-10-31",
+    "2026-11-01",
     "2026-10-01",
   ],
   [
     "2026-04-15T00:00:00Z",
-    "2026-03-31T13:00:00Z",
-    "2026-04-30T14:00:00Z",
+    "2026-03-31",
+    "2026-04-01",
+    "2026-04-30",
+    "2026-05-01",
     "2026-04-15",
   ],
   [
     "2026-12-31T13:30:00Z",
-    "2026-12-31T13:00:00Z",
-    "2027-01-31T13:00:00Z",
+    "2026-12-31",
+    "2027-01-01",
+    "2027-01-31",
+    "2027-02-01",
     "2027-01-01",
   ],
 ])(
-  "uses Melbourne calendar boundaries at %s",
-  async (instant, start, end, today) => {
+  "uses Melbourne calendar month boundaries at %s",
+  async (instant, beforeDate, startDate, lastDate, nextDate, today) => {
     await createDb(env.DB)
       .insert(payments)
       .values([
@@ -268,28 +274,28 @@ it.each([
           id: "before",
           invoiceId: fixture.invoiceId,
           amountCents: 1,
-          receivedAt: Date.parse(start) - 1,
+          paymentDate: beforeDate,
           createdAt: 1,
         },
         {
           id: "start",
           invoiceId: fixture.invoiceId,
           amountCents: 10,
-          receivedAt: Date.parse(start),
+          paymentDate: startDate,
           createdAt: 1,
         },
         {
           id: "last",
           invoiceId: fixture.invoiceId,
           amountCents: 100,
-          receivedAt: Date.parse(end) - 1,
+          paymentDate: lastDate,
           createdAt: 1,
         },
         {
           id: "next",
           invoiceId: fixture.invoiceId,
           amountCents: 1000,
-          receivedAt: Date.parse(end),
+          paymentDate: nextDate,
           createdAt: 1,
         },
       ]);
@@ -365,8 +371,8 @@ it("limits recent payment history to five with deterministic ordering", async ()
         id: `p${index}`,
         invoiceId: fixture.invoiceId,
         amountCents: 100,
-        receivedAt: now.getTime() + index,
-        createdAt: 1,
+        paymentDate: "2026-09-22",
+        createdAt: index,
       })),
     );
 

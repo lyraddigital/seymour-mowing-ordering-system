@@ -6,6 +6,7 @@ import {
   sqliteTable,
   text,
 } from "drizzle-orm/sqlite-core";
+
 import { invoices } from "./invoices";
 
 export const payments = sqliteTable(
@@ -16,7 +17,7 @@ export const payments = sqliteTable(
       .notNull()
       .references(() => invoices.id),
     amountCents: integer("amount_cents").notNull(),
-    receivedAt: integer("received_at").notNull(),
+    paymentDate: text("payment_date").notNull(),
     voidedAt: integer("voided_at"),
     createdAt: integer("created_at").notNull(),
   },
@@ -27,7 +28,13 @@ export const payments = sqliteTable(
     ),
     index("payments_invoice_id_idx").on(
       table.invoiceId,
-      table.receivedAt,
+      table.paymentDate,
+      table.createdAt,
+      table.id,
+    ),
+    index("payments_payment_date_idx").on(
+      table.paymentDate,
+      table.createdAt,
       table.id,
     ),
   ],

@@ -32,11 +32,13 @@
 }
 
 .formSection {
+  display: grid;
+  gap: 22px;
   padding: 28px;
 }
 
 .sectionHeader {
-  margin-bottom: 22px;
+  margin-bottom: 2px;
 }
 
 .sectionHeader h2 {
@@ -62,6 +64,34 @@
   margin-bottom: 7px;
   font-size: 14px;
   font-weight: 600;
+}
+
+.dateInput {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid #adb9a5;
+  border-radius: 6px;
+  background: #fff;
+  color: var(--text);
+  font: inherit;
+  font-size: 16px;
+}
+
+.dateInput:hover {
+  border-color: #65745f;
+}
+
+.dateInput:focus-visible {
+  outline: 3px solid #62793d;
+  outline-offset: 2px;
+}
+
+.dateInput[aria-invalid="true"] {
+  border: 2px solid var(--danger);
+  background: #fff9f7;
 }
 
 .moneyField {

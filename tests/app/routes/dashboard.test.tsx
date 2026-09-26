@@ -82,7 +82,7 @@ it("renders the populated dashboard", async () => {
     id: "dashboard-payment",
     invoiceId: fixture.invoiceId,
     amountCents: 3000,
-    receivedAt: Date.now(),
+    paymentDate: "2026-09-22",
     createdAt: Date.now(),
   });
 

@@ -33,7 +33,7 @@ it.each(["issued", "voided"])(
       env.DB,
       fixture.admin,
       fixture.invoiceId,
-      { amountCents: 1000 },
+      { amountCents: 1000, paymentDate: "2026-09-24" },
     );
     if (status === "voided")
       await voidInvoice(env.DB, fixture.admin, fixture.invoiceId);
@@ -52,7 +52,7 @@ it("returns 404 for nested ownership mismatch", async () => {
     env.DB,
     fixture.admin,
     fixture.invoiceId,
-    { amountCents: 1000 },
+    { amountCents: 1000, paymentDate: "2026-09-24" },
   );
   const { id } = await createDraftInvoice(env.DB, fixture.admin, {
     jobIds: [fixture.otherJobId],

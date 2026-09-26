@@ -444,6 +444,7 @@ it("shows financial metrics, payment history and controls through payment lifecy
 
   const first = await recordPayment(env.DB, admin, invoiceId, {
     amountCents: 2500,
+    paymentDate: "2026-09-24",
   });
 
   let result = await loader(loaderArgs(invoiceId));
@@ -464,6 +465,7 @@ it("shows financial metrics, payment history and controls through payment lifecy
 
   const second = await recordPayment(env.DB, admin, invoiceId, {
     amountCents: 7500,
+    paymentDate: "2026-09-24",
   });
 
   result = await loader(loaderArgs(invoiceId));
@@ -526,7 +528,7 @@ it("shows financial metrics, payment history and controls through payment lifecy
 
   expect(html).toContain("$25.00");
   expect(html).toContain("$75.00");
-  expect(html).toContain("Received");
+  expect(html).toContain("Payment date");
 
   expect(html).not.toContain("Record payment");
   expect(html).not.toContain("Void payment");

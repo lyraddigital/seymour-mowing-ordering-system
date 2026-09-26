@@ -78,6 +78,13 @@
       "when": 1790159965204,
       "tag": "0010_bright_wiccan",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1790334943317,
+      "tag": "0011_freezing_stepford_cuckoos",
+      "breakpoints": true
     }
   ]
 }

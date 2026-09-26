@@ -11,8 +11,8 @@ const currency = new Intl.NumberFormat("en-AU", {
   currency: "AUD",
 });
 
-const date = new Intl.DateTimeFormat("en-AU", {
-  timeZone: "Australia/Melbourne",
+const paymentDate = new Intl.DateTimeFormat("en-AU", {
+  timeZone: "UTC",
   day: "numeric",
   month: "short",
   year: "numeric",
@@ -342,10 +342,10 @@ export default function DashboardPage({ dashboard }: DashboardPageProps) {
                   {dashboard.recentPayments.map((payment) => (
                     <tr key={payment.id}>
                       <td>
-                        <time
-                          dateTime={new Date(payment.receivedAt).toISOString()}
-                        >
-                          {date.format(payment.receivedAt)}
+                        <time dateTime={payment.paymentDate}>
+                          {paymentDate.format(
+                            new Date(`${payment.paymentDate}T00:00:00Z`),
+                          )}
                         </time>
                       </td>
 

@@ -14,22 +14,6 @@ import { payments } from "../../../db/schema/payments";
 
 const millisecondsPerDay = 24 * 60 * 60 * 1000;
 
-// Dashboard calendar dates follow the Victorian business timezone, including DST.
-function monthStart(year: number, month: number) {
-  const utc = Date.UTC(year, month, 1);
-
-  const localHour = Number(
-    new Intl.DateTimeFormat("en-AU", {
-      timeZone: "Australia/Melbourne",
-      hour: "2-digit",
-      hourCycle: "h23",
-    }).format(utc),
-  );
-
-  // Melbourne is UTC+10/+11; neither offset transition occurs at month-start.
-  return utc - localHour * 60 * 60 * 1000;
-}
-
 function daysBetweenDates(from: string, to: string) {
   const fromTime = Date.parse(`${from}T00:00:00Z`);
   const toTime = Date.parse(`${to}T00:00:00Z`);
@@ -63,7 +47,11 @@ export async function getDashboard(
 
   const today = `${part("year")}-${part("month")}-${part("day")}`;
   const year = Number(part("year"));
-  const month = Number(part("month")) - 1;
+  const month = Number(part("month"));
+  const currentMonthStart = `${year}-${String(month).padStart(2, "0")}-01`;
+  const nextMonthYear = month === 12 ? year + 1 : year;
+  const nextMonth = month === 12 ? 1 : month + 1;
+  const nextMonthStart = `${nextMonthYear}-${String(nextMonth).padStart(2, "0")}-01`;
 
   const db = createDb(binding);
 
@@ -169,8 +157,8 @@ export async function getDashboard(
       .where(
         and(
           isNull(payments.voidedAt),
-          gte(payments.receivedAt, monthStart(year, month)),
-          lt(payments.receivedAt, monthStart(year, month + 1)),
+          gte(payments.paymentDate, currentMonthStart),
+          lt(payments.paymentDate, nextMonthStart),
         ),
       ),
 
@@ -182,13 +170,17 @@ export async function getDashboard(
         customerId: sql<string>`${customers.id}`.as("customer_id"),
         customerName: customers.name,
         amountCents: payments.amountCents,
-        receivedAt: payments.receivedAt,
+        paymentDate: payments.paymentDate,
         voidedAt: payments.voidedAt,
       })
       .from(payments)
       .innerJoin(invoices, eq(invoices.id, payments.invoiceId))
       .innerJoin(customers, eq(customers.id, invoices.customerId))
-      .orderBy(desc(payments.receivedAt), desc(payments.id))
+      .orderBy(
+        desc(payments.paymentDate),
+        desc(payments.createdAt),
+        desc(payments.id),
+      )
       .limit(5),
 
     db

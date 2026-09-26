@@ -66,12 +66,13 @@ it.each(["admin", "operator"] as const)(
     context.set(currentUserContext, { ...fixture.admin, role });
     await recordPayment(env.DB, fixture.admin, fixture.invoiceId, {
       amountCents: 2500,
+      paymentDate: "2026-09-24",
     });
     const voided = await recordPayment(
       env.DB,
       fixture.admin,
       fixture.invoiceId,
-      { amountCents: 1000 },
+      { amountCents: 1000, paymentDate: "2026-09-24" },
     );
     await voidPayment(env.DB, fixture.admin, fixture.invoiceId, voided.id);
     await voidInvoice(env.DB, fixture.admin, fixture.invoiceId);
@@ -142,9 +143,8 @@ it.each(["admin", "operator"] as const)(
           day: "numeric",
           month: "long",
           year: "numeric",
-          hour: "numeric",
-          minute: "2-digit",
-        }).format(new Date(payment.receivedAt)),
+          timeZone: "UTC",
+        }).format(new Date(`${payment.paymentDate}T00:00:00Z`)),
       );
     }
     const finances = html.slice(
