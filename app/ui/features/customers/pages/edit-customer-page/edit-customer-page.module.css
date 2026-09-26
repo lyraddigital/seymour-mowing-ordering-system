@@ -1,12 +1,18 @@
 .page {
-  composes: formPage from "../../../../styles/product.module.css";
+  max-width: 900px;
+  margin: 0 auto;
 }
-.backLink {
-  composes: breadcrumb from "../../../../styles/product.module.css";
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+  color: var(--text-muted);
+  font-size: 14px;
 }
-.header {
-  composes: header from "../../../../styles/product.module.css";
-}
-.intro {
-  composes: intro from "../../../../styles/product.module.css";
+
+.breadcrumb a {
+  margin: 0;
 }
