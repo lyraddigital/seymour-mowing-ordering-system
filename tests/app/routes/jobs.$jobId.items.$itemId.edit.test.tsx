@@ -84,6 +84,7 @@ function renderPage(props: ComponentProps<typeof EditJobItemPage>) {
 async function expectResponseStatus(promise: Promise<unknown>, status: number) {
   try {
     await promise;
+
     throw new Error(`Expected Response with status ${status}`);
   } catch (error) {
     expect(error).toBeInstanceOf(Response);
@@ -136,6 +137,8 @@ it("loads the job and item", async () => {
   expect(result.job).toMatchObject({
     id: jobId,
     name: "Front & Back Lawn Mow",
+    customerId: "customer",
+    customerName: "John Smith",
   });
 
   expect(result.item).toMatchObject({
@@ -146,16 +149,19 @@ it("loads the job and item", async () => {
   });
 });
 
-it("renders the edit item form", async () => {
+it("renders the edit item workflow with job and customer context", async () => {
   const result = await loader(loaderArgs());
 
-  const html = renderPage({
-    job: result.job,
-    item: result.item,
-  });
+  const html = renderPage(result);
 
   expect(html).toContain("Edit job item");
+  expect(html).toContain("Update this work item on Front &amp; Back Lawn Mow.");
+
+  expect(html).toContain("Item details");
+
   expect(html).toContain("Front &amp; Back Lawn Mow");
+  expect(html).toContain("John Smith");
+  expect(html).toContain('href="/customers/customer"');
 
   expect(html).toContain('name="description"');
   expect(html).toContain('value="Front lawn"');
@@ -164,7 +170,8 @@ it("renders the edit item form", async () => {
   expect(html).toContain('value="45.00"');
 
   expect(html).toContain("Save changes");
-  expect(html).toContain(`/jobs/${jobId}`);
+  expect(html).toContain("Cancel");
+  expect(html).toContain(`href="/jobs/${jobId}"`);
 });
 
 it.each([
@@ -223,6 +230,9 @@ it.each(["", "abc", "1.234", "-1", "$45.00"])(
           description: "Updated work",
           amount,
         },
+        fieldErrors: {
+          amountCents: expect.any(String),
+        },
       },
     });
 
@@ -255,6 +265,9 @@ it("returns 400 for a blank description", async () => {
         description: " ",
         amount: "45.00",
       },
+      fieldErrors: {
+        description: expect.any(String),
+      },
     },
   });
 
@@ -267,7 +280,7 @@ it("returns 400 for a blank description", async () => {
   ]);
 });
 
-it("preserves submitted values on validation failure", async () => {
+it("renders validation errors while preserving submitted values", async () => {
   const result = await action(
     actionArgs(
       new URLSearchParams({
@@ -277,17 +290,25 @@ it("preserves submitted values on validation failure", async () => {
     ),
   );
 
-  expect(result).toMatchObject({
-    init: {
-      status: 400,
-    },
-    data: {
-      values: {
-        description: "Updated work",
-        amount: "invalid",
-      },
-    },
+  if (result instanceof Response) {
+    throw new Error("Expected validation data");
+  }
+
+  const loaderResult = await loader(loaderArgs());
+
+  const html = renderPage({
+    ...loaderResult,
+    values: result.data.values,
+    fieldErrors: result.data.fieldErrors,
   });
+
+  expect(html).toContain('value="Updated work"');
+  expect(html).toContain('value="invalid"');
+
+  expect(html).toContain('aria-invalid="true"');
+  expect(html).toContain('aria-describedby="amount-error"');
+  expect(html).toContain('id="amount-error"');
+  expect(html).toContain('role="alert"');
 });
 
 it.each(["scheduled", "in_progress", "completed", "cancelled"] as const)(

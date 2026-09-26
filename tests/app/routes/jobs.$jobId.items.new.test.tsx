@@ -68,6 +68,7 @@ function renderPage(props: ComponentProps<typeof AddJobItemPage>) {
 async function expectResponseStatus(promise: Promise<unknown>, status: number) {
   try {
     await promise;
+
     throw new Error(`Expected Response with status ${status}`);
   } catch (error) {
     expect(error).toBeInstanceOf(Response);
@@ -77,6 +78,7 @@ async function expectResponseStatus(promise: Promise<unknown>, status: number) {
 
 beforeEach(async () => {
   context = new RouterContextProvider();
+
   context.set(currentUserContext, user);
   context.set(runtimeContext, {
     env,
@@ -119,7 +121,7 @@ it("loads the job", async () => {
   });
 });
 
-it("renders the add item form", async () => {
+it("renders the add item workflow with job and customer context", async () => {
   const result = await loader(loaderArgs());
 
   const html = renderPage({
@@ -127,11 +129,26 @@ it("renders the add item form", async () => {
   });
 
   expect(html).toContain("Add job item");
+  expect(html).toContain("Add work or a charge to Front &amp; Back Lawn Mow.");
+
+  expect(html).toContain("Item details");
+
   expect(html).toContain("Front &amp; Back Lawn Mow");
+  expect(html).toContain("John Smith");
+  expect(html).toContain('href="/customers/customer"');
+
   expect(html).toContain('name="description"');
+  expect(html).toContain('aria-describedby="description-hint"');
+
   expect(html).toContain('name="amount"');
+  expect(html).toContain('inputMode="decimal"');
+  expect(html).toContain('aria-describedby="amount-hint"');
+
+  expect(html).toContain("Enter the charge in Australian dollars.");
+
   expect(html).toContain("Add item");
-  expect(html).toContain(`/jobs/${jobId}`);
+  expect(html).toContain("Cancel");
+  expect(html).toContain(`href="/jobs/${jobId}"`);
 });
 
 it.each([
@@ -158,9 +175,7 @@ it.each([
       `/jobs/${jobId}`,
     );
 
-    const items = await createDb(env.DB).select().from(jobItems);
-
-    expect(items).toEqual([
+    expect(await createDb(env.DB).select().from(jobItems)).toEqual([
       expect.objectContaining({
         jobId,
         description: "Front lawn",
@@ -191,6 +206,9 @@ it.each(["", "abc", "1.234", "-1", "$45.00"])(
           description: "Front lawn",
           amount,
         },
+        fieldErrors: {
+          amountCents: expect.any(String),
+        },
       },
     });
 
@@ -217,13 +235,16 @@ it("returns 400 for a blank description", async () => {
         description: " ",
         amount: "45.00",
       },
+      fieldErrors: {
+        description: expect.any(String),
+      },
     },
   });
 
   expect(await createDb(env.DB).select().from(jobItems)).toEqual([]);
 });
 
-it("preserves submitted values on validation failure", async () => {
+it("renders validation errors while preserving submitted values", async () => {
   const result = await action(
     actionArgs(
       new URLSearchParams({
@@ -233,17 +254,23 @@ it("preserves submitted values on validation failure", async () => {
     ),
   );
 
-  expect(result).toMatchObject({
-    init: {
-      status: 400,
-    },
-    data: {
-      values: {
-        description: "Front lawn",
-        amount: "invalid",
-      },
-    },
+  if (result instanceof Response) {
+    throw new Error("Expected validation data");
+  }
+
+  const html = renderPage({
+    job: (await loader(loaderArgs())).job,
+    values: result.data.values,
+    fieldErrors: result.data.fieldErrors,
   });
+
+  expect(html).toContain('value="Front lawn"');
+  expect(html).toContain('value="invalid"');
+
+  expect(html).toContain('aria-invalid="true"');
+  expect(html).toContain('aria-describedby="amount-error"');
+  expect(html).toContain('id="amount-error"');
+  expect(html).toContain('role="alert"');
 });
 
 it.each(["completed", "cancelled"] as const)(
