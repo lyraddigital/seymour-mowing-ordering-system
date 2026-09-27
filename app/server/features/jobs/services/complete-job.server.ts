@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, isNotNull, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, exists, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/sqlite-core";
 
 import { PermissionDeniedError } from "../../../auth/authorization/errors/permission-denied-error";
@@ -7,6 +7,7 @@ import type { CurrentUser } from "../../../auth/principal/types/current-user";
 import { createDb } from "../../../db/client/create-db.server";
 import { jobs } from "../../../db/schema/jobs";
 import { jobStatusHistory } from "../../../db/schema/job-status-history";
+import { JobValidationError } from "../errors/job-validation-error";
 import { JobNotFoundError } from "../errors/job-not-found-error";
 import { JobStateConflictError } from "../errors/job-state-conflict-error";
 
@@ -14,12 +15,18 @@ export async function completeJob(
   binding: Env["DB"],
   user: CurrentUser,
   jobId: string,
+  servicePriceCents: number,
 ) {
   if (!can(user, "jobs.manage")) {
     throw new PermissionDeniedError();
   }
 
+  if (!Number.isSafeInteger(servicePriceCents) || servicePriceCents < 0) {
+    throw new JobValidationError({ servicePriceCents: "Enter a valid non-negative service price." });
+  }
+
   const db = createDb(binding);
+  const historyId = crypto.randomUUID();
   const history = alias(jobStatusHistory, "latest_history");
 
   const latest = db
@@ -29,17 +36,15 @@ export async function completeJob(
     .orderBy(desc(history.createdAt), desc(history.id))
     .limit(1);
 
-  // Check the current status and service price in the same statement that
-  // appends the completed status. This prevents a competing transition from
-  // completing the same job and ensures an unpriced job cannot be completed.
-  //
-  // Advance past even a same-millisecond history row.
-  const inserted = await db
+  // D1 batch commits history and price together. Only this request's
+  // conditional history insert authorizes its price update.
+  const [inserted] = await db.batch([
+    db
     .insert(jobStatusHistory)
     .select(
       db
         .select({
-          id: sql<string>`${crypto.randomUUID()}`.as("id"),
+          id: sql<string>`${historyId}`.as("id"),
           jobId: jobStatusHistory.jobId,
           status: sql<"completed">`'completed'`.as("status"),
           createdByUserId: sql<string>`${user.id}`.as("created_by_user_id"),
@@ -54,14 +59,19 @@ export async function completeJob(
           and(
             eq(jobStatusHistory.id, latest),
             inArray(jobStatusHistory.status, ["scheduled", "in_progress"]),
-            isNotNull(jobs.servicePriceCents),
           ),
         ),
     )
-    .returning({ id: jobStatusHistory.jobId })
-    .get();
+    .returning({ id: jobStatusHistory.jobId }),
+    db.update(jobs)
+      .set({ servicePriceCents, updatedAt: Date.now() })
+      .where(and(eq(jobs.id, jobId), exists(
+        db.select({ id: jobStatusHistory.id }).from(jobStatusHistory)
+          .where(eq(jobStatusHistory.id, historyId)),
+      ))),
+  ]);
 
-  if (!inserted) {
+  if (!inserted.length) {
     const existing = await db
       .select({
         id: jobs.id,
@@ -75,16 +85,10 @@ export async function completeJob(
       throw new JobNotFoundError();
     }
 
-    if (existing.servicePriceCents === null) {
-      throw new JobStateConflictError(
-        "Set a service price before completing the job.",
-      );
-    }
-
     throw new JobStateConflictError(
       "Only scheduled or in-progress jobs can be completed.",
     );
   }
 
-  return inserted;
+  return inserted[0];
 }

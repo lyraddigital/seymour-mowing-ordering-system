@@ -1,3 +1,4 @@
+import { completeInvoiceJobs } from "../../../../../support/fixtures/complete-invoice-jobs";
 import { env } from "cloudflare:workers";
 import { eq } from "drizzle-orm";
 import { beforeEach, expect, it } from "vitest";
@@ -61,6 +62,7 @@ beforeEach(async () => {
 });
 
 it("returns invoices with customer and job context", async () => {
+  await completeInvoiceJobs(admin, [firstJobId, secondJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId, secondJobId],
   });
@@ -102,6 +104,7 @@ it("derives totals from invoice items across multiple jobs", async () => {
     amountCents: 3500,
   });
 
+  await completeInvoiceJobs(admin, [firstJobId, secondJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId, secondJobId],
   });
@@ -117,6 +120,7 @@ it("derives totals from invoice items across multiple jobs", async () => {
 });
 
 it("returns issued invoice information", async () => {
+  await completeInvoiceJobs(admin, [firstJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });
@@ -136,10 +140,12 @@ it("returns issued invoice information", async () => {
 });
 
 it("returns invoices newest first", async () => {
+  await completeInvoiceJobs(admin, [firstJobId]);
   const first = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });
 
+  await completeInvoiceJobs(admin, [secondJobId]);
   const second = await createDraftInvoice(env.DB, admin, {
     jobIds: [secondJobId],
   });

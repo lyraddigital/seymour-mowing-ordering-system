@@ -23,14 +23,6 @@ interface EditJobPageProps {
   fieldErrors?: EditJobFormFieldErrors;
 }
 
-function formatServicePrice(servicePriceCents: number | null) {
-  if (servicePriceCents === null) {
-    return "";
-  }
-
-  return (servicePriceCents / 100).toFixed(2);
-}
-
 export default function EditJobPage({
   job,
   values,
@@ -38,14 +30,10 @@ export default function EditJobPage({
 }: EditJobPageProps) {
   const saving = useNavigation().state !== "idle";
   const scheduled = job.currentStatus === "scheduled";
-  const servicePriceEditable =
-    job.currentStatus === "scheduled" || job.currentStatus === "in_progress";
-
   const formValues: EditJobFormValues = values ?? {
     name: job.name,
     description: job.description,
     scheduledDate: job.scheduledDate,
-    servicePrice: formatServicePrice(job.servicePriceCents),
   };
 
   return (
@@ -217,75 +205,6 @@ export default function EditJobPage({
                   Keep the work instructions accurate for whoever opens this job
                   later.
                 </p>
-              )}
-            </div>
-          </div>
-        </section>
-
-        <section
-          className={styles.formSection}
-          aria-labelledby="billing-heading"
-        >
-          <header className={styles.sectionHeader}>
-            <h2 id="billing-heading">Billing</h2>
-
-            <p>Set the price for the service performed as part of this job.</p>
-          </header>
-
-          <div className={styles.fields}>
-            <div>
-              <label htmlFor="servicePrice">Service price</label>
-
-              {servicePriceEditable ? (
-                <>
-                  <input
-                    id="servicePrice"
-                    name="servicePrice"
-                    type="text"
-                    inputMode="decimal"
-                    placeholder="0.00"
-                    defaultValue={formValues.servicePrice}
-                    aria-invalid={!!fieldErrors?.servicePrice}
-                    aria-describedby={
-                      fieldErrors?.servicePrice
-                        ? "servicePrice-error"
-                        : "servicePrice-hint"
-                    }
-                  />
-
-                  {fieldErrors?.servicePrice ? (
-                    <p
-                      className={styles.fieldError}
-                      id="servicePrice-error"
-                      role="alert"
-                    >
-                      {fieldErrors.servicePrice}
-                    </p>
-                  ) : (
-                    <p className={styles.fieldHint} id="servicePrice-hint">
-                      Enter the service price in dollars. Leave it blank if the
-                      price has not been set yet.
-                    </p>
-                  )}
-                </>
-              ) : (
-                <>
-                  <div className={styles.readOnlyField}>
-                    {job.servicePriceCents === null
-                      ? "Not set"
-                      : `$${formatServicePrice(job.servicePriceCents)}`}
-                  </div>
-
-                  <input
-                    type="hidden"
-                    name="servicePrice"
-                    value={formatServicePrice(job.servicePriceCents)}
-                  />
-
-                  <p className={styles.fieldHint}>
-                    The service price cannot be changed for this job.
-                  </p>
-                </>
               )}
             </div>
           </div>

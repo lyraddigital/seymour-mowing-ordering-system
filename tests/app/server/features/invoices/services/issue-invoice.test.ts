@@ -1,3 +1,4 @@
+import { completeInvoiceJobs } from "../../../../../support/fixtures/complete-invoice-jobs";
 import { env } from "cloudflare:workers";
 import { eq } from "drizzle-orm";
 import { beforeEach, expect, it } from "vitest";
@@ -71,6 +72,7 @@ async function getInvoice(invoiceId: string) {
 }
 
 it("issues a draft invoice", async () => {
+  await completeInvoiceJobs(admin, [firstJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });
@@ -95,6 +97,7 @@ it("issues a draft invoice", async () => {
 });
 
 it("issues an invoice containing multiple jobs", async () => {
+  await completeInvoiceJobs(admin, [firstJobId, secondJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId, secondJobId],
   });
@@ -125,10 +128,12 @@ it("issues an invoice containing multiple jobs", async () => {
 });
 
 it("allocates sequential invoice numbers", async () => {
+  await completeInvoiceJobs(admin, [firstJobId]);
   const first = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });
 
+  await completeInvoiceJobs(admin, [secondJobId]);
   const second = await createDraftInvoice(env.DB, admin, {
     jobIds: [secondJobId],
   });
@@ -153,6 +158,7 @@ it("allocates sequential invoice numbers", async () => {
 });
 
 it("does not assign an invoice number until issue", async () => {
+  await completeInvoiceJobs(admin, [firstJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });
@@ -176,6 +182,7 @@ it("does not assign an invoice number until issue", async () => {
 });
 
 it("stores the supplied due date when issuing", async () => {
+  await completeInvoiceJobs(admin, [firstJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });
@@ -193,6 +200,7 @@ it("stores the supplied due date when issuing", async () => {
 it.each(["", "not-a-date", "2026-02-30", "23/09/2026", "0000-01-01"])(
   "rejects invalid due date %s",
   async (dueDate) => {
+    await completeInvoiceJobs(admin, [firstJobId]);
     const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
       jobIds: [firstJobId],
     });
@@ -223,6 +231,7 @@ it("does not change invoice items when issuing", async () => {
     amountCents: 3500,
   });
 
+  await completeInvoiceJobs(admin, [firstJobId, secondJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId, secondJobId],
   });
@@ -245,6 +254,7 @@ it("does not change invoice items when issuing", async () => {
 });
 
 it("does not release jobs when issuing", async () => {
+  await completeInvoiceJobs(admin, [firstJobId, secondJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId, secondJobId],
   });
@@ -273,6 +283,7 @@ it("does not release jobs when issuing", async () => {
 });
 
 it("rejects issuing an already issued invoice", async () => {
+  await completeInvoiceJobs(admin, [firstJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });
@@ -295,6 +306,7 @@ it("rejects issuing an already issued invoice", async () => {
 });
 
 it("does not allocate another number when issue is retried", async () => {
+  await completeInvoiceJobs(admin, [firstJobId]);
   const first = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });
@@ -309,6 +321,7 @@ it("does not allocate another number when issue is retried", async () => {
     }),
   ).rejects.toBeInstanceOf(InvoiceStateConflictError);
 
+  await completeInvoiceJobs(admin, [secondJobId]);
   const second = await createDraftInvoice(env.DB, admin, {
     jobIds: [secondJobId],
   });
@@ -324,6 +337,7 @@ it("does not allocate another number when issue is retried", async () => {
 });
 
 it("rejects a voided invoice", async () => {
+  await completeInvoiceJobs(admin, [firstJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });
@@ -357,6 +371,7 @@ it("rejects a missing invoice", async () => {
 });
 
 it("requires invoice management permission", async () => {
+  await completeInvoiceJobs(admin, [firstJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });

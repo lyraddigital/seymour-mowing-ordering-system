@@ -1,3 +1,4 @@
+import { completeInvoiceJobs } from "./complete-invoice-jobs";
 import { payments } from "../../../app/server/db/schema/payments";
 import { env } from "cloudflare:workers";
 import { createDb } from "../../../app/server/db/client/create-db.server";
@@ -44,6 +45,7 @@ export async function draftInvoiceFixture() {
     description: "Mow",
     scheduledDate: "2026-09-21",
   });
+  await completeInvoiceJobs(admin, [jobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [jobId],
   });

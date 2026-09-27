@@ -1,4 +1,6 @@
-import { and, eq, isNull } from "drizzle-orm";
+import { completedJobId } from "./completed-job-id";
+import { jobs } from "../../../db/schema/jobs";
+import { and, eq, isNull, isNotNull } from "drizzle-orm";
 
 import { PermissionDeniedError } from "../../../auth/authorization/errors/permission-denied-error";
 import { can } from "../../../auth/authorization/policies/can";
@@ -25,5 +27,7 @@ export async function isJobInvoiceable(
     .where(and(eq(invoiceJobs.jobId, jobId), isNull(invoiceJobs.releasedAt)))
     .limit(1);
 
-  return !activeInvoiceJob;
+  const completed = await db.select({ id: jobs.id }).from(jobs)
+    .where(and(eq(jobs.id, jobId), isNotNull(completedJobId(jobs.id)))).get();
+  return !!completed && !activeInvoiceJob;
 }

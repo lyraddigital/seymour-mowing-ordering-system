@@ -1,3 +1,4 @@
+import { completeInvoiceJobs } from "../../support/fixtures/complete-invoice-jobs";
 import { env } from "cloudflare:workers";
 import { RouterContextProvider } from "react-router";
 import { beforeEach, expect, it } from "vitest";
@@ -76,12 +77,14 @@ beforeEach(async () => {
 });
 
 it("allows invoice creation when the job has no active invoice", async () => {
+  await completeInvoiceJobs(admin, [jobId]);
   const result = await loader(loaderArgs(jobId));
 
   expect(result.canCreateInvoice).toBe(true);
 });
 
 it("does not allow invoice creation when the job belongs to a draft invoice", async () => {
+  await completeInvoiceJobs(admin, [jobId]);
   await createDraftInvoice(env.DB, admin, {
     jobIds: [jobId],
   });
@@ -92,6 +95,7 @@ it("does not allow invoice creation when the job belongs to a draft invoice", as
 });
 
 it("does not allow invoice creation when the job belongs to an issued invoice", async () => {
+  await completeInvoiceJobs(admin, [jobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [jobId],
   });
@@ -106,6 +110,7 @@ it("does not allow invoice creation when the job belongs to an issued invoice", 
 });
 
 it("allows invoice creation again after the invoice is voided", async () => {
+  await completeInvoiceJobs(admin, [jobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [jobId],
   });

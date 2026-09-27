@@ -92,7 +92,7 @@ it.each(["admin", "operator"] as const)(
           .where(eq(jobs.id, id));
       }
 
-      await operation(env.DB, user, id);
+      await operation(env.DB, user, id, 10_000);
     }
 
     await createJob(env.DB, user, {

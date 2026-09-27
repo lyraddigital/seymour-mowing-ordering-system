@@ -1,0 +1,2507 @@
+
+> test
+> vitest run
+
+
+ RUN  v4.1.11 C:/Users/User/Documents/Code/seymour-mowing-ordering-system
+
+ ❯ tests/app/routes/jobs.$jobId.invoice.test.ts (5 tests | 4 failed) 212ms
+   × allows invoice creation when the job has no active invoice 60ms
+   × does not allow invoice creation when the job belongs to a draft invoice 39ms
+   × does not allow invoice creation when the job belongs to an issued invoice 37ms
+   × allows invoice creation again after the invoice is voided 39ms
+ ❯ tests/app/server/features/invoices/services/delete-invoice-item.test.ts (9 tests | 9 failed) 401ms
+   × updates the parent timestamp after a successful mutation 53ms
+   × rejects issued invoices without changing data 46ms
+   × rejects voided invoices without changing data 45ms
+   × requires management permission 43ms
+   × rejects a missing invoice 43ms
+   × rolls back the item write if updating the parent fails 46ms
+   × really deletes the draft item 43ms
+   × rejects another invoice's item and leaves both invoices unchanged 41ms
+   × rejects a missing item 40ms
+ ❯ tests/app/routes/customers.$customerId.test.tsx (9 tests | 9 failed) 398ms
+   × renders customer details and read-only financial histories for admin 55ms
+   × renders customer details and read-only financial histories for operator 45ms
+   × renders empty financial history and zero totals 42ms
+   × keeps financial history available for archived customers and preserves restore behaviour 44ms
+   × preserves customer access without exposing finances when invoices.read is denied 43ms
+   × preserves customer access without exposing finances when payments.read is denied 40ms
+   × preserves customer permission denial as 403 43ms
+   × preserves missing customer 404 43ms
+   × requires authenticated user context 41ms
+ ❯ tests/app/routes/jobs.$jobId.test.tsx (10 tests | 3 failed) 450ms
+   × renders the job detail hierarchy for an administrator 62ms
+   × shows the active invoice relationship instead of create invoice 41ms
+   × shows an invoice relationship to an operator but not invoice creation 38ms
+ ❯ tests/app/server/features/customers/queries/get-customer-financial-history.test.ts (14 tests | 14 failed) 626ms
+   × returns empty histories and zero totals for a customer without financial history 61ms
+   × includes drafts but excludes them from total invoiced and outstanding 42ms
+   × derives issued invoice balances with 0 cents paid 44ms
+   × derives issued invoice balances with 2500 cents paid 40ms
+   × derives issued invoice balances with 10000 cents paid 44ms
+   × keeps voided invoices in invoiced history but excludes their balance; retains active and voided payments 44ms
+   × does not multiply multi-job invoice totals by multiple payments 45ms
+   × isolates invoices, payments and all totals between customers 42ms
+   × orders invoices by creation time then id, and payments by payment date then creation time, newest first 45ms
+   × allows financial history reads for admin 42ms
+   × allows financial history reads for operator 46ms
+   × requires customers.read before reading financial data 43ms
+   × requires invoices.read before reading financial data 44ms
+   × requires payments.read before reading financial data 42ms
+ ❯ tests/app/routes/invoices.$invoiceId.test.tsx (15 tests | 13 failed) 613ms
+   × loads invoice details 56ms
+   × renders the invoice detail hierarchy 46ms
+   × shows routine actions and danger zone for a manageable draft invoice 42ms
+   × shows due date and only void lifecycle action for an issued invoice 41ms
+   × shows no lifecycle danger zone for a voided invoice 41ms
+   × allows an operator to view an invoice without management actions 42ms
+   × item controls for draft, managing=true 40ms
+   × item controls for issued, managing=true 34ms
+   × item controls for voided, managing=true 37ms
+   × item controls for draft, managing=false 38ms
+   × renders derived totals after adding, editing and deleting an item 39ms
+   × shows financial metrics, payment history and controls through payment lifecycle 46ms
+   × hides Record payment from non-managers on an issued unpaid invoice 41ms
+ ❯ tests/app/server/features/dashboard/queries/get-dashboard.test.ts (16 tests | 16 failed) 674ms
+   × derives balances without multiplying items/payments for admin 40ms
+   × derives balances without multiplying items/payments for operator 42ms
+   × derives overdue balance, count, and attention rows 39ms
+   × does not treat an invoice due today as overdue 43ms
+   × treats an unpaid invoice due before today as overdue 45ms
+   × excludes paid and voided invoices from overdue and outstanding totals while retaining active receipts 41ms
+   × returns genuine financial, overdue, and job zeros with empty rows 44ms
+   × uses Melbourne calendar month boundaries at 2026-09-30T14:30:00Z 41ms
+   × uses Melbourne calendar month boundaries at 2026-04-15T00:00:00Z 42ms
+   × uses Melbourne calendar month boundaries at 2026-12-31T13:30:00Z 45ms
+   × summarises only today's jobs from latest history, including timestamp ties and cancellation 43ms
+   × limits recent payment history to five with deterministic ordering 44ms
+   × requires customers.read before reading data 39ms
+   × requires invoices.read before reading data 38ms
+   × requires payments.read before reading data 43ms
+   × requires jobs.read before reading data 43ms
+ ❯ tests/app/server/features/invoices/services/update-draft-invoice-jobs.test.ts (16 tests | 15 failed) 742ms
+   × adds a job to a draft invoice 59ms
+   × removes a job from a draft invoice 49ms
+   × preserves invoice item snapshots for jobs that remain selected 49ms
+   × snapshots current job items when a job is newly added 47ms
+   × removes snapshots belonging to removed jobs 60ms
+   × allows a job removed from a draft to be invoiced elsewhere 48ms
+   × rejects an empty job selection 43ms
+   × rejects duplicate job ids 45ms
+   × rejects a missing job 44ms
+   × rejects a job belonging to another customer 45ms
+   × rejects a job assigned to another active invoice 46ms
+   × rejects an issued invoice 40ms
+   × rejects a voided invoice 43ms
+   × requires invoice management permission 47ms
+   × preserves manual and edited items for retained jobs, then removes them with their job 39ms
+ ❯ tests/app/server/features/invoices/services/issue-invoice.test.ts (17 tests | 16 failed) 725ms
+   × issues a draft invoice 51ms
+   × issues an invoice containing multiple jobs 51ms
+   × allocates sequential invoice numbers 44ms
+   × does not assign an invoice number until issue 41ms
+   × stores the supplied due date when issuing 39ms
+   × rejects invalid due date  41ms
+   × rejects invalid due date not-a-date 38ms
+   × rejects invalid due date 2026-02-30 42ms
+   × rejects invalid due date 23/09/2026 45ms
+   × rejects invalid due date 0000-01-01 39ms
+   × does not change invoice items when issuing 52ms
+   × does not release jobs when issuing 44ms
+   × rejects issuing an already issued invoice 37ms
+   × does not allocate another number when issue is retried 42ms
+   × rejects a voided invoice 40ms
+   × requires invoice management permission 42ms
+ ❯ tests/app/server/features/invoices/services/update-invoice-item.test.ts (18 tests | 18 failed) 763ms
+   × updates the parent timestamp after a successful mutation 48ms
+   × rejects issued invoices without changing data 46ms
+   × rejects voided invoices without changing data 43ms
+   × requires management permission 46ms
+   × rejects a missing invoice 44ms
+   × rolls back the item write if updating the parent fails 46ms
+   × edits only description and amount, preserving source job and creation time 39ms
+   × rejects another invoice's item and leaves both invoices unchanged 40ms
+   × rejects a missing item 40ms
+   × accepts zero 45ms
+   × rejects invalid cents -1 41ms
+   × rejects invalid cents 1.5 42ms
+   × rejects invalid cents NaN 39ms
+   × rejects invalid cents Infinity 40ms
+   × rejects invalid cents 9007199254740992 44ms
+   × rejects invalid description 40ms
+   × rejects invalid description 46ms
+   × rejects invalid description 32ms
+ ❯ tests/app/server/features/invoices/services/create-invoice-item.test.ts (19 tests | 19 failed) 795ms
+   × updates the parent timestamp after a successful mutation 36ms
+   × rejects issued invoices without changing data 41ms
+   × rejects voided invoices without changing data 42ms
+   × requires management permission 40ms
+   × rejects a missing invoice 46ms
+   × rolls back the item write if updating the parent fails 41ms
+   × adds a trimmed item with the correct invoice, job and integer cents 42ms
+   × rejects a missing job association without changing timestamp 43ms
+   × rejects a unselected job association without changing timestamp 39ms
+   × rejects a released job association without changing timestamp 41ms
+   × accepts zero 45ms
+   × rejects invalid cents -1 40ms
+   × rejects invalid cents 1.5 41ms
+   × rejects invalid cents NaN 49ms
+   × rejects invalid cents Infinity 43ms
+   × rejects invalid cents 9007199254740992 45ms
+   × rejects invalid description 49ms
+   × rejects invalid description 36ms
+   × rejects invalid description 33ms
+ ❯ tests/app/routes/invoices.$invoiceId.payments.new.test.tsx (19 tests | 19 failed) 786ms
+   × loads invoice context and renders payment date and amount fields 59ms
+   × records 25.50 with the bank payment date and redirects 42ms
+   × records 25.5 with the bank payment date and redirects 45ms
+   × records 100 with the bank payment date and redirects 42ms
+   × returns amount validation data for  43ms
+   × returns amount validation data for 0 41ms
+   × returns amount validation data for -1 41ms
+   × returns amount validation data for 1.234 42ms
+   × returns amount validation data for abc 44ms
+   × returns amount validation data for $5 40ms
+   × returns amount validation data for 1e2 43ms
+   × returns amount validation data for 9007199254740992 41ms
+   × returns payment date validation data 43ms
+   × returns a useful overpayment error and preserves both values 42ms
+   × rejects draft invoice loader and action 39ms
+   × rejects voided invoice loader and action 40ms
+   × rejects the form loader for a fully-paid invoice 42ms
+   × returns 403 for a non-managing user 27ms
+   × returns 404 for a missing invoice 26ms
+ ❯ tests/app/routes/invoices.$invoiceId.items.new.test.tsx (20 tests | 20 failed) 815ms
+   × redirects successful POST to invoice details 52ms
+   × returns 403 without management permission 43ms
+   × returns 404 for a missing invoice 43ms
+   × returns 409 for issued invoices 42ms
+   × returns 409 for voided invoices 39ms
+   × loads draft invoice form data 46ms
+   × returns 400 with submitted values for invalid amount  42ms
+   × returns 400 with submitted values for invalid amount abc 42ms
+   × returns 400 with submitted values for invalid amount -1 43ms
+   × returns 400 with submitted values for invalid amount 1.234 42ms
+   × returns 400 with submitted values for invalid amount $45 40ms
+   × returns 400 with submitted values for invalid amount 1e2 48ms
+   × returns 400 with submitted values for invalid amount 9007199254740992 49ms
+   × returns 400 for a blank description 44ms
+   × parses 0 into integer cents 41ms
+   × parses 45.5 into integer cents 38ms
+   × parses 45.67 into integer cents 44ms
+   × returns 400 for an unselected job 27ms
+   × renders the single-job workflow with read-only job context 27ms
+   × offers only selected jobs for a multi-job invoice 22ms
+ ❯ tests/app/routes/invoices.$invoiceId.items.$itemId.edit.test.tsx (21 tests | 21 failed) 841ms
+   × redirects successful POST to invoice details 55ms
+   × returns 403 without management permission 42ms
+   × returns 404 for a missing invoice 45ms
+   × returns 409 for issued invoices 41ms
+   × returns 409 for voided invoices 43ms
+   × returns 404 for another invoice's item 44ms
+   × returns 404 for a missing item 41ms
+   × loads draft form data 41ms
+   × returns 400 with submitted values for invalid amount  41ms
+   × returns 400 with submitted values for invalid amount abc 41ms
+   × returns 400 with submitted values for invalid amount -1 40ms
+   × returns 400 with submitted values for invalid amount 1.234 46ms
+   × returns 400 with submitted values for invalid amount $45 42ms
+   × returns 400 with submitted values for invalid amount 1e2 42ms
+   × returns 400 with submitted values for invalid amount 9007199254740992 42ms
+   × returns 400 for a blank description 41ms
+   × parses 0 into integer cents 45ms
+   × parses 45.5 into integer cents 31ms
+   × parses 45.67 into integer cents 26ms
+   × ignores a submitted replacement job 27ms
+   × renders linked job as read-only context with validation feedback 24ms
+ ❯ tests/app/server/features/payments/services/record-payment.test.ts (23 tests | 23 failed) 875ms
+   × records the bank payment date and server creation timestamp 58ms
+   × accepts multiple payments including an exact final balance 40ms
+   × rejects invalid amount 0 46ms
+   × rejects invalid amount -1 43ms
+   × rejects invalid amount 1.5 42ms
+   × rejects invalid amount NaN 42ms
+   × rejects invalid amount Infinity 41ms
+   × rejects invalid amount 9007199254740992 42ms
+   × rejects invalid payment date  42ms
+   × rejects invalid payment date not-a-date 42ms
+   × rejects invalid payment date 25/09/2026 37ms
+   × rejects invalid payment date 2026-02-30 44ms
+   × rejects invalid payment date 0000-01-01 39ms
+   × rejects a payment date in the future 46ms
+   × uses the Melbourne calendar date when validating future payments 48ms
+   × rejects overpayment without writing another payment 38ms
+   × prevents concurrent payments exceeding the balance 45ms
+   × does not count voided payments when checking the balance 27ms
+   × rejects draft invoices 26ms
+   × rejects voided invoices 22ms
+   × requires management permission 21ms
+   × rejects a missing invoice 23ms
+   × throws PaymentValidationError for invalid payment details 19ms
+ ❯ tests/app/server/features/invoices/services/void-invoice.test.ts (11 tests | 10 failed) 403ms
+   × voids an issued invoice 34ms
+   × preserves the invoice number when voided 21ms
+   × preserves issuedAt when voided 20ms
+   × does not change invoice items when voided 34ms
+   × releases all jobs when the invoice is voided 36ms
+   × allows jobs from a voided invoice to be invoiced again 42ms
+   × preserves the historical job relationships after voiding 47ms
+   × rejects voiding a draft invoice 40ms
+   × rejects voiding an already voided invoice 45ms
+   × requires invoice management permission 41ms
+ ❯ tests/app/server/features/payments/services/void-payment.test.ts (7 tests | 7 failed) 321ms
+   × voids once, preserves the original record and restores the balance 56ms
+   × preserves active and voided payments through invoice void, then allows explicit payment void 44ms
+   × rejects a payment through a different invoice 44ms
+   × rejects a missing payment 44ms
+   × rejects a missing invoice 44ms
+   × requires management permission 45ms
+   × only one concurrent void succeeds 42ms
+ ❯ tests/app/server/features/payments/queries/list-payments.test.ts (7 tests | 7 failed) 323ms
+   × returns active payments with bank date, invoice and customer context for admin 57ms
+   × returns active payments with bank date, invoice and customer context for operator 44ms
+   × retains both active and voided payments after their invoice is voided 45ms
+   × orders across invoices by payment date, creation time and id descending 44ms
+   × returns an empty list when there are no payments 42ms
+   × requires payment read permission 42ms
+   × keeps the original payment date when a payment is voided 47ms
+ ❯ tests/app/routes/payments.test.tsx (7 tests | 7 failed) 315ms
+   × loads and renders payment history for admin 58ms
+   × loads and renders payment history for operator 41ms
+   × renders payments in payment-date order 44ms
+   × keeps voided payments in payment history 42ms
+   × renders a useful empty state 43ms
+   × maps permission denial to 403 44ms
+   × requires authenticated user context 39ms
+ ❯ tests/app/server/features/invoices/services/create-draft-invoice.test.ts (14 tests | 9 failed) 511ms
+   × creates a draft invoice from one job 31ms
+   × creates a draft invoice from multiple jobs for the same customer 23ms
+   × copies items from all selected jobs 32ms
+   × creates an empty draft when selected jobs have no items 27ms
+   × derives the customer from the selected jobs 37ms
+   × creates an independent snapshot of job items 40ms
+   × rejects a job already attached to an active invoice 42ms
+   × rejects the whole selection when one job is already invoiced 43ms
+   × does not allocate an invoice number to a draft 43ms
+ ❯ tests/app/routes/invoices.$invoiceId.issue.test.tsx (9 tests | 9 failed) 332ms
+   × loads the draft invoice 46ms
+   × renders the issue invoice workflow and summary 37ms
+   × issues the invoice with an explicit due date and redirects 38ms
+   × returns and renders validation feedback for an invalid due date 35ms
+   × returns validation feedback when the due date is missing 33ms
+   × rejects issuing an invoice that has already been issued 33ms
+   × returns 404 for a missing invoice 34ms
+   × returns 403 without invoice management permission 38ms
+   × requires authenticated user context 34ms
+ ❯ tests/app/server/features/invoices/services/delete-draft-invoice.test.ts (10 tests | 9 failed) 449ms
+   × deletes a draft invoice 48ms
+   × deletes all invoice items belonging to the draft 55ms
+   × deletes all invoice job assignments belonging to the draft 50ms
+   × does not delete data belonging to another draft 44ms
+   × allows jobs from a deleted draft to be invoiced again 49ms
+   × rejects deleting an issued invoice 41ms
+   × does not delete items from an issued invoice 44ms
+   × rejects deleting a voided invoice 42ms
+   × requires invoice management permission 38ms
+ ❯ tests/app/routes/invoices.$invoiceId.edit.test.tsx (11 tests | 10 failed) 474ms
+   × loads the current jobs and other available jobs for the invoice customer 58ms
+   × renders the draft invoice edit workflow 48ms
+   × excludes jobs belonging to another customer 46ms
+   × excludes a job belonging to another active invoice 46ms
+   × updates the draft job selection and redirects 43ms
+   × returns and renders feedback when no jobs are selected 43ms
+   × returns 400 when another active invoice owns a selected job 44ms
+   × returns 409 when an issued invoice is edited 40ms
+   × returns 403 without invoice management permission 30ms
+   × requires authenticated user context 38ms
+ ❯ tests/app/routes/invoices.new.test.tsx (13 tests | 9 failed) 521ms
+   × loads jobs available for invoicing 50ms
+   × renders the create invoice workflow 56ms
+   × preselects an eligible job from the query string 41ms
+   × does not return a job already attached to an active invoice 46ms
+   × does not preselect a job already attached to an active invoice 44ms
+   × creates a draft invoice from selected jobs 47ms
+   × returns and renders feedback when jobs belong to different customers 41ms
+   × returns 400 when a selected job is already on an active invoice 34ms
+   × renders the empty state when no jobs are available to invoice 40ms
+ ❯ tests/app/server/features/invoices/queries/is-job-invoiceable.test.ts (5 tests | 4 failed) 217ms
+   × returns true when the job has no active invoice 47ms
+   × returns false when the job belongs to a draft invoice 59ms
+   × returns false when the job belongs to an issued invoice 41ms
+   × returns true after the invoice is voided 37ms
+ ❯ tests/app/routes/invoices.$invoiceId.payments.$paymentId.void.test.ts (5 tests | 5 failed) 252ms
+   × voids a payment on a issued invoice and redirects 76ms
+   × voids a payment on a voided invoice and redirects 45ms
+   × returns 404 for nested ownership mismatch 47ms
+   × returns 404 for missing invoice or payment 43ms
+   × returns 403 without management permission 40ms
+ ❯ tests/app/routes/invoices.$invoiceId.items.$itemId.delete.test.tsx (7 tests | 7 failed) 311ms
+   × redirects successful POST to invoice details 69ms
+   × returns 403 without management permission 52ms
+   × returns 404 for a missing invoice 41ms
+   × returns 409 for issued invoices 47ms
+   × returns 409 for voided invoices 44ms
+   × returns 404 for another invoice's item 34ms
+   × returns 404 for a missing item 22ms
+ ❯ tests/app/server/features/invoices/queries/get-invoice-by-id.test.ts (7 tests | 5 failed) 322ms
+   × returns invoice detail with multiple jobs 59ms
+   × returns invoice items with their source jobs 60ms
+   × derives the invoice total across all invoice items 53ms
+   × returns jobs in scheduled-date order 51ms
+   × derives totals without multiplying item/payment rows and keeps ordered history after invoice void 33ms
+ ❯ tests/app/server/features/invoices/queries/list-invoices.test.ts (6 tests | 4 failed) 287ms
+   × returns invoices with customer and job context 63ms
+   × derives totals from invoice items across multiple jobs 70ms
+   × returns issued invoice information 40ms
+   × returns invoices newest first 44ms
+ ❯ tests/app/server/db/schema/payments.test.ts (6 tests | 6 failed) 280ms
+   × rejects invalid stored amount 0 63ms
+   × rejects invalid stored amount -1 48ms
+   × rejects invalid stored amount 1.5 44ms
+   × rejects invalid stored amount 9007199254740992 42ms
+   × requires a payment date 46ms
+   × requires a real invoice 36ms
+ ❯ tests/app/server/features/invoices/queries/get-active-invoice-for-job.test.ts (7 tests | 5 failed) 310ms
+   × returns the active draft invoice for the job 52ms
+   × returns the active issued invoice for the job 50ms
+   × ignores released invoice assignments 40ms
+   × does not return an invoice assigned to another job 41ms
+   × returns the same active invoice when it contains multiple jobs 59ms
+ ❯ tests/app/routes/invoices.test.tsx (10 tests | 4 failed) 348ms
+   × renders invoices as a scan-friendly table 61ms
+   × shows all jobs belonging to a multi-job invoice 51ms
+   × shows the invoice number and due date after issue 44ms
+   × shows no due date for a draft invoice 46ms
+ ❯ tests/app/routes/invoices.$invoiceId.delete.test.ts (4 tests | 3 failed) 120ms
+   × deletes a draft invoice and redirects to invoices 50ms
+   × returns 409 when an issued invoice is deleted 28ms
+   × returns 403 without invoice management permission 20ms
+ ❯ tests/app/routes/invoices.$invoiceId.void.test.ts (5 tests | 4 failed) 106ms
+   × voids an issued invoice and redirects to the invoice 31ms
+   × releases the invoice jobs when voided 20ms
+   × returns 409 when a draft invoice is voided 20ms
+   × returns 403 without invoice management permission 18ms
+ ❯ tests/app/routes/dashboard.test.tsx (5 tests | 3 failed) 85ms
+   × renders the populated dashboard 38ms
+   × renders the approved empty dashboard state 21ms
+   × does not treat an invoice due today as needing attention 22ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 346 ⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/app/routes/customers.$customerId.test.tsx > renders customer details and read-only financial histories for admin
+ FAIL  tests/app/routes/customers.$customerId.test.tsx > renders customer details and read-only financial histories for operator
+ FAIL  tests/app/routes/customers.$customerId.test.tsx > renders empty financial history and zero totals
+ FAIL  tests/app/routes/customers.$customerId.test.tsx > keeps financial history available for archived customers and preserves restore behaviour
+ FAIL  tests/app/routes/customers.$customerId.test.tsx > preserves customer access without exposing finances when invoices.read is denied
+ FAIL  tests/app/routes/customers.$customerId.test.tsx > preserves customer access without exposing finances when payments.read is denied
+ FAIL  tests/app/routes/customers.$customerId.test.tsx > preserves customer permission denial as 403
+ FAIL  tests/app/routes/customers.$customerId.test.tsx > preserves missing customer 404
+ FAIL  tests/app/routes/customers.$customerId.test.tsx > requires authenticated user context
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ draftInvoiceFixture tests/support/fixtures/draft-invoice.ts:49:29
+ ❯ issuedInvoiceFixture tests/support/fixtures/issued-invoice.ts:7:19
+ ❯ tests/app/routes/customers.$customerId.test.tsx:45:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/346]⎯
+
+ FAIL  tests/app/routes/dashboard.test.tsx > renders the populated dashboard
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ draftInvoiceFixture tests/support/fixtures/draft-invoice.ts:49:29
+ ❯ issuedInvoiceFixture tests/support/fixtures/issued-invoice.ts:7:19
+ ❯ tests/app/routes/dashboard.test.tsx:71:19
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/346]⎯
+
+ FAIL  tests/app/routes/dashboard.test.tsx > renders the approved empty dashboard state
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ draftInvoiceFixture tests/support/fixtures/draft-invoice.ts:49:29
+ ❯ tests/app/routes/dashboard.test.tsx:128:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/346]⎯
+
+ FAIL  tests/app/routes/dashboard.test.tsx > does not treat an invoice due today as needing attention
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ draftInvoiceFixture tests/support/fixtures/draft-invoice.ts:49:29
+ ❯ issuedInvoiceFixture tests/support/fixtures/issued-invoice.ts:7:19
+ ❯ tests/app/routes/dashboard.test.tsx:160:19
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/346]⎯
+
+ FAIL  tests/app/routes/invoices.$invoiceId.delete.test.ts > deletes a draft invoice and redirects to invoices
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/routes/invoices.$invoiceId.delete.test.ts:99:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/346]⎯
+
+ FAIL  tests/app/routes/invoices.$invoiceId.delete.test.ts > returns 409 when an issued invoice is deleted
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/routes/invoices.$invoiceId.delete.test.ts:133:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/346]⎯
+
+ FAIL  tests/app/routes/invoices.$invoiceId.delete.test.ts > returns 403 without invoice management permission
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/routes/invoices.$invoiceId.delete.test.ts:157:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/346]⎯
+
+ FAIL  tests/app/routes/invoices.$invoiceId.edit.test.tsx > loads the current jobs and other available jobs for the invoice customer
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/routes/invoices.$invoiceId.edit.test.tsx:158:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/346]⎯
+
+ FAIL  tests/app/routes/invoices.$invoiceId.edit.test.tsx > renders the draft invoice edit workflow
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/routes/invoices.$invoiceId.edit.test.tsx:185:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/346]⎯
+
+ FAIL  tests/app/routes/invoices.$invoiceId.edit.test.tsx > excludes jobs belonging to another customer
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/routes/invoices.$invoiceId.edit.test.tsx:225:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/346]⎯
+
+ FAIL  tests/app/routes/invoices.$invoiceId.edit.test.tsx > excludes a job belonging to another active invoice
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/routes/invoices.$invoiceId.edit.test.tsx:240:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/346]⎯
+
+ FAIL  tests/app/routes/invoices.$invoiceId.edit.test.tsx > updates the draft job selection and redirects
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/routes/invoices.$invoiceId.edit.test.tsx:261:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/346]⎯
+
+ FAIL  tests/app/routes/invoices.$invoiceId.edit.test.tsx > returns and renders feedback when no jobs are selected
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/routes/invoices.$invoiceId.edit.test.tsx:295:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/346]⎯
+
+ FAIL  tests/app/routes/invoices.$invoiceId.edit.test.tsx > returns 400 when another active invoice owns a selected job
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/routes/invoices.$invoiceId.edit.test.tsx:334:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/346]⎯
+
+ FAIL  tests/app/routes/invoices.$invoiceId.edit.test.tsx > returns 409 when an issued invoice is edited
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/routes/invoices.$invoiceId.edit.test.tsx:367:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/346]⎯
+
+ FAIL  tests/app/routes/invoices.$invoiceId.edit.test.tsx > returns 403 without invoice management permission
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/routes/invoices.$invoiceId.edit.test.tsx:382:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/346]⎯
+
+ FAIL  tests/app/routes/invoices.$invoiceId.edit.test.tsx > requires authenticated user context
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/routes/invoices.$invoiceId.edit.test.tsx:398:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[17/346]⎯
+
+ FAIL  tests/app/routes/invoices.$invoiceId.issue.test.tsx > loads the draft invoice
+ FAIL  tests/app/routes/invoices.$invoiceId.issue.test.tsx > renders the issue invoice workflow and summary
+ FAIL  tests/app/routes/invoices.$invoiceId.issue.test.tsx > issues the invoice with an explicit due date and redirects
+ FAIL  tests/app/routes/invoices.$invoiceId.issue.test.tsx > returns and renders validation feedback for an invalid due date
+ FAIL  tests/app/routes/invoices.$invoiceId.issue.test.tsx > returns validation feedback when the due date is missing
+ FAIL  tests/app/routes/invoices.$invoiceId.issue.test.tsx > rejects issuing an invoice that has already been issued
+ FAIL  tests/app/routes/invoices.$invoiceId.issue.test.tsx > returns 404 for a missing invoice
+ FAIL  tests/app/routes/invoices.$invoiceId.issue.test.tsx > returns 403 without invoice management permission
+ FAIL  tests/app/routes/invoices.$invoiceId.issue.test.tsx > requires authenticated user context
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/routes/invoices.$invoiceId.issue.test.tsx:133:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[18/346]⎯
+
+ FAIL  tests/app/routes/invoices.$invoiceId.items.$itemId.delete.test.tsx > redirects successful POST to invoice details
+ FAIL  tests/app/routes/invoices.$invoiceId.items.$itemId.delete.test.tsx > returns 403 without management permission
+ FAIL  tests/app/routes/invoices.$invoiceId.items.$itemId.delete.test.tsx > returns 404 for a missing invoice
+ FAIL  tests/app/routes/invoices.$invoiceId.items.$itemId.delete.test.tsx > returns 409 for issued invoices
+ FAIL  tests/app/routes/invoices.$invoiceId.items.$itemId.delete.test.tsx > returns 409 for voided invoices
+ FAIL  tests/app/routes/invoices.$invoiceId.items.$itemId.delete.test.tsx > returns 404 for another invoice's item
+ FAIL  tests/app/routes/invoices.$invoiceId.items.$itemId.delete.test.tsx > returns 404 for a missing item
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ draftInvoiceFixture tests/support/fixtures/draft-invoice.ts:49:29
+ ❯ tests/app/routes/invoices.$invoiceId.items.$itemId.delete.test.tsx:16:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[19/346]⎯
+
+ FAIL  tests/app/routes/invoices.$invoiceId.items.$itemId.edit.test.tsx > redirects successful POST to invoice details
+ FAIL  tests/app/routes/invoices.$invoiceId.items.$itemId.edit.test.tsx > returns 403 without management permission
+ FAIL  tests/app/routes/invoices.$invoiceId.items.$itemId.edit.test.tsx > returns 404 for a missing invoice
+ FAIL  tests/app/routes/invoices.$invoiceId.items.$itemId.edit.test.tsx > returns 409 for issued invoices
+ FAIL  tests/app/routes/invoices.$invoiceId.items.$itemId.edit.test.tsx > returns 409 for voided invoices
+ FAIL  tests/app/routes/invoices.$invoiceId.items.$itemId.edit.test.tsx > returns 404 for another invoice's item
+ FAIL  tests/app/routes/invoices.$invoiceId.items.$itemId.edit.test.tsx > returns 404 for a missing item
+ FAIL  tests/app/routes/invoices.$invoiceId.items.$itemId.edit.test.tsx > loads draft form data
+ FAIL  tests/app/routes/invoices.$invoiceId.items.$itemId.edit.test.tsx > returns 400 with submitted values for invalid amount 
+ FAIL  tests/app/routes/invoices.$invoiceId.items.$itemId.edit.test.tsx > returns 400 with submitted values for invalid amount abc
+ FAIL  tests/app/routes/invoices.$invoiceId.items.$itemId.edit.test.tsx > returns 400 with submitted values for invalid amount -1
+ FAIL  tests/app/routes/invoices.$invoiceId.items.$itemId.edit.test.tsx > returns 400 with submitted values for invalid amount 1.234
+ FAIL  tests/app/routes/invoices.$invoiceId.items.$itemId.edit.test.tsx > returns 400 with submitted values for invalid amount $45
+ FAIL  tests/app/routes/invoices.$invoiceId.items.$itemId.edit.test.tsx > returns 400 with submitted values for invalid amount 1e2
+ FAIL  tests/app/routes/invoices.$invoiceId.items.$itemId.edit.test.tsx > returns 400 with submitted values for invalid amount 9007199254740992
+ FAIL  tests/app/routes/invoices.$invoiceId.items.$itemId.edit.test.tsx > returns 400 for a blank description
+ FAIL  tests/app/routes/invoices.$invoiceId.items.$itemId.edit.test.tsx > parses 0 into integer cents
+ FAIL  tests/app/routes/invoices.$invoiceId.items.$itemId.edit.test.tsx > parses 45.5 into integer cents
+ FAIL  tests/app/routes/invoices.$invoiceId.items.$itemId.edit.test.tsx > parses 45.67 into integer cents
+ FAIL  tests/app/routes/invoices.$invoiceId.items.$itemId.edit.test.tsx > ignores a submitted replacement job
+ FAIL  tests/app/routes/invoices.$invoiceId.items.$itemId.edit.test.tsx > renders linked job as read-only context with validation feedback
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ draftInvoiceFixture tests/support/fixtures/draft-invoice.ts:49:29
+ ❯ tests/app/routes/invoices.$invoiceId.items.$itemId.edit.test.tsx:66:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[20/346]⎯
+
+ FAIL  tests/app/routes/invoices.$invoiceId.items.new.test.tsx > redirects successful POST to invoice details
+ FAIL  tests/app/routes/invoices.$invoiceId.items.new.test.tsx > returns 403 without management permission
+ FAIL  tests/app/routes/invoices.$invoiceId.items.new.test.tsx > returns 404 for a missing invoice
+ FAIL  tests/app/routes/invoices.$invoiceId.items.new.test.tsx > returns 409 for issued invoices
+ FAIL  tests/app/routes/invoices.$invoiceId.items.new.test.tsx > returns 409 for voided invoices
+ FAIL  tests/app/routes/invoices.$invoiceId.items.new.test.tsx > loads draft invoice form data
+ FAIL  tests/app/routes/invoices.$invoiceId.items.new.test.tsx > returns 400 with submitted values for invalid amount 
+ FAIL  tests/app/routes/invoices.$invoiceId.items.new.test.tsx > returns 400 with submitted values for invalid amount abc
+ FAIL  tests/app/routes/invoices.$invoiceId.items.new.test.tsx > returns 400 with submitted values for invalid amount -1
+ FAIL  tests/app/routes/invoices.$invoiceId.items.new.test.tsx > returns 400 with submitted values for invalid amount 1.234
+ FAIL  tests/app/routes/invoices.$invoiceId.items.new.test.tsx > returns 400 with submitted values for invalid amount $45
+ FAIL  tests/app/routes/invoices.$invoiceId.items.new.test.tsx > returns 400 with submitted values for invalid amount 1e2
+ FAIL  tests/app/routes/invoices.$invoiceId.items.new.test.tsx > returns 400 with submitted values for invalid amount 9007199254740992
+ FAIL  tests/app/routes/invoices.$invoiceId.items.new.test.tsx > returns 400 for a blank description
+ FAIL  tests/app/routes/invoices.$invoiceId.items.new.test.tsx > parses 0 into integer cents
+ FAIL  tests/app/routes/invoices.$invoiceId.items.new.test.tsx > parses 45.5 into integer cents
+ FAIL  tests/app/routes/invoices.$invoiceId.items.new.test.tsx > parses 45.67 into integer cents
+ FAIL  tests/app/routes/invoices.$invoiceId.items.new.test.tsx > returns 400 for an unselected job
+ FAIL  tests/app/routes/invoices.$invoiceId.items.new.test.tsx > renders the single-job workflow with read-only job context
+ FAIL  tests/app/routes/invoices.$invoiceId.items.new.test.tsx > offers only selected jobs for a multi-job invoice
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ draftInvoiceFixture tests/support/fixtures/draft-invoice.ts:49:29
+ ❯ tests/app/routes/invoices.$invoiceId.items.new.test.tsx:64:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[21/346]⎯
+
+ FAIL  tests/app/routes/invoices.$invoiceId.payments.$paymentId.void.test.ts > voids a payment on a issued invoice and redirects
+ FAIL  tests/app/routes/invoices.$invoiceId.payments.$paymentId.void.test.ts > voids a payment on a voided invoice and redirects
+ FAIL  tests/app/routes/invoices.$invoiceId.payments.$paymentId.void.test.ts > returns 404 for nested ownership mismatch
+ FAIL  tests/app/routes/invoices.$invoiceId.payments.$paymentId.void.test.ts > returns 404 for missing invoice or payment
+ FAIL  tests/app/routes/invoices.$invoiceId.payments.$paymentId.void.test.ts > returns 403 without management permission
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ draftInvoiceFixture tests/support/fixtures/draft-invoice.ts:49:29
+ ❯ issuedInvoiceFixture tests/support/fixtures/issued-invoice.ts:7:19
+ ❯ tests/app/routes/invoices.$invoiceId.payments.$paymentId.void.test.ts:14:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22/346]⎯
+
+ FAIL  tests/app/routes/invoices.$invoiceId.payments.new.test.tsx > loads invoice context and renders payment date and amount fields
+ FAIL  tests/app/routes/invoices.$invoiceId.payments.new.test.tsx > records 25.50 with the bank payment date and redirects
+ FAIL  tests/app/routes/invoices.$invoiceId.payments.new.test.tsx > records 25.5 with the bank payment date and redirects
+ FAIL  tests/app/routes/invoices.$invoiceId.payments.new.test.tsx > records 100 with the bank payment date and redirects
+ FAIL  tests/app/routes/invoices.$invoiceId.payments.new.test.tsx > returns amount validation data for 
+ FAIL  tests/app/routes/invoices.$invoiceId.payments.new.test.tsx > returns amount validation data for 0
+ FAIL  tests/app/routes/invoices.$invoiceId.payments.new.test.tsx > returns amount validation data for -1
+ FAIL  tests/app/routes/invoices.$invoiceId.payments.new.test.tsx > returns amount validation data for 1.234
+ FAIL  tests/app/routes/invoices.$invoiceId.payments.new.test.tsx > returns amount validation data for abc
+ FAIL  tests/app/routes/invoices.$invoiceId.payments.new.test.tsx > returns amount validation data for $5
+ FAIL  tests/app/routes/invoices.$invoiceId.payments.new.test.tsx > returns amount validation data for 1e2
+ FAIL  tests/app/routes/invoices.$invoiceId.payments.new.test.tsx > returns amount validation data for 9007199254740992
+ FAIL  tests/app/routes/invoices.$invoiceId.payments.new.test.tsx > returns payment date validation data
+ FAIL  tests/app/routes/invoices.$invoiceId.payments.new.test.tsx > returns a useful overpayment error and preserves both values
+ FAIL  tests/app/routes/invoices.$invoiceId.payments.new.test.tsx > rejects draft invoice loader and action
+ FAIL  tests/app/routes/invoices.$invoiceId.payments.new.test.tsx > rejects voided invoice loader and action
+ FAIL  tests/app/routes/invoices.$invoiceId.payments.new.test.tsx > rejects the form loader for a fully-paid invoice
+ FAIL  tests/app/routes/invoices.$invoiceId.payments.new.test.tsx > returns 403 for a non-managing user
+ FAIL  tests/app/routes/invoices.$invoiceId.payments.new.test.tsx > returns 404 for a missing invoice
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ draftInvoiceFixture tests/support/fixtures/draft-invoice.ts:49:29
+ ❯ issuedInvoiceFixture tests/support/fixtures/issued-invoice.ts:7:19
+ ❯ tests/app/routes/invoices.$invoiceId.payments.new.test.tsx:29:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[23/346]⎯
+
+ FAIL  tests/app/routes/invoices.$invoiceId.test.tsx > loads invoice details
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/routes/invoices.$invoiceId.test.tsx:127:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[24/346]⎯
+
+ FAIL  tests/app/routes/invoices.$invoiceId.test.tsx > renders the invoice detail hierarchy
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/routes/invoices.$invoiceId.test.tsx:185:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[25/346]⎯
+
+ FAIL  tests/app/routes/invoices.$invoiceId.test.tsx > shows routine actions and danger zone for a manageable draft invoice
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/routes/invoices.$invoiceId.test.tsx:219:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[26/346]⎯
+
+ FAIL  tests/app/routes/invoices.$invoiceId.test.tsx > shows due date and only void lifecycle action for an issued invoice
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/routes/invoices.$invoiceId.test.tsx:240:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[27/346]⎯
+
+ FAIL  tests/app/routes/invoices.$invoiceId.test.tsx > shows no lifecycle danger zone for a voided invoice
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/routes/invoices.$invoiceId.test.tsx:274:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[28/346]⎯
+
+ FAIL  tests/app/routes/invoices.$invoiceId.test.tsx > allows an operator to view an invoice without management actions
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/routes/invoices.$invoiceId.test.tsx:298:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[29/346]⎯
+
+ FAIL  tests/app/routes/invoices.$invoiceId.test.tsx > item controls for draft, managing=true
+ FAIL  tests/app/routes/invoices.$invoiceId.test.tsx > item controls for issued, managing=true
+ FAIL  tests/app/routes/invoices.$invoiceId.test.tsx > item controls for voided, managing=true
+ FAIL  tests/app/routes/invoices.$invoiceId.test.tsx > item controls for draft, managing=false
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/routes/invoices.$invoiceId.test.tsx:333:31
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[30/346]⎯
+
+ FAIL  tests/app/routes/invoices.$invoiceId.test.tsx > renders derived totals after adding, editing and deleting an item
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/routes/invoices.$invoiceId.test.tsx:378:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[31/346]⎯
+
+ FAIL  tests/app/routes/invoices.$invoiceId.test.tsx > shows financial metrics, payment history and controls through payment lifecycle
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/routes/invoices.$invoiceId.test.tsx:427:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[32/346]⎯
+
+ FAIL  tests/app/routes/invoices.$invoiceId.test.tsx > hides Record payment from non-managers on an issued unpaid invoice
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/routes/invoices.$invoiceId.test.tsx:549:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[33/346]⎯
+
+ FAIL  tests/app/routes/invoices.$invoiceId.void.test.ts > voids an issued invoice and redirects to the invoice
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/routes/invoices.$invoiceId.void.test.ts:93:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[34/346]⎯
+
+ FAIL  tests/app/routes/invoices.$invoiceId.void.test.ts > releases the invoice jobs when voided
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/routes/invoices.$invoiceId.void.test.ts:127:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[35/346]⎯
+
+ FAIL  tests/app/routes/invoices.$invoiceId.void.test.ts > returns 409 when a draft invoice is voided
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/routes/invoices.$invoiceId.void.test.ts:153:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[36/346]⎯
+
+ FAIL  tests/app/routes/invoices.$invoiceId.void.test.ts > returns 403 without invoice management permission
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/routes/invoices.$invoiceId.void.test.ts:166:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[37/346]⎯
+
+ FAIL  tests/app/routes/invoices.new.test.tsx > loads jobs available for invoicing
+AssertionError: expected [] to deeply equal ArrayContaining{…}
+
+- Expected
++ Received
+
+- ArrayContaining [
+-   ObjectContaining {
+-     "customerId": "customer",
+-     "customerName": "John Smith",
+-     "id": "a71024fb-5bea-4ec5-8f32-e0eb69bb6c3a",
+-     "name": "Front lawn",
+-   },
+-   ObjectContaining {
+-     "customerId": "customer",
+-     "customerName": "John Smith",
+-     "id": "7dfd297d-a8c2-4f62-9038-df5edd1f21c2",
+-     "name": "Back lawn",
+-   },
+-   ObjectContaining {
+-     "customerId": "other-customer",
+-     "customerName": "Jane Smith",
+-     "id": "4a0acaf3-232f-4f21-9094-8801b39dc334",
+-     "name": "Nature strip",
+-   },
+- ]
++ []
+
+ ❯ tests/app/routes/invoices.new.test.tsx:155:23
+    153|   const result = await loader(loaderArgs());
+    154|
+    155|   expect(result.jobs).toEqual(
+       |                       ^
+    156|     expect.arrayContaining([
+    157|       expect.objectContaining({
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[38/346]⎯
+
+ FAIL  tests/app/routes/invoices.new.test.tsx > renders the create invoice workflow
+AssertionError: expected '<section class="_page_5ee80e _page_b9…' to contain 'Customer'
+
+Expected: "Customer"
+Received: "<section class="_page_5ee80e _page_b92f4d"><div class="_breadcrumb_b92f4d"><a class="_breadcrumb_5ee80e" href="/invoices" data-discover="true">Invoices</a><span aria-hidden="true">›</span><span>Create invoice</span></div><header class="_header_5ee80e"><div><h1 class="page-title">Create invoice</h1><p class="_intro_5ee80e">Choose a customer and select the jobs to include on the draft invoice.</p></div></header><div class="_emptyState_5ee80e"><h2>No jobs available to invoice</h2><p>Jobs already assigned to a draft or issued invoice are not available here.</p><a class="_secondaryAction_5ee80e" href="/jobs" data-discover="true">View jobs</a></div></section>"
+
+ ❯ tests/app/routes/invoices.new.test.tsx:197:16
+    195|   );
+    196|
+    197|   expect(html).toContain("Customer");
+       |                ^
+    198|   expect(html).toContain("Select a customer");
+    199|   expect(html).toContain("John Smith");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[39/346]⎯
+
+ FAIL  tests/app/routes/invoices.new.test.tsx > preselects an eligible job from the query string
+AssertionError: expected null to be '62f3bb41-f79a-4426-836f-1d4f443a1492' // Object.is equality
+
+- Expected:
+"62f3bb41-f79a-4426-836f-1d4f443a1492"
+
++ Received:
+null
+
+ ❯ tests/app/routes/invoices.new.test.tsx:218:31
+    216|   const result = await loader(loaderArgs(`?jobId=${firstJobId}`));
+    217|
+    218|   expect(result.initialJobId).toBe(firstJobId);
+       |                               ^
+    219|
+    220|   const html = renderPage({
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[40/346]⎯
+
+ FAIL  tests/app/routes/invoices.new.test.tsx > does not return a job already attached to an active invoice
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/routes/invoices.new.test.tsx:242:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[41/346]⎯
+
+ FAIL  tests/app/routes/invoices.new.test.tsx > does not preselect a job already attached to an active invoice
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/routes/invoices.new.test.tsx:254:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[42/346]⎯
+
+ FAIL  tests/app/routes/invoices.new.test.tsx > creates a draft invoice from selected jobs
+AssertionError: expected DataWithResponseInit{ …(3) } to be an instance of Response
+ ❯ tests/app/routes/invoices.new.test.tsx:276:20
+    274|   const response = await action(actionArgs([firstJobId, secondJobId]));
+    275|
+    276|   expect(response).toBeInstanceOf(Response);
+       |                    ^
+    277|   expect((response as Response).status).toBe(302);
+    278|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[43/346]⎯
+
+ FAIL  tests/app/routes/invoices.new.test.tsx > returns and renders feedback when jobs belong to different customers
+AssertionError: expected '<section class="_page_5ee80e _page_b9…' to contain 'role="alert"'
+
+Expected: "role="alert""
+Received: "<section class="_page_5ee80e _page_b92f4d"><div class="_breadcrumb_b92f4d"><a class="_breadcrumb_5ee80e" href="/invoices" data-discover="true">Invoices</a><span aria-hidden="true">›</span><span>Create invoice</span></div><header class="_header_5ee80e"><div><h1 class="page-title">Create invoice</h1><p class="_intro_5ee80e">Choose a customer and select the jobs to include on the draft invoice.</p></div></header><div class="_emptyState_5ee80e"><h2>No jobs available to invoice</h2><p>Jobs already assigned to a draft or issued invoice are not available here.</p><a class="_secondaryAction_5ee80e" href="/jobs" data-discover="true">View jobs</a></div></section>"
+
+ ❯ tests/app/routes/invoices.new.test.tsx:374:16
+    372|   });
+    373|
+    374|   expect(html).toContain('role="alert"');
+       |                ^
+    375|   expect(html).toContain("Invoice could not be created.");
+    376|   expect(html).toContain("All selected jobs must belong to the same cu…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[44/346]⎯
+
+ FAIL  tests/app/routes/invoices.new.test.tsx > returns 400 when a selected job is already on an active invoice
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/routes/invoices.new.test.tsx:383:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[45/346]⎯
+
+ FAIL  tests/app/routes/invoices.new.test.tsx > renders the empty state when no jobs are available to invoice
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/routes/invoices.new.test.tsx:405:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[46/346]⎯
+
+ FAIL  tests/app/routes/invoices.test.tsx > renders invoices as a scan-friendly table
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/routes/invoices.test.tsx:120:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[47/346]⎯
+
+ FAIL  tests/app/routes/invoices.test.tsx > shows all jobs belonging to a multi-job invoice
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/routes/invoices.test.tsx:150:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[48/346]⎯
+
+ FAIL  tests/app/routes/invoices.test.tsx > shows the invoice number and due date after issue
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/routes/invoices.test.tsx:167:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[49/346]⎯
+
+ FAIL  tests/app/routes/invoices.test.tsx > shows no due date for a draft invoice
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/routes/invoices.test.tsx:193:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[50/346]⎯
+
+ FAIL  tests/app/routes/jobs.$jobId.invoice.test.ts > allows invoice creation when the job has no active invoice
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/app/routes/jobs.$jobId.invoice.test.ts:82:35
+     80|   const result = await loader(loaderArgs(jobId));
+     81|
+     82|   expect(result.canCreateInvoice).toBe(true);
+       |                                   ^
+     83| });
+     84|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[51/346]⎯
+
+ FAIL  tests/app/routes/jobs.$jobId.invoice.test.ts > does not allow invoice creation when the job belongs to a draft invoice
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/routes/jobs.$jobId.invoice.test.ts:87:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[52/346]⎯
+
+ FAIL  tests/app/routes/jobs.$jobId.invoice.test.ts > does not allow invoice creation when the job belongs to an issued invoice
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/routes/jobs.$jobId.invoice.test.ts:98:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[53/346]⎯
+
+ FAIL  tests/app/routes/jobs.$jobId.invoice.test.ts > allows invoice creation again after the invoice is voided
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/routes/jobs.$jobId.invoice.test.ts:113:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[54/346]⎯
+
+ FAIL  tests/app/routes/jobs.$jobId.test.tsx > renders the job detail hierarchy for an administrator
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/app/routes/jobs.$jobId.test.tsx:110:35
+    108|   expect(result.canManage).toBe(true);
+    109|   expect(result.invoice).toBeNull();
+    110|   expect(result.canCreateInvoice).toBe(true);
+       |                                   ^
+    111|
+    112|   const html = renderPage(result);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[55/346]⎯
+
+ FAIL  tests/app/routes/jobs.$jobId.test.tsx > shows the active invoice relationship instead of create invoice
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/routes/jobs.$jobId.test.tsx:148:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[56/346]⎯
+
+ FAIL  tests/app/routes/jobs.$jobId.test.tsx > shows an invoice relationship to an operator but not invoice creation
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/routes/jobs.$jobId.test.tsx:176:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[57/346]⎯
+
+ FAIL  tests/app/routes/payments.test.tsx > loads and renders payment history for admin
+ FAIL  tests/app/routes/payments.test.tsx > loads and renders payment history for operator
+ FAIL  tests/app/routes/payments.test.tsx > renders payments in payment-date order
+ FAIL  tests/app/routes/payments.test.tsx > keeps voided payments in payment history
+ FAIL  tests/app/routes/payments.test.tsx > renders a useful empty state
+ FAIL  tests/app/routes/payments.test.tsx > maps permission denial to 403
+ FAIL  tests/app/routes/payments.test.tsx > requires authenticated user context
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ draftInvoiceFixture tests/support/fixtures/draft-invoice.ts:49:29
+ ❯ issuedInvoiceFixture tests/support/fixtures/issued-invoice.ts:7:19
+ ❯ tests/app/routes/payments.test.tsx:37:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[58/346]⎯
+
+ FAIL  tests/app/server/db/schema/payments.test.ts > rejects invalid stored amount 0
+ FAIL  tests/app/server/db/schema/payments.test.ts > rejects invalid stored amount -1
+ FAIL  tests/app/server/db/schema/payments.test.ts > rejects invalid stored amount 1.5
+ FAIL  tests/app/server/db/schema/payments.test.ts > rejects invalid stored amount 9007199254740992
+ FAIL  tests/app/server/db/schema/payments.test.ts > requires a payment date
+ FAIL  tests/app/server/db/schema/payments.test.ts > requires a real invoice
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ draftInvoiceFixture tests/support/fixtures/draft-invoice.ts:49:29
+ ❯ issuedInvoiceFixture tests/support/fixtures/issued-invoice.ts:7:19
+ ❯ tests/app/server/db/schema/payments.test.ts:11:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[59/346]⎯
+
+ FAIL  tests/app/server/features/customers/queries/get-customer-financial-history.test.ts > returns empty histories and zero totals for a customer without financial history
+ FAIL  tests/app/server/features/customers/queries/get-customer-financial-history.test.ts > includes drafts but excludes them from total invoiced and outstanding
+ FAIL  tests/app/server/features/customers/queries/get-customer-financial-history.test.ts > derives issued invoice balances with 0 cents paid
+ FAIL  tests/app/server/features/customers/queries/get-customer-financial-history.test.ts > derives issued invoice balances with 2500 cents paid
+ FAIL  tests/app/server/features/customers/queries/get-customer-financial-history.test.ts > derives issued invoice balances with 10000 cents paid
+ FAIL  tests/app/server/features/customers/queries/get-customer-financial-history.test.ts > keeps voided invoices in invoiced history but excludes their balance; retains active and voided payments
+ FAIL  tests/app/server/features/customers/queries/get-customer-financial-history.test.ts > does not multiply multi-job invoice totals by multiple payments
+ FAIL  tests/app/server/features/customers/queries/get-customer-financial-history.test.ts > isolates invoices, payments and all totals between customers
+ FAIL  tests/app/server/features/customers/queries/get-customer-financial-history.test.ts > orders invoices by creation time then id, and payments by payment date then creation time, newest first
+ FAIL  tests/app/server/features/customers/queries/get-customer-financial-history.test.ts > allows financial history reads for admin
+ FAIL  tests/app/server/features/customers/queries/get-customer-financial-history.test.ts > allows financial history reads for operator
+ FAIL  tests/app/server/features/customers/queries/get-customer-financial-history.test.ts > requires customers.read before reading financial data
+ FAIL  tests/app/server/features/customers/queries/get-customer-financial-history.test.ts > requires invoices.read before reading financial data
+ FAIL  tests/app/server/features/customers/queries/get-customer-financial-history.test.ts > requires payments.read before reading financial data
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ draftInvoiceFixture tests/support/fixtures/draft-invoice.ts:49:29
+ ❯ tests/app/server/features/customers/queries/get-customer-financial-history.test.ts:26:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[60/346]⎯
+
+ FAIL  tests/app/server/features/dashboard/queries/get-dashboard.test.ts > derives balances without multiplying items/payments for admin
+ FAIL  tests/app/server/features/dashboard/queries/get-dashboard.test.ts > derives balances without multiplying items/payments for operator
+ FAIL  tests/app/server/features/dashboard/queries/get-dashboard.test.ts > derives overdue balance, count, and attention rows
+ FAIL  tests/app/server/features/dashboard/queries/get-dashboard.test.ts > does not treat an invoice due today as overdue
+ FAIL  tests/app/server/features/dashboard/queries/get-dashboard.test.ts > treats an unpaid invoice due before today as overdue
+ FAIL  tests/app/server/features/dashboard/queries/get-dashboard.test.ts > excludes paid and voided invoices from overdue and outstanding totals while retaining active receipts
+ FAIL  tests/app/server/features/dashboard/queries/get-dashboard.test.ts > returns genuine financial, overdue, and job zeros with empty rows
+ FAIL  tests/app/server/features/dashboard/queries/get-dashboard.test.ts > uses Melbourne calendar month boundaries at 2026-09-30T14:30:00Z
+ FAIL  tests/app/server/features/dashboard/queries/get-dashboard.test.ts > uses Melbourne calendar month boundaries at 2026-04-15T00:00:00Z
+ FAIL  tests/app/server/features/dashboard/queries/get-dashboard.test.ts > uses Melbourne calendar month boundaries at 2026-12-31T13:30:00Z
+ FAIL  tests/app/server/features/dashboard/queries/get-dashboard.test.ts > summarises only today's jobs from latest history, including timestamp ties and cancellation
+ FAIL  tests/app/server/features/dashboard/queries/get-dashboard.test.ts > limits recent payment history to five with deterministic ordering
+ FAIL  tests/app/server/features/dashboard/queries/get-dashboard.test.ts > requires customers.read before reading data
+ FAIL  tests/app/server/features/dashboard/queries/get-dashboard.test.ts > requires invoices.read before reading data
+ FAIL  tests/app/server/features/dashboard/queries/get-dashboard.test.ts > requires payments.read before reading data
+ FAIL  tests/app/server/features/dashboard/queries/get-dashboard.test.ts > requires jobs.read before reading data
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ draftInvoiceFixture tests/support/fixtures/draft-invoice.ts:49:29
+ ❯ issuedInvoiceFixture tests/support/fixtures/issued-invoice.ts:7:19
+ ❯ tests/app/server/features/dashboard/queries/get-dashboard.test.ts:22:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[61/346]⎯
+
+ FAIL  tests/app/server/features/invoices/queries/get-active-invoice-for-job.test.ts > returns the active draft invoice for the job
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/queries/get-active-invoice-for-job.test.ts:69:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[62/346]⎯
+
+ FAIL  tests/app/server/features/invoices/queries/get-active-invoice-for-job.test.ts > returns the active issued invoice for the job
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/queries/get-active-invoice-for-job.test.ts:82:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[63/346]⎯
+
+ FAIL  tests/app/server/features/invoices/queries/get-active-invoice-for-job.test.ts > ignores released invoice assignments
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/queries/get-active-invoice-for-job.test.ts:99:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[64/346]⎯
+
+ FAIL  tests/app/server/features/invoices/queries/get-active-invoice-for-job.test.ts > does not return an invoice assigned to another job
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/queries/get-active-invoice-for-job.test.ts:117:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[65/346]⎯
+
+ FAIL  tests/app/server/features/invoices/queries/get-active-invoice-for-job.test.ts > returns the same active invoice when it contains multiple jobs
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/queries/get-active-invoice-for-job.test.ts:126:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[66/346]⎯
+
+ FAIL  tests/app/server/features/invoices/queries/get-invoice-by-id.test.ts > returns invoice detail with multiple jobs
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/queries/get-invoice-by-id.test.ts:70:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[67/346]⎯
+
+ FAIL  tests/app/server/features/invoices/queries/get-invoice-by-id.test.ts > returns invoice items with their source jobs
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/queries/get-invoice-by-id.test.ts:114:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[68/346]⎯
+
+ FAIL  tests/app/server/features/invoices/queries/get-invoice-by-id.test.ts > derives the invoice total across all invoice items
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/queries/get-invoice-by-id.test.ts:152:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[69/346]⎯
+
+ FAIL  tests/app/server/features/invoices/queries/get-invoice-by-id.test.ts > returns jobs in scheduled-date order
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/queries/get-invoice-by-id.test.ts:163:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[70/346]⎯
+
+ FAIL  tests/app/server/features/invoices/queries/get-invoice-by-id.test.ts > derives totals without multiplying item/payment rows and keeps ordered history after invoice void
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/queries/get-invoice-by-id.test.ts:202:18
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[71/346]⎯
+
+ FAIL  tests/app/server/features/invoices/queries/is-job-invoiceable.test.ts > returns true when the job has no active invoice
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/app/server/features/invoices/queries/is-job-invoiceable.test.ts:56:56
+     54|
+     55| it("returns true when the job has no active invoice", async () => {
+     56|   expect(await isJobInvoiceable(env.DB, admin, jobId)).toBe(true);
+       |                                                        ^
+     57| });
+     58|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[72/346]⎯
+
+ FAIL  tests/app/server/features/invoices/queries/is-job-invoiceable.test.ts > returns false when the job belongs to a draft invoice
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/queries/is-job-invoiceable.test.ts:61:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[73/346]⎯
+
+ FAIL  tests/app/server/features/invoices/queries/is-job-invoiceable.test.ts > returns false when the job belongs to an issued invoice
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/queries/is-job-invoiceable.test.ts:70:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[74/346]⎯
+
+ FAIL  tests/app/server/features/invoices/queries/is-job-invoiceable.test.ts > returns true after the invoice is voided
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/queries/is-job-invoiceable.test.ts:83:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[75/346]⎯
+
+ FAIL  tests/app/server/features/invoices/queries/list-invoices.test.ts > returns invoices with customer and job context
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/queries/list-invoices.test.ts:66:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[76/346]⎯
+
+ FAIL  tests/app/server/features/invoices/queries/list-invoices.test.ts > derives totals from invoice items across multiple jobs
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/queries/list-invoices.test.ts:108:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[77/346]⎯
+
+ FAIL  tests/app/server/features/invoices/queries/list-invoices.test.ts > returns issued invoice information
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/queries/list-invoices.test.ts:124:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[78/346]⎯
+
+ FAIL  tests/app/server/features/invoices/queries/list-invoices.test.ts > returns invoices newest first
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/queries/list-invoices.test.ts:144:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[79/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/create-draft-invoice.test.ts > creates a draft invoice from one job
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/create-draft-invoice.test.ts:66:18
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[80/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/create-draft-invoice.test.ts > creates a draft invoice from multiple jobs for the same customer
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/create-draft-invoice.test.ts:88:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[81/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/create-draft-invoice.test.ts > copies items from all selected jobs
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/create-draft-invoice.test.ts:127:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[82/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/create-draft-invoice.test.ts > creates an empty draft when selected jobs have no items
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/create-draft-invoice.test.ts:158:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[83/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/create-draft-invoice.test.ts > derives the customer from the selected jobs
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/create-draft-invoice.test.ts:179:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[84/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/create-draft-invoice.test.ts > creates an independent snapshot of job items
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/create-draft-invoice.test.ts:199:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[85/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/create-draft-invoice.test.ts > rejects a job already attached to an active invoice
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/create-draft-invoice.test.ts:284:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[86/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/create-draft-invoice.test.ts > rejects the whole selection when one job is already invoiced
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/create-draft-invoice.test.ts:303:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[87/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/create-draft-invoice.test.ts > does not allocate an invoice number to a draft
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/create-draft-invoice.test.ts:323:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[88/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/create-invoice-item.test.ts > updates the parent timestamp after a successful mutation
+ FAIL  tests/app/server/features/invoices/services/create-invoice-item.test.ts > rejects issued invoices without changing data
+ FAIL  tests/app/server/features/invoices/services/create-invoice-item.test.ts > rejects voided invoices without changing data
+ FAIL  tests/app/server/features/invoices/services/create-invoice-item.test.ts > requires management permission
+ FAIL  tests/app/server/features/invoices/services/create-invoice-item.test.ts > rejects a missing invoice
+ FAIL  tests/app/server/features/invoices/services/create-invoice-item.test.ts > rolls back the item write if updating the parent fails
+ FAIL  tests/app/server/features/invoices/services/create-invoice-item.test.ts > adds a trimmed item with the correct invoice, job and integer cents
+ FAIL  tests/app/server/features/invoices/services/create-invoice-item.test.ts > rejects a missing job association without changing timestamp
+ FAIL  tests/app/server/features/invoices/services/create-invoice-item.test.ts > rejects a unselected job association without changing timestamp
+ FAIL  tests/app/server/features/invoices/services/create-invoice-item.test.ts > rejects a released job association without changing timestamp
+ FAIL  tests/app/server/features/invoices/services/create-invoice-item.test.ts > accepts zero
+ FAIL  tests/app/server/features/invoices/services/create-invoice-item.test.ts > rejects invalid cents -1
+ FAIL  tests/app/server/features/invoices/services/create-invoice-item.test.ts > rejects invalid cents 1.5
+ FAIL  tests/app/server/features/invoices/services/create-invoice-item.test.ts > rejects invalid cents NaN
+ FAIL  tests/app/server/features/invoices/services/create-invoice-item.test.ts > rejects invalid cents Infinity
+ FAIL  tests/app/server/features/invoices/services/create-invoice-item.test.ts > rejects invalid cents 9007199254740992
+ FAIL  tests/app/server/features/invoices/services/create-invoice-item.test.ts > rejects invalid description
+ FAIL  tests/app/server/features/invoices/services/create-invoice-item.test.ts > rejects invalid description
+ FAIL  tests/app/server/features/invoices/services/create-invoice-item.test.ts > rejects invalid description
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ draftInvoiceFixture tests/support/fixtures/draft-invoice.ts:49:29
+ ❯ tests/app/server/features/invoices/services/create-invoice-item.test.ts:21:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[89/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/delete-draft-invoice.test.ts > deletes a draft invoice
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/delete-draft-invoice.test.ts:77:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[90/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/delete-draft-invoice.test.ts > deletes all invoice items belonging to the draft
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/delete-draft-invoice.test.ts:100:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[91/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/delete-draft-invoice.test.ts > deletes all invoice job assignments belonging to the draft
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/delete-draft-invoice.test.ts:123:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[92/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/delete-draft-invoice.test.ts > does not delete data belonging to another draft
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/delete-draft-invoice.test.ts:151:34
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[93/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/delete-draft-invoice.test.ts > allows jobs from a deleted draft to be invoiced again
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/delete-draft-invoice.test.ts:185:34
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[94/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/delete-draft-invoice.test.ts > rejects deleting an issued invoice
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/delete-draft-invoice.test.ts:219:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[95/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/delete-draft-invoice.test.ts > does not delete items from an issued invoice
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/delete-draft-invoice.test.ts:257:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[96/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/delete-draft-invoice.test.ts > rejects deleting a voided invoice
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/delete-draft-invoice.test.ts:286:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[97/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/delete-draft-invoice.test.ts > requires invoice management permission
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/delete-draft-invoice.test.ts:327:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[98/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/delete-invoice-item.test.ts > updates the parent timestamp after a successful mutation
+ FAIL  tests/app/server/features/invoices/services/delete-invoice-item.test.ts > rejects issued invoices without changing data
+ FAIL  tests/app/server/features/invoices/services/delete-invoice-item.test.ts > rejects voided invoices without changing data
+ FAIL  tests/app/server/features/invoices/services/delete-invoice-item.test.ts > requires management permission
+ FAIL  tests/app/server/features/invoices/services/delete-invoice-item.test.ts > rejects a missing invoice
+ FAIL  tests/app/server/features/invoices/services/delete-invoice-item.test.ts > rolls back the item write if updating the parent fails
+ FAIL  tests/app/server/features/invoices/services/delete-invoice-item.test.ts > really deletes the draft item
+ FAIL  tests/app/server/features/invoices/services/delete-invoice-item.test.ts > rejects another invoice's item and leaves both invoices unchanged
+ FAIL  tests/app/server/features/invoices/services/delete-invoice-item.test.ts > rejects a missing item
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ draftInvoiceFixture tests/support/fixtures/draft-invoice.ts:49:29
+ ❯ tests/app/server/features/invoices/services/delete-invoice-item.test.ts:21:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[99/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/issue-invoice.test.ts > issues a draft invoice
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/issue-invoice.test.ts:76:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[100/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/issue-invoice.test.ts > issues an invoice containing multiple jobs
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/issue-invoice.test.ts:101:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[101/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/issue-invoice.test.ts > allocates sequential invoice numbers
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/issue-invoice.test.ts:132:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[102/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/issue-invoice.test.ts > does not assign an invoice number until issue
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/issue-invoice.test.ts:162:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[103/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/issue-invoice.test.ts > stores the supplied due date when issuing
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/issue-invoice.test.ts:186:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[104/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/issue-invoice.test.ts > rejects invalid due date 
+ FAIL  tests/app/server/features/invoices/services/issue-invoice.test.ts > rejects invalid due date not-a-date
+ FAIL  tests/app/server/features/invoices/services/issue-invoice.test.ts > rejects invalid due date 2026-02-30
+ FAIL  tests/app/server/features/invoices/services/issue-invoice.test.ts > rejects invalid due date 23/09/2026
+ FAIL  tests/app/server/features/invoices/services/issue-invoice.test.ts > rejects invalid due date 0000-01-01
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/issue-invoice.test.ts:204:31
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[105/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/issue-invoice.test.ts > does not change invoice items when issuing
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/issue-invoice.test.ts:235:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[106/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/issue-invoice.test.ts > does not release jobs when issuing
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/issue-invoice.test.ts:258:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[107/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/issue-invoice.test.ts > rejects issuing an already issued invoice
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/issue-invoice.test.ts:287:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[108/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/issue-invoice.test.ts > does not allocate another number when issue is retried
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/issue-invoice.test.ts:310:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[109/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/issue-invoice.test.ts > rejects a voided invoice
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/issue-invoice.test.ts:341:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[110/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/issue-invoice.test.ts > requires invoice management permission
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/issue-invoice.test.ts:375:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[111/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/update-draft-invoice-jobs.test.ts > adds a job to a draft invoice
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/update-draft-invoice-jobs.test.ts:89:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[112/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/update-draft-invoice-jobs.test.ts > removes a job from a draft invoice
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/update-draft-invoice-jobs.test.ts:123:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[113/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/update-draft-invoice-jobs.test.ts > preserves invoice item snapshots for jobs that remain selected
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/update-draft-invoice-jobs.test.ts:153:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[114/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/update-draft-invoice-jobs.test.ts > snapshots current job items when a job is newly added
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/update-draft-invoice-jobs.test.ts:191:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[115/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/update-draft-invoice-jobs.test.ts > removes snapshots belonging to removed jobs
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/update-draft-invoice-jobs.test.ts:227:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[116/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/update-draft-invoice-jobs.test.ts > allows a job removed from a draft to be invoiced elsewhere
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/update-draft-invoice-jobs.test.ts:253:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[117/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/update-draft-invoice-jobs.test.ts > rejects an empty job selection
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/update-draft-invoice-jobs.test.ts:272:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[118/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/update-draft-invoice-jobs.test.ts > rejects duplicate job ids
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/update-draft-invoice-jobs.test.ts:285:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[119/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/update-draft-invoice-jobs.test.ts > rejects a missing job
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/update-draft-invoice-jobs.test.ts:298:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[120/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/update-draft-invoice-jobs.test.ts > rejects a job belonging to another customer
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/update-draft-invoice-jobs.test.ts:311:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[121/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/update-draft-invoice-jobs.test.ts > rejects a job assigned to another active invoice
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/update-draft-invoice-jobs.test.ts:324:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[122/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/update-draft-invoice-jobs.test.ts > rejects an issued invoice
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/update-draft-invoice-jobs.test.ts:354:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[123/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/update-draft-invoice-jobs.test.ts > rejects a voided invoice
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/update-draft-invoice-jobs.test.ts:371:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[124/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/update-draft-invoice-jobs.test.ts > requires invoice management permission
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/update-draft-invoice-jobs.test.ts:398:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[125/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/update-draft-invoice-jobs.test.ts > preserves manual and edited items for retained jobs, then removes them with their job
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/update-draft-invoice-jobs.test.ts:423:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[126/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/update-invoice-item.test.ts > updates the parent timestamp after a successful mutation
+ FAIL  tests/app/server/features/invoices/services/update-invoice-item.test.ts > rejects issued invoices without changing data
+ FAIL  tests/app/server/features/invoices/services/update-invoice-item.test.ts > rejects voided invoices without changing data
+ FAIL  tests/app/server/features/invoices/services/update-invoice-item.test.ts > requires management permission
+ FAIL  tests/app/server/features/invoices/services/update-invoice-item.test.ts > rejects a missing invoice
+ FAIL  tests/app/server/features/invoices/services/update-invoice-item.test.ts > rolls back the item write if updating the parent fails
+ FAIL  tests/app/server/features/invoices/services/update-invoice-item.test.ts > edits only description and amount, preserving source job and creation time
+ FAIL  tests/app/server/features/invoices/services/update-invoice-item.test.ts > rejects another invoice's item and leaves both invoices unchanged
+ FAIL  tests/app/server/features/invoices/services/update-invoice-item.test.ts > rejects a missing item
+ FAIL  tests/app/server/features/invoices/services/update-invoice-item.test.ts > accepts zero
+ FAIL  tests/app/server/features/invoices/services/update-invoice-item.test.ts > rejects invalid cents -1
+ FAIL  tests/app/server/features/invoices/services/update-invoice-item.test.ts > rejects invalid cents 1.5
+ FAIL  tests/app/server/features/invoices/services/update-invoice-item.test.ts > rejects invalid cents NaN
+ FAIL  tests/app/server/features/invoices/services/update-invoice-item.test.ts > rejects invalid cents Infinity
+ FAIL  tests/app/server/features/invoices/services/update-invoice-item.test.ts > rejects invalid cents 9007199254740992
+ FAIL  tests/app/server/features/invoices/services/update-invoice-item.test.ts > rejects invalid description
+ FAIL  tests/app/server/features/invoices/services/update-invoice-item.test.ts > rejects invalid description
+ FAIL  tests/app/server/features/invoices/services/update-invoice-item.test.ts > rejects invalid description
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ draftInvoiceFixture tests/support/fixtures/draft-invoice.ts:49:29
+ ❯ tests/app/server/features/invoices/services/update-invoice-item.test.ts:22:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[127/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/void-invoice.test.ts > voids an issued invoice
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/void-invoice.test.ts:76:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[128/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/void-invoice.test.ts > preserves the invoice number when voided
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/void-invoice.test.ts:101:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[129/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/void-invoice.test.ts > preserves issuedAt when voided
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/void-invoice.test.ts:119:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[130/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/void-invoice.test.ts > does not change invoice items when voided
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/void-invoice.test.ts:149:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[131/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/void-invoice.test.ts > releases all jobs when the invoice is voided
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/void-invoice.test.ts:174:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[132/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/void-invoice.test.ts > allows jobs from a voided invoice to be invoiced again
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/void-invoice.test.ts:209:34
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[133/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/void-invoice.test.ts > preserves the historical job relationships after voiding
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/void-invoice.test.ts:247:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[134/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/void-invoice.test.ts > rejects voiding a draft invoice
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/void-invoice.test.ts:268:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[135/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/void-invoice.test.ts > rejects voiding an already voided invoice
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/void-invoice.test.ts:298:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[136/346]⎯
+
+ FAIL  tests/app/server/features/invoices/services/void-invoice.test.ts > requires invoice management permission
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/void-invoice.test.ts:326:29
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[137/346]⎯
+
+ FAIL  tests/app/server/features/payments/services/record-payment.test.ts > records the bank payment date and server creation timestamp
+ FAIL  tests/app/server/features/payments/services/record-payment.test.ts > accepts multiple payments including an exact final balance
+ FAIL  tests/app/server/features/payments/services/record-payment.test.ts > rejects invalid amount 0
+ FAIL  tests/app/server/features/payments/services/record-payment.test.ts > rejects invalid amount -1
+ FAIL  tests/app/server/features/payments/services/record-payment.test.ts > rejects invalid amount 1.5
+ FAIL  tests/app/server/features/payments/services/record-payment.test.ts > rejects invalid amount NaN
+ FAIL  tests/app/server/features/payments/services/record-payment.test.ts > rejects invalid amount Infinity
+ FAIL  tests/app/server/features/payments/services/record-payment.test.ts > rejects invalid amount 9007199254740992
+ FAIL  tests/app/server/features/payments/services/record-payment.test.ts > rejects invalid payment date 
+ FAIL  tests/app/server/features/payments/services/record-payment.test.ts > rejects invalid payment date not-a-date
+ FAIL  tests/app/server/features/payments/services/record-payment.test.ts > rejects invalid payment date 25/09/2026
+ FAIL  tests/app/server/features/payments/services/record-payment.test.ts > rejects invalid payment date 2026-02-30
+ FAIL  tests/app/server/features/payments/services/record-payment.test.ts > rejects invalid payment date 0000-01-01
+ FAIL  tests/app/server/features/payments/services/record-payment.test.ts > rejects a payment date in the future
+ FAIL  tests/app/server/features/payments/services/record-payment.test.ts > uses the Melbourne calendar date when validating future payments
+ FAIL  tests/app/server/features/payments/services/record-payment.test.ts > rejects overpayment without writing another payment
+ FAIL  tests/app/server/features/payments/services/record-payment.test.ts > prevents concurrent payments exceeding the balance
+ FAIL  tests/app/server/features/payments/services/record-payment.test.ts > does not count voided payments when checking the balance
+ FAIL  tests/app/server/features/payments/services/record-payment.test.ts > rejects draft invoices
+ FAIL  tests/app/server/features/payments/services/record-payment.test.ts > rejects voided invoices
+ FAIL  tests/app/server/features/payments/services/record-payment.test.ts > requires management permission
+ FAIL  tests/app/server/features/payments/services/record-payment.test.ts > rejects a missing invoice
+ FAIL  tests/app/server/features/payments/services/record-payment.test.ts > throws PaymentValidationError for invalid payment details
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ draftInvoiceFixture tests/support/fixtures/draft-invoice.ts:49:29
+ ❯ issuedInvoiceFixture tests/support/fixtures/issued-invoice.ts:7:19
+ ❯ tests/app/server/features/payments/services/record-payment.test.ts:22:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[138/346]⎯
+
+ FAIL  tests/app/server/features/payments/services/void-payment.test.ts > voids once, preserves the original record and restores the balance
+ FAIL  tests/app/server/features/payments/services/void-payment.test.ts > preserves active and voided payments through invoice void, then allows explicit payment void
+ FAIL  tests/app/server/features/payments/services/void-payment.test.ts > rejects a payment through a different invoice
+ FAIL  tests/app/server/features/payments/services/void-payment.test.ts > rejects a missing payment
+ FAIL  tests/app/server/features/payments/services/void-payment.test.ts > rejects a missing invoice
+ FAIL  tests/app/server/features/payments/services/void-payment.test.ts > requires management permission
+ FAIL  tests/app/server/features/payments/services/void-payment.test.ts > only one concurrent void succeeds
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ draftInvoiceFixture tests/support/fixtures/draft-invoice.ts:49:29
+ ❯ issuedInvoiceFixture tests/support/fixtures/issued-invoice.ts:7:19
+ ❯ tests/app/server/features/payments/services/void-payment.test.ts:18:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[139/346]⎯
+
+ FAIL  tests/app/server/features/payments/queries/list-payments.test.ts > returns active payments with bank date, invoice and customer context for admin
+ FAIL  tests/app/server/features/payments/queries/list-payments.test.ts > returns active payments with bank date, invoice and customer context for operator
+ FAIL  tests/app/server/features/payments/queries/list-payments.test.ts > retains both active and voided payments after their invoice is voided
+ FAIL  tests/app/server/features/payments/queries/list-payments.test.ts > orders across invoices by payment date, creation time and id descending
+ FAIL  tests/app/server/features/payments/queries/list-payments.test.ts > returns an empty list when there are no payments
+ FAIL  tests/app/server/features/payments/queries/list-payments.test.ts > requires payment read permission
+ FAIL  tests/app/server/features/payments/queries/list-payments.test.ts > keeps the original payment date when a payment is voided
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ draftInvoiceFixture tests/support/fixtures/draft-invoice.ts:49:29
+ ❯ issuedInvoiceFixture tests/support/fixtures/issued-invoice.ts:7:19
+ ❯ tests/app/server/features/payments/queries/list-payments.test.ts:19:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[140/346]⎯
+
+
+ Test Files  35 failed | 45 passed (80)
+      Tests  346 failed | 407 passed (753)
+   Start at  16:33:40
+   Duration  43.06s (transform 23.57s, setup 180.05s, import 125.99s, tests 22.78s, environment 8ms)
+

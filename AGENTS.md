@@ -775,21 +775,7 @@ The Customer remains important contextual information and may link to the Custom
 
 Job name and description are descriptive metadata.
 
-They may be edited regardless of current Job status:
-
-```text
-
-scheduled
-
-in_progress
-
-completed
-
-cancelled
-
-```
-
-This allows corrections and clarification of the Job record without altering its lifecycle history.
+They may be edited only while the Job is scheduled or in progress. Completed and cancelled Jobs are locked. Reopen an eligible completed Job before making corrections.
 
 Editing Job name or description must not create or modify Job status-history rows.
 
@@ -867,11 +853,11 @@ This rule must be enforced server-side.
 
 Do not rely solely on disabling or hiding the field in the UI.
 
-When updating a Job whose current status is not `scheduled`, name and description may still be changed, but the scheduled date must remain unchanged.
+When updating an in-progress Job, name and description may still be changed, but the scheduled date must remain unchanged. Completed and cancelled Jobs reject ordinary edits.
 
 If the edit form includes the existing scheduled date as a submitted value, do not reject an otherwise valid metadata edit merely because the field is present.
 
-Reject the operation only if a non-scheduled Job attempts to change the stored scheduled date.
+For an in-progress Job, reject a scheduled-date change but allow an unchanged submitted date.
 
 Prefer making the field disabled or read-only in the UI when the Job is not scheduled, while still enforcing the invariant on the server.
 
@@ -887,9 +873,9 @@ The current Job edit rules are:
 
 Field            Scheduled     In Progress     Completed     Cancelled
 
-name             editable      editable        editable      editable
+name             editable      editable        read-only      read-only
 
-description      editable      editable        editable      editable
+description      editable      editable        read-only      read-only
 
 scheduled date   editable      read-only       read-only     read-only
 
@@ -937,8 +923,6 @@ in_progress -> in_progress
 
 completed -> scheduled
 
-completed -> in_progress
-
 completed -> completed
 
 completed -> cancelled
@@ -953,7 +937,7 @@ cancelled -> cancelled
 
 ```
 
-There is currently no reopen transition.
+A completed Job may be reopened to `in_progress` only if it has no active invoice allocation. Reopening appends status history and retains the service price and all additional charges. Cancelled Jobs cannot be reopened.
 
 There is currently no transition from `in_progress` back to `scheduled`.
 
@@ -961,7 +945,7 @@ A scheduled Job may be completed directly without first moving to `in_progress`.
 
 This is intentional.
 
-Starting, completing, or cancelling a Job must append a new status-history row.
+Starting, completing, cancelling, or reopening a Job must append a new status-history row.
 
 Do not mutate or delete previous status-history records.
 
@@ -986,6 +970,20 @@ cancelJob
 over generic status-setting APIs.
 
 Do not introduce a generic workflow engine or state-machine abstraction unless future requirements demonstrate a real need.
+
+---
+
+# Job Billing Finalisation
+
+Operational editing and billing finalisation are separate concerns. Ordinary Job editing never accepts or changes `servicePriceCents`.
+
+Completion supplies a required non-negative integer-cent service price and persists it atomically with the completed status-history entry. Completion finalises and locks the billable Job state. The UI first warns about finalisation, then reviews the service price, existing additional charges, and derived total.
+
+Reopening retains billing data, returns the Job to in-progress, and enables corrections before completing again. Jobs allocated to an active invoice cannot be reopened.
+
+Only completed Jobs are invoiceable and expose invoice actions or relationships in the Job UI. Domain services enforce lifecycle invariants; UI visibility is not a security or domain boundary.
+
+Invoice snapshots remain independent of subsequent Job changes. Do not implicitly refresh snapshots when a Job is corrected.
 
 ---
 
@@ -1208,14 +1206,14 @@ Do not introduce discounts or negative line items without an explicit later prod
 
 A Job may have zero or more Job Items.
 
-The Job total is derived from its Job Items.
+The Job total is derived from its service price and additional charges (Job Items).
 
 Do not introduce a mutable stored Job-total field as a separate source of truth.
 
 The current Job total is:
 
 ```text
-sum(job_items.amount_cents)
+servicePriceCents + sum(job_items.amount_cents)
 ```
 
 Job Items may currently be:
@@ -1224,22 +1222,7 @@ Job Items may currently be:
 - edited
 - removed
 
-These operations are allowed regardless of the Job's current operational status:
-
-```text
-scheduled
-in_progress
-completed
-cancelled
-```
-
-Do not freeze Job Items merely because a Job is completed.
-
-A completed Job may still require pricing to be entered or corrected after the operational work is finished.
-
-A cancelled Job may still require legitimate charges such as a call-out fee or partial work charge.
-
-Job operational status and Job pricing are separate concerns.
+Additional charges may be created, edited, or removed only while the Job is scheduled or in progress. Completed and cancelled Jobs reject all charge mutations server-side. Charges remain editable through the normal Job UI before completion; the completion dialog is a final review.
 
 Do not introduce additional Job statuses such as:
 
@@ -1480,9 +1463,7 @@ This preselects an eligible Job but does not bypass server validation.
 
 Do not create an Invoice immediately from a Job-detail POST simply because the shortcut originates from a Job.
 
-Current Invoice creation does not impose a Job-status restriction.
-
-Do not silently restrict invoicing to completed Jobs unless a later product decision explicitly adds that rule.
+Only completed Jobs may be selected for invoice creation or added to a draft. Enforce the authoritative latest status when allocating the Job, including races with reopening.
 
 When a draft Invoice is created, current Job Items for all selected Jobs are snapshotted into Invoice Items.
 
@@ -1876,15 +1857,15 @@ For Job editing specifically, test at minimum:
 
 - in-progress Job date cannot be changed
 
-- completed Job name can be changed
+- completed Job name cannot be changed
 
-- completed Job description can be changed
+- completed Job description cannot be changed
 
 - completed Job date cannot be changed
 
-- cancelled Job name can be changed
+- cancelled Job name cannot be changed
 
-- cancelled Job description can be changed
+- cancelled Job description cannot be changed
 
 - cancelled Job date cannot be changed
 
@@ -2069,7 +2050,7 @@ Before considering work complete:
 
 10. Confirm Customer cannot be changed after Job creation.
 
-11. Confirm name and description remain editable for all Job statuses.
+11. Confirm ordinary editing is allowed only while scheduled or in progress, and never changes service price.
 
 12. Confirm scheduled date can only change while the Job is `scheduled`.
 

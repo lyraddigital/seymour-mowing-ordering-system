@@ -38,15 +38,6 @@ export function validateUpdateJob(input: UpdateJobInput): UpdateJobInput {
     fieldErrors.description = "Use 2,000 characters or fewer.";
   }
 
-  if (
-    input.servicePriceCents !== null &&
-    (!Number.isSafeInteger(input.servicePriceCents) ||
-      input.servicePriceCents < 0)
-  ) {
-    fieldErrors.servicePriceCents =
-      "Service price must be a non-negative amount in cents.";
-  }
-
   if (Object.keys(fieldErrors).length) {
     throw new JobValidationError(fieldErrors);
   }
@@ -55,6 +46,5 @@ export function validateUpdateJob(input: UpdateJobInput): UpdateJobInput {
     name,
     scheduledDate,
     description,
-    servicePriceCents: input.servicePriceCents,
   };
 }

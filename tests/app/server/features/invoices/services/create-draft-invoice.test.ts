@@ -1,3 +1,4 @@
+import { completeInvoiceJobs } from "../../../../../support/fixtures/complete-invoice-jobs";
 import { env } from "cloudflare:workers";
 import { eq } from "drizzle-orm";
 import { beforeEach, expect, it } from "vitest";
@@ -61,6 +62,7 @@ beforeEach(async () => {
 });
 
 it("creates a draft invoice from one job", async () => {
+  await completeInvoiceJobs(admin, [firstJobId]);
   const result = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });
@@ -82,6 +84,7 @@ it("creates a draft invoice from one job", async () => {
 });
 
 it("creates a draft invoice from multiple jobs for the same customer", async () => {
+  await completeInvoiceJobs(admin, [firstJobId, secondJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId, secondJobId],
   });
@@ -120,6 +123,7 @@ it("copies items from all selected jobs", async () => {
     amountCents: 3500,
   });
 
+  await completeInvoiceJobs(admin, [firstJobId, secondJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId, secondJobId],
   });
@@ -150,6 +154,7 @@ it("copies items from all selected jobs", async () => {
 });
 
 it("creates an empty draft when selected jobs have no items", async () => {
+  await completeInvoiceJobs(admin, [firstJobId, secondJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId, secondJobId],
   });
@@ -170,6 +175,7 @@ it("creates an empty draft when selected jobs have no items", async () => {
 });
 
 it("derives the customer from the selected jobs", async () => {
+  await completeInvoiceJobs(admin, [firstJobId, secondJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId, secondJobId],
   });
@@ -189,6 +195,7 @@ it("creates an independent snapshot of job items", async () => {
     amountCents: 4500,
   });
 
+  await completeInvoiceJobs(admin, [firstJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });
@@ -273,6 +280,7 @@ it("rejects jobs belonging to different customers", async () => {
 });
 
 it("rejects a job already attached to an active invoice", async () => {
+  await completeInvoiceJobs(admin, [firstJobId]);
   const firstInvoice = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });
@@ -291,6 +299,7 @@ it("rejects a job already attached to an active invoice", async () => {
 });
 
 it("rejects the whole selection when one job is already invoiced", async () => {
+  await completeInvoiceJobs(admin, [firstJobId]);
   await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });
@@ -310,6 +319,7 @@ it("rejects the whole selection when one job is already invoiced", async () => {
 });
 
 it("does not allocate an invoice number to a draft", async () => {
+  await completeInvoiceJobs(admin, [firstJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });

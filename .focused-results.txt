@@ -1,0 +1,123 @@
+
+> test
+> vitest run tests/app/server/features/invoices tests/app/routes/jobs
+
+
+ RUN  v4.1.11 C:/Users/User/Documents/Code/seymour-mowing-ordering-system
+
+ ❯ tests/app/routes/jobs.$jobId.invoice.test.ts (5 tests | 1 failed) 305ms
+   × allows invoice creation when the job has no active invoice 66ms
+ ❯ tests/app/routes/jobs.$jobId.test.tsx (10 tests | 1 failed) 478ms
+   × renders the job detail hierarchy for an administrator 64ms
+ ❯ tests/app/server/features/invoices/services/delete-invoice-item.test.ts (9 tests | 1 failed) 638ms
+   × rejects another invoice's item and leaves both invoices unchanged 58ms
+ ❯ tests/app/server/features/invoices/services/create-draft-invoice.test.ts (14 tests | 1 failed) 702ms
+   × rejects the whole selection when one job is already invoiced 54ms
+ ❯ tests/app/server/features/invoices/services/update-invoice-item.test.ts (18 tests | 1 failed) 974ms
+   × rejects another invoice's item and leaves both invoices unchanged 60ms
+ ❯ tests/app/server/features/invoices/queries/is-job-invoiceable.test.ts (5 tests | 1 failed) 203ms
+   × returns true when the job has no active invoice 41ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/app/routes/jobs.$jobId.invoice.test.ts > allows invoice creation when the job has no active invoice
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/app/routes/jobs.$jobId.invoice.test.ts:82:35
+     80|   const result = await loader(loaderArgs(jobId));
+     81|
+     82|   expect(result.canCreateInvoice).toBe(true);
+       |                                   ^
+     83| });
+     84|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  tests/app/routes/jobs.$jobId.test.tsx > renders the job detail hierarchy for an administrator
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/app/routes/jobs.$jobId.test.tsx:110:35
+    108|   expect(result.canManage).toBe(true);
+    109|   expect(result.invoice).toBeNull();
+    110|   expect(result.canCreateInvoice).toBe(true);
+       |                                   ^
+    111|
+    112|   const html = renderPage(result);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  tests/app/server/features/invoices/queries/is-job-invoiceable.test.ts > returns true when the job has no active invoice
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/app/server/features/invoices/queries/is-job-invoiceable.test.ts:56:56
+     54|
+     55| it("returns true when the job has no active invoice", async () => {
+     56|   expect(await isJobInvoiceable(env.DB, admin, jobId)).toBe(true);
+       |                                                        ^
+     57| });
+     58|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  tests/app/server/features/invoices/services/create-draft-invoice.test.ts > rejects the whole selection when one job is already invoiced
+AssertionError: expected InvoiceJobSelectionError: Only completed … to be an instance of InvoiceJobConflictError
+ ❯ tests/app/server/features/invoices/services/create-draft-invoice.test.ts:311:4
+    309|       jobIds: [firstJobId, secondJobId],
+    310|     }),
+    311|   ).rejects.toBeInstanceOf(InvoiceJobConflictError);
+       |    ^
+    312|
+    313|   expect(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+ FAIL  tests/app/server/features/invoices/services/delete-invoice-item.test.ts > rejects another invoice's item and leaves both invoices unchanged
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/delete-invoice-item.test.ts:91:18
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+ FAIL  tests/app/server/features/invoices/services/update-invoice-item.test.ts > rejects another invoice's item and leaves both invoices unchanged
+InvoiceJobSelectionError: Only completed jobs can be added to an invoice.
+ ❯ createDraftInvoice app/server/features/invoices/services/create-draft-invoice.server.ts:69:11
+     67|
+     68|   if (selectedJobs.some((job) => job.completedId === null)) {
+     69|     throw new InvoiceJobSelectionError("Only completed jobs can be add…
+       |           ^
+     70|   }
+     71|
+ ❯ tests/app/server/features/invoices/services/update-invoice-item.test.ts:111:18
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
+
+
+ Test Files  6 failed | 17 passed (23)
+      Tests  6 failed | 256 passed (262)
+   Start at  16:34:52
+   Duration  14.18s (transform 17.75s, setup 51.15s, import 34.59s, tests 11.16s, environment 1ms)
+

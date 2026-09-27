@@ -136,7 +136,7 @@ it("allows only one of competing transitions to succeed", async () => {
   const outcomes = await Promise.allSettled([
     cancelJob(env.DB, user, "job"),
     cancelJob(env.DB, user, "job"),
-    completeJob(env.DB, user, "job"),
+    completeJob(env.DB, user, "job", 10_000),
   ]);
   expect(
     outcomes.filter((result) => result.status === "fulfilled"),

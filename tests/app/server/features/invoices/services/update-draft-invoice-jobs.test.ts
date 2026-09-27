@@ -1,3 +1,4 @@
+import { completeInvoiceJobs } from "../../../../../support/fixtures/complete-invoice-jobs";
 import { updateInvoiceItem } from "../../../../../../app/server/features/invoices/services/update-invoice-item.server";
 import { createInvoiceItem } from "../../../../../../app/server/features/invoices/services/create-invoice-item.server";
 import { env } from "cloudflare:workers";
@@ -84,10 +85,12 @@ beforeEach(async () => {
 });
 
 it("adds a job to a draft invoice", async () => {
+  await completeInvoiceJobs(admin, [firstJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });
 
+  await completeInvoiceJobs(admin, [firstJobId, secondJobId]);
   await updateDraftInvoiceJobs(env.DB, admin, invoiceId, {
     jobIds: [firstJobId, secondJobId],
   });
@@ -116,10 +119,12 @@ it("adds a job to a draft invoice", async () => {
 });
 
 it("removes a job from a draft invoice", async () => {
+  await completeInvoiceJobs(admin, [firstJobId, secondJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId, secondJobId],
   });
 
+  await completeInvoiceJobs(admin, [secondJobId]);
   await updateDraftInvoiceJobs(env.DB, admin, invoiceId, {
     jobIds: [secondJobId],
   });
@@ -144,6 +149,7 @@ it("preserves invoice item snapshots for jobs that remain selected", async () =>
     amountCents: 4500,
   });
 
+  await completeInvoiceJobs(admin, [firstJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });
@@ -155,6 +161,7 @@ it("preserves invoice item snapshots for jobs that remain selected", async () =>
     })
     .where(eq(jobItems.id, firstItemId));
 
+  await completeInvoiceJobs(admin, [firstJobId, secondJobId]);
   await updateDraftInvoiceJobs(env.DB, admin, invoiceId, {
     jobIds: [firstJobId, secondJobId],
   });
@@ -180,10 +187,12 @@ it("snapshots current job items when a job is newly added", async () => {
     amountCents: 3500,
   });
 
+  await completeInvoiceJobs(admin, [firstJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });
 
+  await completeInvoiceJobs(admin, [firstJobId, secondJobId]);
   await updateDraftInvoiceJobs(env.DB, admin, invoiceId, {
     jobIds: [firstJobId, secondJobId],
   });
@@ -214,10 +223,12 @@ it("removes snapshots belonging to removed jobs", async () => {
     amountCents: 3500,
   });
 
+  await completeInvoiceJobs(admin, [firstJobId, secondJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId, secondJobId],
   });
 
+  await completeInvoiceJobs(admin, [firstJobId]);
   await updateDraftInvoiceJobs(env.DB, admin, invoiceId, {
     jobIds: [firstJobId],
   });
@@ -238,14 +249,17 @@ it("removes snapshots belonging to removed jobs", async () => {
 });
 
 it("allows a job removed from a draft to be invoiced elsewhere", async () => {
+  await completeInvoiceJobs(admin, [firstJobId, secondJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId, secondJobId],
   });
 
+  await completeInvoiceJobs(admin, [firstJobId]);
   await updateDraftInvoiceJobs(env.DB, admin, invoiceId, {
     jobIds: [firstJobId],
   });
 
+  await completeInvoiceJobs(admin, [secondJobId]);
   const result = await createDraftInvoice(env.DB, admin, {
     jobIds: [secondJobId],
   });
@@ -254,6 +268,7 @@ it("allows a job removed from a draft to be invoiced elsewhere", async () => {
 });
 
 it("rejects an empty job selection", async () => {
+  await completeInvoiceJobs(admin, [firstJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });
@@ -266,6 +281,7 @@ it("rejects an empty job selection", async () => {
 });
 
 it("rejects duplicate job ids", async () => {
+  await completeInvoiceJobs(admin, [firstJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });
@@ -278,6 +294,7 @@ it("rejects duplicate job ids", async () => {
 });
 
 it("rejects a missing job", async () => {
+  await completeInvoiceJobs(admin, [firstJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });
@@ -290,6 +307,7 @@ it("rejects a missing job", async () => {
 });
 
 it("rejects a job belonging to another customer", async () => {
+  await completeInvoiceJobs(admin, [firstJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });
@@ -302,10 +320,12 @@ it("rejects a job belonging to another customer", async () => {
 });
 
 it("rejects a job assigned to another active invoice", async () => {
+  await completeInvoiceJobs(admin, [firstJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });
 
+  await completeInvoiceJobs(admin, [secondJobId]);
   await createDraftInvoice(env.DB, admin, {
     jobIds: [secondJobId],
   });
@@ -330,6 +350,7 @@ it("rejects a job assigned to another active invoice", async () => {
 });
 
 it("rejects an issued invoice", async () => {
+  await completeInvoiceJobs(admin, [firstJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });
@@ -346,6 +367,7 @@ it("rejects an issued invoice", async () => {
 });
 
 it("rejects a voided invoice", async () => {
+  await completeInvoiceJobs(admin, [firstJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });
@@ -372,6 +394,7 @@ it("rejects a missing invoice", async () => {
 });
 
 it("requires invoice management permission", async () => {
+  await completeInvoiceJobs(admin, [firstJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });
@@ -396,6 +419,7 @@ it("preserves manual and edited items for retained jobs, then removes them with 
     description: "Original",
     amountCents: 1000,
   });
+  await completeInvoiceJobs(admin, [firstJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });
@@ -411,14 +435,17 @@ it("preserves manual and edited items for retained jobs, then removes them with 
     amountCents: 500,
   });
   const before = await db.select().from(invoiceItems);
+  await completeInvoiceJobs(admin, [firstJobId]);
   await updateDraftInvoiceJobs(env.DB, admin, invoiceId, {
     jobIds: [firstJobId],
   });
   expect(await db.select().from(invoiceItems)).toEqual(before);
+  await completeInvoiceJobs(admin, [firstJobId, secondJobId]);
   await updateDraftInvoiceJobs(env.DB, admin, invoiceId, {
     jobIds: [firstJobId, secondJobId],
   });
   expect(await db.select().from(invoiceItems)).toEqual(before);
+  await completeInvoiceJobs(admin, [secondJobId]);
   await updateDraftInvoiceJobs(env.DB, admin, invoiceId, {
     jobIds: [secondJobId],
   });

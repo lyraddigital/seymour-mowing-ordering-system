@@ -1,3 +1,4 @@
+import { completedJobId } from "../queries/completed-job-id";
 import { and, eq, inArray, isNull, ne, sql } from "drizzle-orm";
 
 import { PermissionDeniedError } from "../../../auth/authorization/errors/permission-denied-error";
@@ -64,6 +65,7 @@ export async function updateDraftInvoiceJobs(
     .select({
       id: jobs.id,
       customerId: jobs.customerId,
+      completedId: completedJobId(jobs.id),
     })
     .from(jobs)
     .where(inArray(jobs.id, jobIds));
@@ -78,6 +80,10 @@ export async function updateDraftInvoiceJobs(
     throw new InvoiceJobSelectionError(
       "All selected jobs must belong to the invoice customer.",
     );
+  }
+
+  if (selectedJobs.some((job) => job.completedId === null)) {
+    throw new InvoiceJobSelectionError("Only completed jobs can be added to an invoice.");
   }
 
   const conflictingAssignments = await db
@@ -160,7 +166,7 @@ export async function updateDraftInvoiceJobs(
         db.insert(invoiceJobs).values(
           addedJobIds.map((jobId) => ({
             invoiceId,
-            jobId,
+            jobId: completedJobId(jobId),
             releasedAt: null,
           })),
         ),
@@ -195,7 +201,7 @@ export async function updateDraftInvoiceJobs(
         db.insert(invoiceJobs).values(
           addedJobIds.map((jobId) => ({
             invoiceId,
-            jobId,
+            jobId: completedJobId(jobId),
             releasedAt: null,
           })),
         ),
@@ -249,6 +255,10 @@ export async function updateDraftInvoiceJobs(
       ]);
     }
   } catch (error) {
+    if (error instanceof Error && error.message.includes("NOT NULL constraint failed: invoice_jobs.job_id")) {
+      throw new InvoiceJobSelectionError("Only completed jobs can be added to an invoice.");
+    }
+
     if (
       error instanceof Error &&
       error.message.includes("invoice_jobs.job_id")

@@ -1,3 +1,6 @@
+import { startJob } from "../../../app/server/features/jobs/services/start-job.server";
+import { reopenJob } from "../../../app/server/features/jobs/services/reopen-job.server";
+import { completeInvoiceJobs } from "../../support/fixtures/complete-invoice-jobs";
 import { env } from "cloudflare:workers";
 import { eq } from "drizzle-orm";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -106,7 +109,7 @@ it("renders the job detail hierarchy for an administrator", async () => {
 
   expect(result.canManage).toBe(true);
   expect(result.invoice).toBeNull();
-  expect(result.canCreateInvoice).toBe(true);
+  expect(result.canCreateInvoice).toBe(false);
 
   const html = renderPage(result);
 
@@ -131,10 +134,14 @@ it("renders the job detail hierarchy for an administrator", async () => {
   expect(html).toContain("Items");
   expect(html).toContain("No items have been added yet.");
 
-  expect(html).toContain("Invoice");
-  expect(html).toContain("This job has not been added to an invoice yet.");
-  expect(html).toContain(`href="/invoices/new?jobId=${jobId}"`);
-  expect(html).toContain("Create invoice");
+  expect(html).not.toContain('id="job-invoice-heading"');
+  expect(html).not.toContain("Create invoice");
+  expect(html).toContain("Complete this job?");
+  expect(html).toContain("Service price (AUD)");
+  expect(html).toContain("Additional charges");
+  expect(html).toContain("Continue");
+  expect(html).toContain("Back");
+  expect(html).toContain("<dialog");
 
   expect(html).toContain("Danger zone");
   expect(html).toContain("<summary>Cancel Job</summary>");
@@ -143,6 +150,7 @@ it("renders the job detail hierarchy for an administrator", async () => {
 });
 
 it("shows the active invoice relationship instead of create invoice", async () => {
+  await completeInvoiceJobs(user, [jobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, user, {
     jobIds: [jobId],
   });
@@ -170,6 +178,7 @@ it("shows the active invoice relationship instead of create invoice", async () =
 });
 
 it("shows an invoice relationship to an operator but not invoice creation", async () => {
+  await completeInvoiceJobs(user, [jobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, user, {
     jobIds: [jobId],
   });
@@ -231,7 +240,7 @@ it.each([
         .where(eq(jobs.id, jobId));
     }
 
-    await operation(env.DB, user, jobId);
+    await operation(env.DB, user, jobId, 10_000);
 
     const result = await loader(args());
     const html = renderPage(result);
@@ -252,9 +261,12 @@ it.each([
     if (status === "completed") {
       expect(html).toContain(`action="/jobs/${jobId}/reopen"`);
       expect(html).toContain("Reopen job");
+      expect(html).toContain('id="job-invoice-heading"');
+      expect(html).toContain("Create invoice");
     } else {
       expect(html).not.toContain(`action="/jobs/${jobId}/reopen"`);
       expect(html).not.toContain("Reopen job");
+      expect(html).not.toContain('id="job-invoice-heading"');
     }
   },
 );
@@ -306,4 +318,13 @@ it("requires the authenticated user context", async () => {
   });
 
   await expect(loader(args())).rejects.toThrow();
+});
+
+
+it("hides invoices for in-progress and reopened jobs", async () => {
+  await startJob(env.DB, user, jobId);
+  expect(renderPage(await loader(args()))).not.toContain('id="job-invoice-heading"');
+  await completeJob(env.DB, user, jobId, 12345);
+  await reopenJob(env.DB, user, jobId);
+  expect(renderPage(await loader(args()))).not.toContain('id="job-invoice-heading"');
 });

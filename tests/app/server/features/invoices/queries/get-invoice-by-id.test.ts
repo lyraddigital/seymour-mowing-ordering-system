@@ -1,3 +1,4 @@
+import { completeInvoiceJobs } from "../../../../../support/fixtures/complete-invoice-jobs";
 import { voidInvoice } from "../../../../../../app/server/features/invoices/services/void-invoice.server";
 import { issueInvoice } from "../../../../../../app/server/features/invoices/services/issue-invoice.server";
 import { voidPayment } from "../../../../../../app/server/features/payments/services/void-payment.server";
@@ -65,6 +66,7 @@ beforeEach(async () => {
 });
 
 it("returns invoice detail with multiple jobs", async () => {
+  await completeInvoiceJobs(admin, [firstJobId, secondJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId, secondJobId],
   });
@@ -108,6 +110,7 @@ it("returns invoice items with their source jobs", async () => {
     amountCents: 3500,
   });
 
+  await completeInvoiceJobs(admin, [firstJobId, secondJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId, secondJobId],
   });
@@ -145,6 +148,7 @@ it("derives the invoice total across all invoice items", async () => {
     amountCents: 3500,
   });
 
+  await completeInvoiceJobs(admin, [firstJobId, secondJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId, secondJobId],
   });
@@ -155,6 +159,7 @@ it("derives the invoice total across all invoice items", async () => {
 });
 
 it("returns jobs in scheduled-date order", async () => {
+  await completeInvoiceJobs(admin, [secondJobId, firstJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [secondJobId, firstJobId],
   });
@@ -193,6 +198,7 @@ it("derives totals without multiplying item/payment rows and keeps ordered histo
     description: "Edge",
     amountCents: 4000,
   });
+  await completeInvoiceJobs(admin, [firstJobId, secondJobId]);
   const { id } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId, secondJobId],
   });

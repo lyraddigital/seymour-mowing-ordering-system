@@ -1,0 +1,21 @@
+.dialog {
+  width: min(560px, calc(100vw - 32px));
+  max-height: calc(100dvh - 48px);
+  padding: 28px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--text);
+  background: var(--surface);
+  box-shadow: 0 20px 60px #12351f33;
+}
+.dialog::backdrop { background: #12351f80; }
+.dialog h2 { margin: 0; }
+.dialog p { line-height: 1.6; }
+.context { color: var(--text-muted); }
+.dialog label { display: block; margin-bottom: 8px; font-weight: 600; }
+.dialog input:not([type="hidden"]) { width: 100%; }
+.actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
+.charges { list-style: none; padding: 0; }
+.charges li, .total { display: flex; justify-content: space-between; gap: 20px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.charges strong, .total strong { font-variant-numeric: tabular-nums; }
+.error { color: var(--danger); }

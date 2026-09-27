@@ -1,3 +1,4 @@
+import { completeInvoiceJobs } from "../../../../../support/fixtures/complete-invoice-jobs";
 import { env } from "cloudflare:workers";
 import { and, eq } from "drizzle-orm";
 import { beforeEach, expect, it } from "vitest";
@@ -64,6 +65,7 @@ it("returns null when the job has no active invoice", async () => {
 });
 
 it("returns the active draft invoice for the job", async () => {
+  await completeInvoiceJobs(admin, [jobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [jobId],
   });
@@ -76,6 +78,7 @@ it("returns the active draft invoice for the job", async () => {
 });
 
 it("returns the active issued invoice for the job", async () => {
+  await completeInvoiceJobs(admin, [jobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [jobId],
   });
@@ -92,6 +95,7 @@ it("returns the active issued invoice for the job", async () => {
 });
 
 it("ignores released invoice assignments", async () => {
+  await completeInvoiceJobs(admin, [jobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [jobId],
   });
@@ -109,6 +113,7 @@ it("ignores released invoice assignments", async () => {
 });
 
 it("does not return an invoice assigned to another job", async () => {
+  await completeInvoiceJobs(admin, [otherJobId]);
   await createDraftInvoice(env.DB, admin, {
     jobIds: [otherJobId],
   });
@@ -117,6 +122,7 @@ it("does not return an invoice assigned to another job", async () => {
 });
 
 it("returns the same active invoice when it contains multiple jobs", async () => {
+  await completeInvoiceJobs(admin, [jobId, otherJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [jobId, otherJobId],
   });

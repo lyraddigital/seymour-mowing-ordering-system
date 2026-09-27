@@ -1,3 +1,4 @@
+import { completedJobId } from "../queries/completed-job-id";
 import { and, inArray, isNull, sql } from "drizzle-orm";
 
 import { PermissionDeniedError } from "../../../auth/authorization/errors/permission-denied-error";
@@ -45,6 +46,7 @@ export async function createDraftInvoice(
     .select({
       id: jobs.id,
       customerId: jobs.customerId,
+      completedId: completedJobId(jobs.id),
     })
     .from(jobs)
     .where(inArray(jobs.id, jobIds));
@@ -61,6 +63,10 @@ export async function createDraftInvoice(
     throw new InvoiceJobSelectionError(
       "All selected jobs must belong to the same customer.",
     );
+  }
+
+  if (selectedJobs.some((job) => job.completedId === null)) {
+    throw new InvoiceJobSelectionError("Only completed jobs can be added to an invoice.");
   }
 
   const existingAssignment = await db
@@ -98,7 +104,7 @@ export async function createDraftInvoice(
       db.insert(invoiceJobs).values(
         jobIds.map((jobId) => ({
           invoiceId,
-          jobId,
+          jobId: completedJobId(jobId),
           releasedAt: null,
         })),
       ),
@@ -129,6 +135,10 @@ export async function createDraftInvoice(
       ),
     ]);
   } catch (error) {
+    if (error instanceof Error && error.message.includes("NOT NULL constraint failed: invoice_jobs.job_id")) {
+      throw new InvoiceJobSelectionError("Only completed jobs can be added to an invoice.");
+    }
+
     if (isActiveJobConflict(error)) {
       throw new InvoiceJobConflictError(
         "One or more selected jobs are already included on another active invoice.",

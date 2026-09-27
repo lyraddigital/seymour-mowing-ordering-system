@@ -167,7 +167,7 @@ export default function JobPage({
         canManage={canManage && active}
       />
 
-      <section className={styles.invoice} aria-labelledby="job-invoice-heading">
+      {job.currentStatus === "completed" && <section className={styles.invoice} aria-labelledby="job-invoice-heading">
         <span className={styles.sectionIcon}>
           <Icon name="invoice" />
         </span>
@@ -218,7 +218,7 @@ export default function JobPage({
             </div>
           )}
         </div>
-      </section>
+      </section>}
 
       {canManage && active && (
         <section className={styles.danger} aria-labelledby="job-danger-heading">

@@ -1,3 +1,4 @@
+import { completeInvoiceJobs } from "../../support/fixtures/complete-invoice-jobs";
 import { env } from "cloudflare:workers";
 import { eq } from "drizzle-orm";
 import { RouterContextProvider } from "react-router";
@@ -88,6 +89,7 @@ beforeEach(async () => {
 });
 
 it("voids an issued invoice and redirects to the invoice", async () => {
+  await completeInvoiceJobs(admin, [jobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [jobId],
   });
@@ -121,6 +123,7 @@ it("voids an issued invoice and redirects to the invoice", async () => {
 });
 
 it("releases the invoice jobs when voided", async () => {
+  await completeInvoiceJobs(admin, [jobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [jobId],
   });
@@ -146,6 +149,7 @@ it("releases the invoice jobs when voided", async () => {
 });
 
 it("returns 409 when a draft invoice is voided", async () => {
+  await completeInvoiceJobs(admin, [jobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [jobId],
   });
@@ -158,6 +162,7 @@ it("returns 404 for a missing invoice", async () => {
 });
 
 it("returns 403 without invoice management permission", async () => {
+  await completeInvoiceJobs(admin, [jobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [jobId],
   });

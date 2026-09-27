@@ -14,7 +14,6 @@ import type {
   EditJobFormValues,
 } from "../server/features/jobs/types/edit-job-form-values";
 import type { UpdateJobInput } from "../server/features/jobs/types/update-job-input";
-import { parseServicePrice } from "../server/features/jobs/validation/parse-service-price";
 import EditJobPage from "../ui/features/jobs/pages/edit-job-page/edit-job-page";
 import type { Route } from "./+types/jobs.$jobId.edit";
 
@@ -34,6 +33,10 @@ export async function loader({ context, params }: Route.LoaderArgs) {
 
     if (!job) {
       throw new Response("Job not found", { status: 404 });
+    }
+
+    if (job.currentStatus !== "scheduled" && job.currentStatus !== "in_progress") {
+      throw new Response("Only scheduled or in-progress jobs can be edited.", { status: 409 });
     }
 
     return { job };
@@ -64,30 +67,13 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     name: text("name"),
     scheduledDate: text("scheduledDate"),
     description: text("description"),
-    servicePrice: text("servicePrice"),
   };
 
-  const parsedServicePrice = parseServicePrice(values.servicePrice);
-
-  if (!parsedServicePrice.success) {
-    const fieldErrors: EditJobFormFieldErrors = {
-      servicePrice: parsedServicePrice.error,
-    };
-
-    return data(
-      {
-        values,
-        fieldErrors,
-      },
-      { status: 400 },
-    );
-  }
 
   const input: UpdateJobInput = {
     name: values.name,
     scheduledDate: values.scheduledDate,
     description: values.description,
-    servicePriceCents: parsedServicePrice.value,
   };
 
   try {
@@ -103,7 +89,6 @@ export async function action({ request, context, params }: Route.ActionArgs) {
         name: error.fieldErrors.name,
         scheduledDate: error.fieldErrors.scheduledDate,
         description: error.fieldErrors.description,
-        servicePrice: error.fieldErrors.servicePriceCents,
       };
 
       return data(

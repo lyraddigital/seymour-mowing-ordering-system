@@ -1,3 +1,4 @@
+import { completeInvoiceJobs } from "../../../../../support/fixtures/complete-invoice-jobs";
 import { env } from "cloudflare:workers";
 import { eq } from "drizzle-orm";
 import { beforeEach, expect, it } from "vitest";
@@ -72,6 +73,7 @@ async function getInvoice(invoiceId: string) {
 }
 
 it("deletes a draft invoice", async () => {
+  await completeInvoiceJobs(admin, [firstJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });
@@ -94,6 +96,7 @@ it("deletes all invoice items belonging to the draft", async () => {
     amountCents: 3500,
   });
 
+  await completeInvoiceJobs(admin, [firstJobId, secondJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId, secondJobId],
   });
@@ -116,6 +119,7 @@ it("deletes all invoice items belonging to the draft", async () => {
 });
 
 it("deletes all invoice job assignments belonging to the draft", async () => {
+  await completeInvoiceJobs(admin, [firstJobId, secondJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId, secondJobId],
   });
@@ -143,10 +147,12 @@ it("does not delete data belonging to another draft", async () => {
     amountCents: 4500,
   });
 
+  await completeInvoiceJobs(admin, [firstJobId]);
   const { id: firstInvoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });
 
+  await completeInvoiceJobs(admin, [secondJobId]);
   const { id: secondInvoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [secondJobId],
   });
@@ -175,12 +181,14 @@ it("does not delete data belonging to another draft", async () => {
 });
 
 it("allows jobs from a deleted draft to be invoiced again", async () => {
+  await completeInvoiceJobs(admin, [firstJobId, secondJobId]);
   const { id: firstInvoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId, secondJobId],
   });
 
   await deleteDraftInvoice(env.DB, admin, firstInvoiceId);
 
+  await completeInvoiceJobs(admin, [firstJobId, secondJobId]);
   const { id: secondInvoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId, secondJobId],
   });
@@ -207,6 +215,7 @@ it("allows jobs from a deleted draft to be invoiced again", async () => {
 });
 
 it("rejects deleting an issued invoice", async () => {
+  await completeInvoiceJobs(admin, [firstJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });
@@ -244,6 +253,7 @@ it("does not delete items from an issued invoice", async () => {
     amountCents: 4500,
   });
 
+  await completeInvoiceJobs(admin, [firstJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });
@@ -272,6 +282,7 @@ it("does not delete items from an issued invoice", async () => {
 });
 
 it("rejects deleting a voided invoice", async () => {
+  await completeInvoiceJobs(admin, [firstJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });
@@ -312,6 +323,7 @@ it("rejects a missing invoice", async () => {
 });
 
 it("requires invoice management permission", async () => {
+  await completeInvoiceJobs(admin, [firstJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });

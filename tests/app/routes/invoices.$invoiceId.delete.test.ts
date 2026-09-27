@@ -1,3 +1,4 @@
+import { completeInvoiceJobs } from "../../support/fixtures/complete-invoice-jobs";
 import { env } from "cloudflare:workers";
 import { eq } from "drizzle-orm";
 import { RouterContextProvider } from "react-router";
@@ -94,6 +95,7 @@ it("deletes a draft invoice and redirects to invoices", async () => {
     amountCents: 4500,
   });
 
+  await completeInvoiceJobs(admin, [jobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [jobId],
   });
@@ -127,6 +129,7 @@ it("deletes a draft invoice and redirects to invoices", async () => {
 });
 
 it("returns 409 when an issued invoice is deleted", async () => {
+  await completeInvoiceJobs(admin, [jobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [jobId],
   });
@@ -150,6 +153,7 @@ it("returns 404 for a missing invoice", async () => {
 });
 
 it("returns 403 without invoice management permission", async () => {
+  await completeInvoiceJobs(admin, [jobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [jobId],
   });

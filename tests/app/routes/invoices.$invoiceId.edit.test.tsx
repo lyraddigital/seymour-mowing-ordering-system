@@ -1,3 +1,4 @@
+import { completeInvoiceJobs } from "../../support/fixtures/complete-invoice-jobs";
 import { env } from "cloudflare:workers";
 import type { ComponentProps } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -153,6 +154,7 @@ beforeEach(async () => {
 });
 
 it("loads the current jobs and other available jobs for the invoice customer", async () => {
+  await completeInvoiceJobs(admin, [firstJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });
@@ -179,6 +181,7 @@ it("loads the current jobs and other available jobs for the invoice customer", a
 });
 
 it("renders the draft invoice edit workflow", async () => {
+  await completeInvoiceJobs(admin, [firstJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });
@@ -218,6 +221,7 @@ it("renders the draft invoice edit workflow", async () => {
 });
 
 it("excludes jobs belonging to another customer", async () => {
+  await completeInvoiceJobs(admin, [firstJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });
@@ -232,10 +236,12 @@ it("excludes jobs belonging to another customer", async () => {
 });
 
 it("excludes a job belonging to another active invoice", async () => {
+  await completeInvoiceJobs(admin, [firstJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });
 
+  await completeInvoiceJobs(admin, [secondJobId]);
   await createDraftInvoice(env.DB, admin, {
     jobIds: [secondJobId],
   });
@@ -251,6 +257,7 @@ it("excludes a job belonging to another active invoice", async () => {
 });
 
 it("updates the draft job selection and redirects", async () => {
+  await completeInvoiceJobs(admin, [firstJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });
@@ -284,6 +291,7 @@ it("updates the draft job selection and redirects", async () => {
 });
 
 it("returns and renders feedback when no jobs are selected", async () => {
+  await completeInvoiceJobs(admin, [firstJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });
@@ -322,10 +330,12 @@ it("returns and renders feedback when no jobs are selected", async () => {
 });
 
 it("returns 400 when another active invoice owns a selected job", async () => {
+  await completeInvoiceJobs(admin, [firstJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });
 
+  await completeInvoiceJobs(admin, [secondJobId]);
   await createDraftInvoice(env.DB, admin, {
     jobIds: [secondJobId],
   });
@@ -353,6 +363,7 @@ it("returns 404 for a missing invoice", async () => {
 });
 
 it("returns 409 when an issued invoice is edited", async () => {
+  await completeInvoiceJobs(admin, [firstJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });
@@ -367,6 +378,7 @@ it("returns 409 when an issued invoice is edited", async () => {
 });
 
 it("returns 403 without invoice management permission", async () => {
+  await completeInvoiceJobs(admin, [firstJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });
@@ -382,6 +394,7 @@ it("returns 403 without invoice management permission", async () => {
 });
 
 it("requires authenticated user context", async () => {
+  await completeInvoiceJobs(admin, [firstJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });

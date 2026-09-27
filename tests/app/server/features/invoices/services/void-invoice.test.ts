@@ -1,3 +1,4 @@
+import { completeInvoiceJobs } from "../../../../../support/fixtures/complete-invoice-jobs";
 import { env } from "cloudflare:workers";
 import { eq } from "drizzle-orm";
 import { beforeEach, expect, it } from "vitest";
@@ -71,6 +72,7 @@ async function getInvoice(invoiceId: string) {
 }
 
 it("voids an issued invoice", async () => {
+  await completeInvoiceJobs(admin, [firstJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });
@@ -95,6 +97,7 @@ it("voids an issued invoice", async () => {
 });
 
 it("preserves the invoice number when voided", async () => {
+  await completeInvoiceJobs(admin, [firstJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });
@@ -112,6 +115,7 @@ it("preserves the invoice number when voided", async () => {
 });
 
 it("preserves issuedAt when voided", async () => {
+  await completeInvoiceJobs(admin, [firstJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });
@@ -141,6 +145,7 @@ it("does not change invoice items when voided", async () => {
     amountCents: 3500,
   });
 
+  await completeInvoiceJobs(admin, [firstJobId, secondJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId, secondJobId],
   });
@@ -165,6 +170,7 @@ it("does not change invoice items when voided", async () => {
 });
 
 it("releases all jobs when the invoice is voided", async () => {
+  await completeInvoiceJobs(admin, [firstJobId, secondJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId, secondJobId],
   });
@@ -199,6 +205,7 @@ it("releases all jobs when the invoice is voided", async () => {
 });
 
 it("allows jobs from a voided invoice to be invoiced again", async () => {
+  await completeInvoiceJobs(admin, [firstJobId, secondJobId]);
   const { id: firstInvoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId, secondJobId],
   });
@@ -209,6 +216,7 @@ it("allows jobs from a voided invoice to be invoiced again", async () => {
 
   await voidInvoice(env.DB, admin, firstInvoiceId);
 
+  await completeInvoiceJobs(admin, [firstJobId, secondJobId]);
   const { id: secondInvoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId, secondJobId],
   });
@@ -235,6 +243,7 @@ it("allows jobs from a voided invoice to be invoiced again", async () => {
 });
 
 it("preserves the historical job relationships after voiding", async () => {
+  await completeInvoiceJobs(admin, [firstJobId, secondJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId, secondJobId],
   });
@@ -255,6 +264,7 @@ it("preserves the historical job relationships after voiding", async () => {
 });
 
 it("rejects voiding a draft invoice", async () => {
+  await completeInvoiceJobs(admin, [firstJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });
@@ -284,6 +294,7 @@ it("rejects voiding a draft invoice", async () => {
 });
 
 it("rejects voiding an already voided invoice", async () => {
+  await completeInvoiceJobs(admin, [firstJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });
@@ -311,6 +322,7 @@ it("rejects a missing invoice", async () => {
 });
 
 it("requires invoice management permission", async () => {
+  await completeInvoiceJobs(admin, [firstJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });

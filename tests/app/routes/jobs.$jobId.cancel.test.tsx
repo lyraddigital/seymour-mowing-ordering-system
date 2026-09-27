@@ -96,7 +96,7 @@ it.each([cancelJob, completeJob])(
         .where(eq(jobs.id, jobId));
     }
 
-    await operation(env.DB, user, jobId);
+    await operation(env.DB, user, jobId, 10_000);
 
     await expect(submit()).rejects.toMatchObject({ status: 409 });
   },

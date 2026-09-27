@@ -1,3 +1,4 @@
+import { completeInvoiceJobs } from "../../../../../support/fixtures/complete-invoice-jobs";
 import { env } from "cloudflare:workers";
 import { beforeEach, expect, it } from "vitest";
 
@@ -52,10 +53,12 @@ beforeEach(async () => {
 });
 
 it("returns true when the job has no active invoice", async () => {
+  await completeInvoiceJobs(admin, [jobId]);
   expect(await isJobInvoiceable(env.DB, admin, jobId)).toBe(true);
 });
 
 it("returns false when the job belongs to a draft invoice", async () => {
+  await completeInvoiceJobs(admin, [jobId]);
   await createDraftInvoice(env.DB, admin, {
     jobIds: [jobId],
   });
@@ -64,6 +67,7 @@ it("returns false when the job belongs to a draft invoice", async () => {
 });
 
 it("returns false when the job belongs to an issued invoice", async () => {
+  await completeInvoiceJobs(admin, [jobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [jobId],
   });
@@ -76,6 +80,7 @@ it("returns false when the job belongs to an issued invoice", async () => {
 });
 
 it("returns true after the invoice is voided", async () => {
+  await completeInvoiceJobs(admin, [jobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [jobId],
   });

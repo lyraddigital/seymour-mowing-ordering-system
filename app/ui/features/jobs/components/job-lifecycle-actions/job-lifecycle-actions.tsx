@@ -1,6 +1,7 @@
 import { Form, useNavigation } from "react-router";
 
 import type { JobSummary } from "../../../../../server/features/jobs/types/job-summary";
+import CompleteJobDialog from "../complete-job-dialog/complete-job-dialog";
 import styles from "./job-lifecycle-actions.module.css";
 
 interface JobLifecycleActionsProps {
@@ -60,27 +61,7 @@ export default function JobLifecycleActions({
             </Form>
           )}
 
-          <Form
-            method="post"
-            action={`${actionPath}/complete`}
-            aria-busy={busy}
-          >
-            <input type="hidden" name="returnTo" value={returnTo} />
-
-            <button
-              className={
-                job.currentStatus === "in_progress"
-                  ? styles.primaryButton
-                  : styles.secondaryButton
-              }
-              type="submit"
-              disabled={busy}
-            >
-              {busy && navigation.formAction === `${actionPath}/complete`
-                ? "Completing…"
-                : "Complete Job"}
-            </button>
-          </Form>
+          <CompleteJobDialog job={job} returnTo={returnTo} disabled={busy} />
         </div>
       )}
 

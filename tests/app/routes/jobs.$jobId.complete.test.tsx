@@ -2,7 +2,7 @@ import { env } from "cloudflare:workers";
 import { eq } from "drizzle-orm";
 import { RouterContextProvider } from "react-router";
 import { beforeEach, expect, it } from "vitest";
-import { action } from "../../../app/routes/jobs.$jobId.complete";
+import { action, loader } from "../../../app/routes/jobs.$jobId.complete";
 import { currentUserContext } from "../../../app/server/auth/context/current-user-context";
 import { runtimeContext } from "../../../app/server/auth/context/runtime-context";
 import { createDb } from "../../../app/server/db/client/create-db.server";
@@ -20,7 +20,7 @@ const user = internalUser();
 let context: RouterContextProvider;
 let jobId: string;
 
-const submit = (id = jobId, method = "POST") => {
+const submit = (id = jobId, method = "POST", servicePrice = "125.50") => {
   const url = `https://example.test/jobs/${id}/complete`;
 
   return action({
@@ -31,6 +31,7 @@ const submit = (id = jobId, method = "POST") => {
       ...(method === "POST"
         ? {
             body: new URLSearchParams({
+              servicePrice,
               status: "cancelled",
               createdByUserId: "forged",
             }),
@@ -78,11 +79,13 @@ beforeEach(async () => {
 it("performs the dedicated operation and redirects to job detail despite forged form values", async () => {
   const response = await submit();
 
+  if (!(response instanceof Response)) throw new Error("Expected redirect");
   expect(response.status).toBe(302);
   expect(response.headers.get("Location")).toBe(`/jobs/${jobId}`);
 
   expect(await getJobById(env.DB, user, jobId)).toMatchObject({
     currentStatus: "completed",
+    servicePriceCents: 12550,
   });
 });
 
@@ -93,7 +96,7 @@ it("returns 404 for an unknown job", async () => {
 it.each([completeJob, cancelJob])(
   "returns 409 after an earlier transition",
   async (operation) => {
-    await operation(env.DB, user, jobId);
+    await operation(env.DB, user, jobId, 10_000);
 
     await expect(submit()).rejects.toMatchObject({ status: 409 });
   },
@@ -122,3 +125,20 @@ it.each(["GET", "PUT", "PATCH", "DELETE"])(
     await expect(submit(jobId, method)).rejects.toMatchObject({ status: 405 });
   },
 );
+
+
+it.each(["", " ", "-1", "abc", "1.234", "1e2", "Infinity", "9007199254740992"])("returns validation data preserving %j", async (servicePrice) => {
+  const response = await submit(jobId, "POST", servicePrice);
+  if (response instanceof Response) throw new Error("Expected validation data");
+  expect(response.init?.status).toBe(400);
+  expect(response.data).toMatchObject({ servicePrice, error: expect.any(String) });
+  expect(await getJobById(env.DB, user, jobId)).toMatchObject({ currentStatus: "scheduled", servicePriceCents: 10000 });
+});
+
+it("loads current billing for review with server-side authorization", async () => {
+  const url = `https://example.test/jobs/${jobId}/complete`;
+  const args = { context, params: { jobId }, request: new Request(url), url: new URL(url), pattern: "/jobs/:jobId/complete" };
+  expect(await loader(args)).toMatchObject({ job: { servicePriceCents: 10000 }, charges: { items: [], totalCents: 0 } });
+  context.set(currentUserContext, { ...user, role: "unknown" as "admin" });
+  await expect(loader(args)).rejects.toMatchObject({ status: 403 });
+});

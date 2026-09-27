@@ -1,3 +1,4 @@
+import { completeInvoiceJobs } from "../../support/fixtures/complete-invoice-jobs";
 import { env } from "cloudflare:workers";
 import type { ComponentProps } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -237,6 +238,7 @@ it("does not preselect an unknown job", async () => {
 });
 
 it("does not return a job already attached to an active invoice", async () => {
+  await completeInvoiceJobs(admin, [firstJobId]);
   await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });
@@ -248,6 +250,7 @@ it("does not return a job already attached to an active invoice", async () => {
 });
 
 it("does not preselect a job already attached to an active invoice", async () => {
+  await completeInvoiceJobs(admin, [firstJobId]);
   await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });
@@ -376,6 +379,7 @@ it("returns and renders feedback when jobs belong to different customers", async
 });
 
 it("returns 400 when a selected job is already on an active invoice", async () => {
+  await completeInvoiceJobs(admin, [firstJobId]);
   await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });
@@ -397,10 +401,12 @@ it("returns 400 when a selected job is already on an active invoice", async () =
 });
 
 it("renders the empty state when no jobs are available to invoice", async () => {
+  await completeInvoiceJobs(admin, [firstJobId, secondJobId]);
   await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId, secondJobId],
   });
 
+  await completeInvoiceJobs(admin, [otherCustomerJobId]);
   await createDraftInvoice(env.DB, admin, {
     jobIds: [otherCustomerJobId],
   });

@@ -1,3 +1,4 @@
+import { completeInvoiceJobs } from "../../support/fixtures/complete-invoice-jobs";
 import { env } from "cloudflare:workers";
 import type { ComponentProps } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -122,6 +123,7 @@ it("loads invoice details", async () => {
     amountCents: 4500,
   });
 
+  await completeInvoiceJobs(admin, [jobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [jobId],
   });
@@ -179,6 +181,7 @@ it("renders the invoice detail hierarchy", async () => {
     amountCents: 4500,
   });
 
+  await completeInvoiceJobs(admin, [jobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [jobId],
   });
@@ -212,6 +215,7 @@ it("renders the invoice detail hierarchy", async () => {
 });
 
 it("shows routine actions and danger zone for a manageable draft invoice", async () => {
+  await completeInvoiceJobs(admin, [jobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [jobId],
   });
@@ -232,6 +236,7 @@ it("shows routine actions and danger zone for a manageable draft invoice", async
 });
 
 it("shows due date and only void lifecycle action for an issued invoice", async () => {
+  await completeInvoiceJobs(admin, [jobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [jobId],
   });
@@ -265,6 +270,7 @@ it("shows due date and only void lifecycle action for an issued invoice", async 
 });
 
 it("shows no lifecycle danger zone for a voided invoice", async () => {
+  await completeInvoiceJobs(admin, [jobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [jobId],
   });
@@ -288,6 +294,7 @@ it("shows no lifecycle danger zone for a voided invoice", async () => {
 });
 
 it("allows an operator to view an invoice without management actions", async () => {
+  await completeInvoiceJobs(admin, [jobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [jobId],
   });
@@ -322,6 +329,7 @@ it.each([
 ] as const)(
   "item controls for %s, managing=%s",
   async (status, manage, visible) => {
+    await completeInvoiceJobs(admin, [jobId]);
     const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
       jobIds: [jobId],
     });
@@ -366,6 +374,7 @@ it.each([
 );
 
 it("renders derived totals after adding, editing and deleting an item", async () => {
+  await completeInvoiceJobs(admin, [jobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [jobId],
   });
@@ -414,6 +423,7 @@ it("renders derived totals after adding, editing and deleting an item", async ()
 });
 
 it("shows financial metrics, payment history and controls through payment lifecycle", async () => {
+  await completeInvoiceJobs(admin, [jobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [jobId],
   });
@@ -535,6 +545,7 @@ it("shows financial metrics, payment history and controls through payment lifecy
 });
 
 it("hides Record payment from non-managers on an issued unpaid invoice", async () => {
+  await completeInvoiceJobs(admin, [jobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [jobId],
   });

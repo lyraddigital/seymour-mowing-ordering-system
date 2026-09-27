@@ -1,4 +1,5 @@
-import { and, asc, eq, isNull, sql } from "drizzle-orm";
+import { completedJobId } from "./completed-job-id";
+import { and, asc, eq, isNull, isNotNull, sql } from "drizzle-orm";
 
 import { PermissionDeniedError } from "../../../auth/authorization/errors/permission-denied-error";
 import { can } from "../../../auth/authorization/policies/can";
@@ -44,6 +45,6 @@ export async function listInvoiceableJobs(
       invoiceJobs,
       and(eq(invoiceJobs.jobId, jobs.id), isNull(invoiceJobs.releasedAt)),
     )
-    .where(isNull(invoiceJobs.invoiceId))
+    .where(and(isNull(invoiceJobs.invoiceId), isNotNull(completedJobId(jobs.id))))
     .orderBy(asc(customers.name), asc(jobs.scheduledDate), asc(jobs.id));
 }

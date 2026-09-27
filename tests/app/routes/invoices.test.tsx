@@ -1,3 +1,4 @@
+import { completeInvoiceJobs } from "../../support/fixtures/complete-invoice-jobs";
 import { env } from "cloudflare:workers";
 import { renderToStaticMarkup } from "react-dom/server";
 import {
@@ -115,6 +116,7 @@ it("renders invoices as a scan-friendly table", async () => {
     amountCents: 4500,
   });
 
+  await completeInvoiceJobs(admin, [firstJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });
@@ -144,6 +146,7 @@ it("renders invoices as a scan-friendly table", async () => {
 });
 
 it("shows all jobs belonging to a multi-job invoice", async () => {
+  await completeInvoiceJobs(admin, [firstJobId, secondJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId, secondJobId],
   });
@@ -160,6 +163,7 @@ it("shows all jobs belonging to a multi-job invoice", async () => {
 });
 
 it("shows the invoice number and due date after issue", async () => {
+  await completeInvoiceJobs(admin, [firstJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });
@@ -185,6 +189,7 @@ it("shows the invoice number and due date after issue", async () => {
 });
 
 it("shows no due date for a draft invoice", async () => {
+  await completeInvoiceJobs(admin, [firstJobId]);
   await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });
