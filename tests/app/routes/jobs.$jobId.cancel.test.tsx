@@ -1,4 +1,6 @@
 import { env } from "cloudflare:workers";
+import { eq } from "drizzle-orm";
+
 import { beforeEach, expect, it } from "vitest";
 import { RouterContextProvider } from "react-router";
 import { action } from "../../../app/routes/jobs.$jobId.cancel";
@@ -18,8 +20,10 @@ import { internalUser } from "../../support/fixtures/internal-user";
 const user = internalUser();
 let context: RouterContextProvider;
 let jobId: string;
+
 const submit = (id = jobId, method = "POST") => {
   const url = `https://example.test/jobs/${id}/cancel`;
+
   return action({
     context,
     params: { jobId: id },
@@ -38,19 +42,25 @@ const submit = (id = jobId, method = "POST") => {
     pattern: "/jobs/:jobId/cancel",
   });
 };
+
 beforeEach(async () => {
   context = new RouterContextProvider();
   context.set(currentUserContext, user);
   context.set(runtimeContext, { env, ctx: {} as ExecutionContext });
+
   const db = createDb(env.DB);
+
   await db.delete(jobStatusHistory);
   await db.delete(jobs);
   await db.delete(customers);
   await db.delete(users);
+
   await db.insert(users).values(user);
+
   await db
     .insert(customers)
     .values({ id: "customer", name: "Customer", createdAt: 1, updatedAt: 1 });
+
   jobId = (
     await createJob(env.DB, user, {
       name: "Lawn service",
@@ -60,36 +70,55 @@ beforeEach(async () => {
     })
   ).id;
 });
+
 it("performs the dedicated operation and redirects to job detail despite forged form values", async () => {
   const response = await submit();
+
   expect(response.status).toBe(302);
   expect(response.headers.get("Location")).toBe(`/jobs/${jobId}`);
+
   expect(await getJobById(env.DB, user, jobId)).toMatchObject({
     currentStatus: "cancelled",
   });
 });
+
 it("returns 404 for an unknown job", async () => {
   await expect(submit("missing")).rejects.toMatchObject({ status: 404 });
 });
+
 it.each([cancelJob, completeJob])(
   "returns 409 after an earlier transition",
   async (operation) => {
+    if (operation === completeJob) {
+      await createDb(env.DB)
+        .update(jobs)
+        .set({ servicePriceCents: 10_000 })
+        .where(eq(jobs.id, jobId));
+    }
+
     await operation(env.DB, user, jobId);
+
     await expect(submit()).rejects.toMatchObject({ status: 409 });
   },
 );
+
 it("requires authorization", async () => {
   context.set(currentUserContext, { ...user, role: "unknown" as "admin" });
+
   await expect(submit()).rejects.toMatchObject({ status: 403 });
 });
+
 it("requires authenticated user context", async () => {
   context = new RouterContextProvider();
   context.set(runtimeContext, { env, ctx: {} as ExecutionContext });
+
   await expect(submit()).rejects.toThrow();
+
   expect(await createDb(env.DB).select().from(jobStatusHistory)).toHaveLength(
     1,
   );
 });
+
 it.each(["GET", "PUT", "PATCH", "DELETE"])(
   "rejects %s with 405",
   async (method) => {

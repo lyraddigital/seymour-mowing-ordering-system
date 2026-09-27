@@ -10,8 +10,10 @@ import { jobs } from "../../../../../../app/server/db/schema/jobs";
 import { users } from "../../../../../../app/server/db/schema/users";
 import { JobItemValidationError } from "../../../../../../app/server/features/jobs/errors/job-item-validation-error";
 import { JobNotFoundError } from "../../../../../../app/server/features/jobs/errors/job-not-found-error";
+import { JobStateConflictError } from "../../../../../../app/server/features/jobs/errors/job-state-conflict-error";
 import { createJob } from "../../../../../../app/server/features/jobs/services/create-job.server";
 import { createJobItem } from "../../../../../../app/server/features/jobs/services/create-job-item.server";
+import { reopenJob } from "../../../../../../app/server/features/jobs/services/reopen-job.server";
 import { internalUser } from "../../../../../support/fixtures/internal-user";
 
 const user = internalUser();
@@ -68,7 +70,7 @@ it.each(["admin", "operator"] as const)(
   },
 );
 
-it.each(["scheduled", "in_progress", "completed", "cancelled"] as const)(
+it.each(["scheduled", "in_progress"] as const)(
   "allows an item to be added while the job is %s",
   async (status) => {
     const db = createDb(env.DB);
@@ -91,6 +93,57 @@ it.each(["scheduled", "in_progress", "completed", "cancelled"] as const)(
     expect(await db.select().from(jobItems)).toHaveLength(1);
   },
 );
+
+it.each(["completed", "cancelled"] as const)(
+  "rejects adding an item while the job is %s",
+  async (status) => {
+    const db = createDb(env.DB);
+
+    await db.insert(jobStatusHistory).values({
+      id: `status-${status}`,
+      jobId,
+      status,
+      createdByUserId: user.id,
+      createdAt: Date.now() + 1,
+    });
+
+    await expect(
+      createJobItem(env.DB, user, jobId, {
+        description: "Lawn mowing",
+        amountCents: 5000,
+      }),
+    ).rejects.toBeInstanceOf(JobStateConflictError);
+
+    expect(await db.select().from(jobItems)).toEqual([]);
+  },
+);
+
+it("allows an item to be added after a completed job is reopened", async () => {
+  const db = createDb(env.DB);
+
+  await db.insert(jobStatusHistory).values({
+    id: "status-completed",
+    jobId,
+    status: "completed",
+    createdByUserId: user.id,
+    createdAt: Date.now() + 1,
+  });
+
+  await reopenJob(env.DB, user, jobId);
+
+  await createJobItem(env.DB, user, jobId, {
+    description: "Lawn mowing",
+    amountCents: 5000,
+  });
+
+  expect(await db.select().from(jobItems)).toEqual([
+    expect.objectContaining({
+      jobId,
+      description: "Lawn mowing",
+      amountCents: 5000,
+    }),
+  ]);
+});
 
 it("allows a zero-value item", async () => {
   await createJobItem(env.DB, user, jobId, {

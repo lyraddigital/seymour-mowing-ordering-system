@@ -1,12 +1,15 @@
 import { JobValidationError } from "../errors/job-validation-error";
-import type { UpdateJobInput } from "../types/update-job-input";
+import type {
+  UpdateJobFieldErrors,
+  UpdateJobInput,
+} from "../types/update-job-input";
 
 export function validateUpdateJob(input: UpdateJobInput): UpdateJobInput {
   const name = input.name.trim();
   const scheduledDate = input.scheduledDate.trim();
   const description = input.description.trim();
 
-  const fieldErrors: Partial<Record<keyof UpdateJobInput, string>> = {};
+  const fieldErrors: UpdateJobFieldErrors = {};
 
   if (!name) {
     fieldErrors.name = "Enter a job name.";
@@ -35,6 +38,15 @@ export function validateUpdateJob(input: UpdateJobInput): UpdateJobInput {
     fieldErrors.description = "Use 2,000 characters or fewer.";
   }
 
+  if (
+    input.servicePriceCents !== null &&
+    (!Number.isSafeInteger(input.servicePriceCents) ||
+      input.servicePriceCents < 0)
+  ) {
+    fieldErrors.servicePriceCents =
+      "Service price must be a non-negative amount in cents.";
+  }
+
   if (Object.keys(fieldErrors).length) {
     throw new JobValidationError(fieldErrors);
   }
@@ -43,5 +55,6 @@ export function validateUpdateJob(input: UpdateJobInput): UpdateJobInput {
     name,
     scheduledDate,
     description,
+    servicePriceCents: input.servicePriceCents,
   };
 }

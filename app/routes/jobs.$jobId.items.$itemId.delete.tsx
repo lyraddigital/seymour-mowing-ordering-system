@@ -6,6 +6,7 @@ import { can } from "../server/auth/authorization/policies/can";
 import { currentUserContext } from "../server/auth/context/current-user-context";
 import { runtimeContext } from "../server/auth/context/runtime-context";
 import { JobItemNotFoundError } from "../server/features/jobs/errors/job-item-not-found-error";
+import { JobStateConflictError } from "../server/features/jobs/errors/job-state-conflict-error";
 import { deleteJobItem } from "../server/features/jobs/services/delete-job-item.server";
 
 export async function action({ context, params }: Route.ActionArgs) {
@@ -27,6 +28,10 @@ export async function action({ context, params }: Route.ActionArgs) {
       throw new Response("Job item not found", {
         status: 404,
       });
+    }
+
+    if (error instanceof JobStateConflictError) {
+      throw new Response(error.message, { status: 409 });
     }
 
     if (error instanceof PermissionDeniedError) {

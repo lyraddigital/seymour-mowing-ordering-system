@@ -10,13 +10,17 @@ import { PermissionDeniedError } from "../../../../../../app/server/auth/authori
 import { internalUser } from "../../../../../support/fixtures/internal-user";
 
 const user = internalUser();
+
 beforeEach(async () => {
   const db = createDb(env.DB);
+
   await db.delete(jobStatusHistory);
   await db.delete(jobs);
   await db.delete(customers);
   await db.delete(users);
+
   await db.insert(users).values(user);
+
   await db.insert(customers).values({
     id: "customer",
     name: "Customer",
@@ -24,6 +28,7 @@ beforeEach(async () => {
     updatedAt: 1,
     archivedAt: 2,
   });
+
   await db.insert(jobs).values(
     ["job", "other"].map((id) => ({
       id,
@@ -31,10 +36,12 @@ beforeEach(async () => {
       name: `Name ${id}`,
       description: "Mow and edge lawns",
       scheduledDate: "2026-09-17",
+      servicePriceCents: id === "job" ? 12_500 : null,
       createdAt: 1,
       updatedAt: 1,
     })),
   );
+
   await db.insert(jobStatusHistory).values(
     ["job", "other"].map((jobId) => ({
       id: `${jobId}-initial`,
@@ -45,7 +52,8 @@ beforeEach(async () => {
     })),
   );
 });
-it("returns the requested job with its name and customer even if the customer is archived", async () => {
+
+it("returns the requested job with its name, customer and service price even if the customer is archived", async () => {
   expect(await getJobById(env.DB, user, "job")).toEqual({
     id: "job",
     name: "Name job",
@@ -53,13 +61,16 @@ it("returns the requested job with its name and customer even if the customer is
     customerName: "Customer",
     description: "Mow and edge lawns",
     scheduledDate: "2026-09-17",
+    servicePriceCents: 12_500,
     currentStatus: "scheduled",
   });
 });
+
 it.each(["completed", "cancelled"] as const)(
   "returns %s as current status using timestamp then id ordering",
   async (status) => {
     const db = createDb(env.DB);
+
     await db.insert(jobStatusHistory).values([
       {
         id: "z",
@@ -68,7 +79,13 @@ it.each(["completed", "cancelled"] as const)(
         createdByUserId: user.id,
         createdAt: 0,
       },
-      { id: "b", jobId: "job", status, createdByUserId: user.id, createdAt: 2 },
+      {
+        id: "b",
+        jobId: "job",
+        status,
+        createdByUserId: user.id,
+        createdAt: 2,
+      },
       {
         id: "a",
         jobId: "job",
@@ -77,17 +94,20 @@ it.each(["completed", "cancelled"] as const)(
         createdAt: 2,
       },
     ]);
+
     expect(await getJobById(env.DB, user, "job")).toMatchObject({
       currentStatus: status,
     });
   },
 );
+
 it.each(["missing", "", "' OR 1=1 --"])(
   "returns null for unknown id %j",
   async (id) => {
     expect(await getJobById(env.DB, user, id)).toBeNull();
   },
 );
+
 it("requires read permission", async () => {
   await expect(
     getJobById(env.DB, { ...user, role: "unknown" as "admin" }, "job"),

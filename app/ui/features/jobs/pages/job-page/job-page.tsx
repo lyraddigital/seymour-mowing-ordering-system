@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+import { Form, Link, useNavigation } from "react-router";
 
 import type { InvoiceSummary } from "../../../../../server/features/invoices/types/invoice-summary";
 import type { JobItemSummary } from "../../../../../server/features/jobs/types/job-item-summary";
@@ -62,8 +62,17 @@ export default function JobPage({
   canManage,
   canCreateInvoice,
 }: JobPageProps) {
+  const navigation = useNavigation();
+
   const active =
     job.currentStatus === "scheduled" || job.currentStatus === "in_progress";
+
+  const canReopen =
+    canManage && job.currentStatus === "completed" && invoice === null;
+
+  const reopening =
+    navigation.state !== "idle" &&
+    navigation.formAction === `/jobs/${job.id}/reopen`;
 
   return (
     <section className={ui.page}>
@@ -110,10 +119,28 @@ export default function JobPage({
               />
             )}
 
-            <Link className={ui.secondaryAction} to={`/jobs/${job.id}/edit`}>
-              <Icon name="edit" />
-              Edit job
-            </Link>
+            {active && (
+              <Link className={ui.secondaryAction} to={`/jobs/${job.id}/edit`}>
+                <Icon name="edit" />
+                Edit job
+              </Link>
+            )}
+
+            {canReopen && (
+              <Form
+                method="post"
+                action={`/jobs/${job.id}/reopen`}
+                aria-busy={reopening}
+              >
+                <button
+                  className={ui.secondaryAction}
+                  type="submit"
+                  disabled={reopening}
+                >
+                  {reopening ? "Reopening…" : "Reopen job"}
+                </button>
+              </Form>
+            )}
           </div>
         )}
       </header>
@@ -137,7 +164,7 @@ export default function JobPage({
         jobId={job.id}
         items={jobItems}
         totalCents={jobTotalCents}
-        canManage={canManage}
+        canManage={canManage && active}
       />
 
       <section className={styles.invoice} aria-labelledby="job-invoice-heading">

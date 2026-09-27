@@ -311,7 +311,7 @@ it("renders validation errors while preserving submitted values", async () => {
   expect(html).toContain('role="alert"');
 });
 
-it.each(["scheduled", "in_progress", "completed", "cancelled"] as const)(
+it.each(["scheduled", "in_progress"] as const)(
   "allows an item to be edited while the job is %s",
   async (status) => {
     if (status !== "scheduled") {
@@ -343,6 +343,42 @@ it.each(["scheduled", "in_progress", "completed", "cancelled"] as const)(
         id: itemId,
         description: "Updated after status change",
         amountCents: 5000,
+      }),
+    ]);
+  },
+);
+
+it.each(["completed", "cancelled"] as const)(
+  "returns 409 when editing an item while the job is %s",
+  async (status) => {
+    await createDb(env.DB)
+      .insert(jobStatusHistory)
+      .values({
+        id: `status-${status}`,
+        jobId,
+        status,
+        createdByUserId: user.id,
+        createdAt: Date.now() + 1,
+      });
+
+    await expectResponseStatus(
+      action(
+        actionArgs(
+          new URLSearchParams({
+            description: "Updated after status change",
+            amount: "50.00",
+          }),
+        ),
+      ),
+      409,
+    );
+
+    expect(await createDb(env.DB).select().from(jobItems)).toEqual([
+      expect.objectContaining({
+        id: itemId,
+        jobId,
+        description: "Front lawn",
+        amountCents: 4500,
       }),
     ]);
   },

@@ -4,6 +4,7 @@ import {
   route,
   layout,
 } from "@react-router/dev/routes";
+
 export default [
   layout("routes/app-layout.tsx", [
     index("routes/index.ts"),
@@ -24,6 +25,7 @@ export default [
     route("jobs/:jobId", "routes/jobs.$jobId.tsx"),
     route("jobs/:jobId/edit", "routes/jobs.$jobId.edit.tsx"),
     route("jobs/:jobId/complete", "routes/jobs.$jobId.complete.tsx"),
+    route("jobs/:jobId/reopen", "routes/jobs.$jobId.reopen.tsx"),
     route("jobs/:jobId/start", "routes/jobs.$jobId.start.tsx"),
     route("jobs/:jobId/cancel", "routes/jobs.$jobId.cancel.tsx"),
     route(

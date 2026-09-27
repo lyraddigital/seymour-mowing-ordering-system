@@ -9,7 +9,12 @@ import { JobStateConflictError } from "../server/features/jobs/errors/job-state-
 import { JobValidationError } from "../server/features/jobs/errors/job-validation-error";
 import { getJobById } from "../server/features/jobs/queries/get-job-by-id.server";
 import { updateJob } from "../server/features/jobs/services/update-job.server";
+import type {
+  EditJobFormFieldErrors,
+  EditJobFormValues,
+} from "../server/features/jobs/types/edit-job-form-values";
 import type { UpdateJobInput } from "../server/features/jobs/types/update-job-input";
+import { parseServicePrice } from "../server/features/jobs/validation/parse-service-price";
 import EditJobPage from "../ui/features/jobs/pages/edit-job-page/edit-job-page";
 import type { Route } from "./+types/jobs.$jobId.edit";
 
@@ -55,10 +60,34 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     return typeof value === "string" ? value : "";
   };
 
-  const values: UpdateJobInput = {
+  const values: EditJobFormValues = {
     name: text("name"),
     scheduledDate: text("scheduledDate"),
     description: text("description"),
+    servicePrice: text("servicePrice"),
+  };
+
+  const parsedServicePrice = parseServicePrice(values.servicePrice);
+
+  if (!parsedServicePrice.success) {
+    const fieldErrors: EditJobFormFieldErrors = {
+      servicePrice: parsedServicePrice.error,
+    };
+
+    return data(
+      {
+        values,
+        fieldErrors,
+      },
+      { status: 400 },
+    );
+  }
+
+  const input: UpdateJobInput = {
+    name: values.name,
+    scheduledDate: values.scheduledDate,
+    description: values.description,
+    servicePriceCents: parsedServicePrice.value,
   };
 
   try {
@@ -66,14 +95,21 @@ export async function action({ request, context, params }: Route.ActionArgs) {
       context.get(runtimeContext).env.DB,
       user,
       params.jobId,
-      values,
+      input,
     );
   } catch (error) {
     if (error instanceof JobValidationError) {
+      const fieldErrors: EditJobFormFieldErrors = {
+        name: error.fieldErrors.name,
+        scheduledDate: error.fieldErrors.scheduledDate,
+        description: error.fieldErrors.description,
+        servicePrice: error.fieldErrors.servicePriceCents,
+      };
+
       return data(
         {
           values,
-          fieldErrors: error.fieldErrors,
+          fieldErrors,
         },
         { status: 400 },
       );

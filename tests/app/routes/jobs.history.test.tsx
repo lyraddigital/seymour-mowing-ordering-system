@@ -1,4 +1,5 @@
 import { env } from "cloudflare:workers";
+import { eq } from "drizzle-orm";
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter, RouterContextProvider } from "react-router";
 import { beforeEach, expect, it } from "vitest";
@@ -83,6 +84,13 @@ it.each(["admin", "operator"] as const)(
         description: "Mow front lawn",
         scheduledDate: "2026-09-17",
       });
+
+      if (operation === completeJob) {
+        await createDb(env.DB)
+          .update(jobs)
+          .set({ servicePriceCents: 10_000 })
+          .where(eq(jobs.id, id));
+      }
 
       await operation(env.DB, user, id);
     }

@@ -7,6 +7,7 @@ import { currentUserContext } from "../server/auth/context/current-user-context"
 import { runtimeContext } from "../server/auth/context/runtime-context";
 import { JobItemNotFoundError } from "../server/features/jobs/errors/job-item-not-found-error";
 import { JobItemValidationError } from "../server/features/jobs/errors/job-item-validation-error";
+import { JobStateConflictError } from "../server/features/jobs/errors/job-state-conflict-error";
 import { getJobById } from "../server/features/jobs/queries/get-job-by-id.server";
 import { getJobItemById } from "../server/features/jobs/queries/get-job-item-by-id.server";
 import { updateJobItem } from "../server/features/jobs/services/update-job-item.server";
@@ -105,6 +106,10 @@ export async function action({ request, context, params }: Route.ActionArgs) {
       throw new Response("Job item not found", {
         status: 404,
       });
+    }
+
+    if (error instanceof JobStateConflictError) {
+      throw new Response(error.message, { status: 409 });
     }
 
     if (error instanceof PermissionDeniedError) {

@@ -10,9 +10,11 @@ import { jobStatusHistory } from "../../../../../../app/server/db/schema/job-sta
 import { jobs } from "../../../../../../app/server/db/schema/jobs";
 import { users } from "../../../../../../app/server/db/schema/users";
 import { JobItemNotFoundError } from "../../../../../../app/server/features/jobs/errors/job-item-not-found-error";
+import { JobStateConflictError } from "../../../../../../app/server/features/jobs/errors/job-state-conflict-error";
 import { createJobItem } from "../../../../../../app/server/features/jobs/services/create-job-item.server";
 import { createJob } from "../../../../../../app/server/features/jobs/services/create-job.server";
 import { deleteJobItem } from "../../../../../../app/server/features/jobs/services/delete-job-item.server";
+import { reopenJob } from "../../../../../../app/server/features/jobs/services/reopen-job.server";
 import { internalUser } from "../../../../../support/fixtures/internal-user";
 
 const user = internalUser();
@@ -96,7 +98,7 @@ it("only deletes the requested item", async () => {
   ]);
 });
 
-it.each(["scheduled", "in_progress", "completed", "cancelled"] as const)(
+it.each(["scheduled", "in_progress"] as const)(
   "allows an item to be deleted while the job is %s",
   async (status) => {
     if (status !== "scheduled") {
@@ -108,6 +110,46 @@ it.each(["scheduled", "in_progress", "completed", "cancelled"] as const)(
     expect(await createDb(env.DB).select().from(jobItems)).toEqual([]);
   },
 );
+
+it.each(["completed", "cancelled"] as const)(
+  "rejects deleting an item while the job is %s",
+  async (status) => {
+    await setStatus(status);
+
+    await expect(
+      deleteJobItem(env.DB, user, jobId, itemId),
+    ).rejects.toBeInstanceOf(JobStateConflictError);
+
+    expect(
+      await createDb(env.DB)
+        .select()
+        .from(jobItems)
+        .where(eq(jobItems.id, itemId)),
+    ).toEqual([
+      expect.objectContaining({
+        id: itemId,
+        jobId,
+        description: "Front lawn",
+        amountCents: 4500,
+      }),
+    ]);
+  },
+);
+
+it("allows an item to be deleted after a completed job is reopened", async () => {
+  await setStatus("completed");
+
+  await reopenJob(env.DB, user, jobId);
+
+  await deleteJobItem(env.DB, user, jobId, itemId);
+
+  expect(
+    await createDb(env.DB)
+      .select()
+      .from(jobItems)
+      .where(eq(jobItems.id, itemId)),
+  ).toEqual([]);
+});
 
 it("rejects a nonexistent item", async () => {
   await expect(

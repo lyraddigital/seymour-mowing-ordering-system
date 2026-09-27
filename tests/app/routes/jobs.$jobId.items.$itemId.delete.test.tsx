@@ -1,6 +1,6 @@
 import { env } from "cloudflare:workers";
-import { beforeEach, expect, it } from "vitest";
 import { RouterContextProvider } from "react-router";
+import { beforeEach, expect, it } from "vitest";
 
 import { action } from "../../../app/routes/jobs.$jobId.items.$itemId.delete";
 import { currentUserContext } from "../../../app/server/auth/context/current-user-context";
@@ -42,6 +42,7 @@ function actionArgs() {
 async function expectResponseStatus(promise: Promise<unknown>, status: number) {
   try {
     await promise;
+
     throw new Error(`Expected Response with status ${status}`);
   } catch (error) {
     expect(error).toBeInstanceOf(Response);
@@ -116,7 +117,7 @@ it("only deletes the requested item", async () => {
 });
 
 it.each(["completed", "cancelled"] as const)(
-  "allows an item to be deleted from a %s job",
+  "returns 409 when deleting an item from a %s job",
   async (status) => {
     await createDb(env.DB)
       .insert(jobStatusHistory)
@@ -128,12 +129,16 @@ it.each(["completed", "cancelled"] as const)(
         createdAt: Date.now() + 1,
       });
 
-    const response = await action(actionArgs());
+    await expectResponseStatus(action(actionArgs()), 409);
 
-    expect(response).toBeInstanceOf(Response);
-    expect((response as Response).status).toBe(302);
-
-    expect(await createDb(env.DB).select().from(jobItems)).toEqual([]);
+    expect(await createDb(env.DB).select().from(jobItems)).toEqual([
+      expect.objectContaining({
+        id: itemId,
+        jobId,
+        description: "Front lawn",
+        amountCents: 4500,
+      }),
+    ]);
   },
 );
 

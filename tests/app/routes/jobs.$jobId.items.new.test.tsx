@@ -274,7 +274,7 @@ it("renders validation errors while preserving submitted values", async () => {
 });
 
 it.each(["completed", "cancelled"] as const)(
-  "allows an item to be added to a %s job",
+  "returns 409 when adding an item to a %s job",
   async (status) => {
     await createDb(env.DB)
       .insert(jobStatusHistory)
@@ -286,25 +286,19 @@ it.each(["completed", "cancelled"] as const)(
         createdAt: Date.now() + 1,
       });
 
-    const response = await action(
-      actionArgs(
-        new URLSearchParams({
-          description: "Final charge",
-          amount: "25.00",
-        }),
+    await expectResponseStatus(
+      action(
+        actionArgs(
+          new URLSearchParams({
+            description: "Final charge",
+            amount: "25.00",
+          }),
+        ),
       ),
+      409,
     );
 
-    expect(response).toBeInstanceOf(Response);
-    expect((response as Response).status).toBe(302);
-
-    expect(await createDb(env.DB).select().from(jobItems)).toEqual([
-      expect.objectContaining({
-        jobId,
-        description: "Final charge",
-        amountCents: 2500,
-      }),
-    ]);
+    expect(await createDb(env.DB).select().from(jobItems)).toEqual([]);
   },
 );
 

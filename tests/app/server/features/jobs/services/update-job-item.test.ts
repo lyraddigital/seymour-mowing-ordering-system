@@ -11,8 +11,10 @@ import { jobs } from "../../../../../../app/server/db/schema/jobs";
 import { users } from "../../../../../../app/server/db/schema/users";
 import { JobItemNotFoundError } from "../../../../../../app/server/features/jobs/errors/job-item-not-found-error";
 import { JobItemValidationError } from "../../../../../../app/server/features/jobs/errors/job-item-validation-error";
+import { JobStateConflictError } from "../../../../../../app/server/features/jobs/errors/job-state-conflict-error";
 import { createJobItem } from "../../../../../../app/server/features/jobs/services/create-job-item.server";
 import { createJob } from "../../../../../../app/server/features/jobs/services/create-job.server";
+import { reopenJob } from "../../../../../../app/server/features/jobs/services/reopen-job.server";
 import { updateJobItem } from "../../../../../../app/server/features/jobs/services/update-job-item.server";
 import { internalUser } from "../../../../../support/fixtures/internal-user";
 
@@ -110,7 +112,7 @@ it("allows the amount to be changed to zero", async () => {
   });
 });
 
-it.each(["scheduled", "in_progress", "completed", "cancelled"] as const)(
+it.each(["scheduled", "in_progress"] as const)(
   "allows an item to be edited while the job is %s",
   async (status) => {
     if (status !== "scheduled") {
@@ -128,6 +130,45 @@ it.each(["scheduled", "in_progress", "completed", "cancelled"] as const)(
     });
   },
 );
+
+it.each(["completed", "cancelled"] as const)(
+  "rejects editing an item while the job is %s",
+  async (status) => {
+    await setStatus(status);
+
+    await expect(
+      updateJobItem(env.DB, user, jobId, itemId, {
+        description: "Updated work",
+        amountCents: 5000,
+      }),
+    ).rejects.toBeInstanceOf(JobStateConflictError);
+
+    expect(await getItem()).toMatchObject({
+      id: itemId,
+      jobId,
+      description: "Front lawn",
+      amountCents: 4500,
+    });
+  },
+);
+
+it("allows an item to be edited after a completed job is reopened", async () => {
+  await setStatus("completed");
+
+  await reopenJob(env.DB, user, jobId);
+
+  await updateJobItem(env.DB, user, jobId, itemId, {
+    description: "Updated after reopening",
+    amountCents: 5500,
+  });
+
+  expect(await getItem()).toMatchObject({
+    id: itemId,
+    jobId,
+    description: "Updated after reopening",
+    amountCents: 5500,
+  });
+});
 
 it.each([
   {

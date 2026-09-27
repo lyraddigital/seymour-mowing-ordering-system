@@ -18,6 +18,7 @@ export const jobs = sqliteTable(
     name: text("name").notNull(),
     description: text("description").notNull(),
     scheduledDate: text("scheduled_date").notNull(),
+    servicePriceCents: integer("service_price_cents"),
     createdAt: integer("created_at").notNull(),
     updatedAt: integer("updated_at").notNull(),
   },
@@ -29,6 +30,10 @@ export const jobs = sqliteTable(
     check(
       "jobs_description_valid",
       sql`length(trim(${table.description})) between 1 and 2000`,
+    ),
+    check(
+      "jobs_service_price_cents_valid",
+      sql`${table.servicePriceCents} is null or ${table.servicePriceCents} >= 0`,
     ),
     index("jobs_customer_id_idx").on(table.customerId),
     index("jobs_scheduled_date_idx").on(table.scheduledDate, table.id),

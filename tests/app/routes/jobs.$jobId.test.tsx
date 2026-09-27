@@ -1,4 +1,5 @@
 import { env } from "cloudflare:workers";
+import { eq } from "drizzle-orm";
 import { renderToStaticMarkup } from "react-dom/server";
 import {
   createMemoryRouter,
@@ -221,14 +222,23 @@ it.each([
   ["completed", completeJob],
   ["cancelled", cancelJob],
 ] as const)(
-  "shows a %s job without lifecycle controls or danger zone",
+  "shows a %s job without edit, lifecycle controls or danger zone",
   async (status, operation) => {
+    if (operation === completeJob) {
+      await createDb(env.DB)
+        .update(jobs)
+        .set({ servicePriceCents: 10_000 })
+        .where(eq(jobs.id, jobId));
+    }
+
     await operation(env.DB, user, jobId);
 
     const result = await loader(args());
     const html = renderPage(result);
 
     expect(html).toContain(status === "completed" ? "Completed" : "Cancelled");
+
+    expect(html).not.toContain(`href="/jobs/${jobId}/edit"`);
 
     expect(html).not.toContain(`action="/jobs/${jobId}/start"`);
     expect(html).not.toContain(`action="/jobs/${jobId}/complete"`);
@@ -239,7 +249,13 @@ it.each([
     expect(html).not.toContain("Cancel Job");
     expect(html).not.toContain("Danger zone");
 
-    expect(html).toContain(`href="/jobs/${jobId}/edit"`);
+    if (status === "completed") {
+      expect(html).toContain(`action="/jobs/${jobId}/reopen"`);
+      expect(html).toContain("Reopen job");
+    } else {
+      expect(html).not.toContain(`action="/jobs/${jobId}/reopen"`);
+      expect(html).not.toContain("Reopen job");
+    }
   },
 );
 

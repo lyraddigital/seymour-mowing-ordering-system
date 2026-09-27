@@ -1,4 +1,4 @@
-import { and, desc, eq, exists, or } from "drizzle-orm";
+import { and, desc, eq, exists, inArray, isNull, or } from "drizzle-orm";
 import { alias } from "drizzle-orm/sqlite-core";
 
 import { PermissionDeniedError } from "../../../auth/authorization/errors/permission-denied-error";
@@ -46,18 +46,37 @@ export async function updateJob(
       ),
   );
 
+  const billingDetailsEditable = exists(
+    db
+      .select({ id: jobStatusHistory.id })
+      .from(jobStatusHistory)
+      .where(
+        and(
+          eq(jobStatusHistory.id, latest),
+          inArray(jobStatusHistory.status, ["scheduled", "in_progress"]),
+        ),
+      ),
+  );
+
+  const servicePriceUnchanged =
+    values.servicePriceCents === null
+      ? isNull(jobs.servicePriceCents)
+      : eq(jobs.servicePriceCents, values.servicePriceCents);
+
   const updated = await db
     .update(jobs)
     .set({
       name: values.name,
       description: values.description,
       scheduledDate: values.scheduledDate,
+      servicePriceCents: values.servicePriceCents,
       updatedAt: Date.now(),
     })
     .where(
       and(
         eq(jobs.id, jobId),
         or(eq(jobs.scheduledDate, values.scheduledDate), currentlyScheduled),
+        or(servicePriceUnchanged, billingDetailsEditable),
       ),
     )
     .returning({ id: jobs.id })
@@ -65,7 +84,11 @@ export async function updateJob(
 
   if (!updated) {
     const existing = await db
-      .select({ id: jobs.id })
+      .select({
+        id: jobs.id,
+        scheduledDate: jobs.scheduledDate,
+        servicePriceCents: jobs.servicePriceCents,
+      })
       .from(jobs)
       .where(eq(jobs.id, jobId))
       .get();
@@ -74,9 +97,19 @@ export async function updateJob(
       throw new JobNotFoundError();
     }
 
-    throw new JobStateConflictError(
-      "Scheduled date can only be changed while the job is scheduled.",
-    );
+    if (existing.scheduledDate !== values.scheduledDate) {
+      throw new JobStateConflictError(
+        "Scheduled date can only be changed while the job is scheduled.",
+      );
+    }
+
+    if (existing.servicePriceCents !== values.servicePriceCents) {
+      throw new JobStateConflictError(
+        "Service price can only be changed while the job is scheduled or in progress.",
+      );
+    }
+
+    throw new JobStateConflictError("The job can no longer be updated.");
   }
 
   return updated;

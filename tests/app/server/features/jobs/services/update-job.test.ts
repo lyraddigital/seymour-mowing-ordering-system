@@ -41,6 +41,7 @@ beforeEach(async () => {
     name: "Old name",
     description: "Old description",
     scheduledDate: originalDate,
+    servicePriceCents: null,
     createdAt: 1,
     updatedAt: 1,
   });
@@ -66,6 +67,13 @@ async function setStatus(status: "in_progress" | "completed" | "cancelled") {
     });
 }
 
+async function setServicePrice(servicePriceCents: number | null) {
+  await createDb(env.DB)
+    .update(jobs)
+    .set({ servicePriceCents })
+    .where(eq(jobs.id, jobId));
+}
+
 async function getJob() {
   return createDb(env.DB).select().from(jobs).where(eq(jobs.id, jobId)).get();
 }
@@ -80,6 +88,7 @@ it.each(["admin", "operator"] as const)(
         name: " New name ",
         description: " New description ",
         scheduledDate: "2026-09-18",
+        servicePriceCents: 12_500,
       }),
     ).toEqual({ id: jobId });
 
@@ -89,6 +98,7 @@ it.each(["admin", "operator"] as const)(
       name: "New name",
       description: "New description",
       scheduledDate: "2026-09-18",
+      servicePriceCents: 12_500,
       createdAt: 1,
     });
 
@@ -96,22 +106,71 @@ it.each(["admin", "operator"] as const)(
   },
 );
 
-it.each(["in_progress", "completed", "cancelled"] as const)(
-  "allows name and description edits with the unchanged date while %s",
+it("allows a zero service price while scheduled", async () => {
+  await updateJob(env.DB, user, jobId, {
+    name: "Old name",
+    description: "Old description",
+    scheduledDate: originalDate,
+    servicePriceCents: 0,
+  });
+
+  expect(await getJob()).toMatchObject({
+    servicePriceCents: 0,
+  });
+});
+
+it("allows the service price to be cleared while scheduled", async () => {
+  await setServicePrice(10_000);
+
+  await updateJob(env.DB, user, jobId, {
+    name: "Old name",
+    description: "Old description",
+    scheduledDate: originalDate,
+    servicePriceCents: null,
+  });
+
+  expect(await getJob()).toMatchObject({
+    servicePriceCents: null,
+  });
+});
+
+it("allows the service price to be changed while in progress", async () => {
+  await setServicePrice(10_000);
+  await setStatus("in_progress");
+
+  await updateJob(env.DB, user, jobId, {
+    name: "Corrected name",
+    description: "Corrected description",
+    scheduledDate: originalDate,
+    servicePriceCents: 15_000,
+  });
+
+  expect(await getJob()).toMatchObject({
+    name: "Corrected name",
+    description: "Corrected description",
+    servicePriceCents: 15_000,
+  });
+});
+
+it.each(["completed", "cancelled"] as const)(
+  "rejects a service price change while %s",
   async (status) => {
+    await setServicePrice(10_000);
     await setStatus(status);
 
-    await updateJob(env.DB, user, jobId, {
-      name: "Corrected name",
-      description: "Corrected description",
-      scheduledDate: originalDate,
-    });
+    await expect(
+      updateJob(env.DB, user, jobId, {
+        name: "Changed name",
+        description: "Changed description",
+        scheduledDate: originalDate,
+        servicePriceCents: 15_000,
+      }),
+    ).rejects.toBeInstanceOf(JobStateConflictError);
 
     expect(await getJob()).toMatchObject({
-      customerId: "customer",
-      name: "Corrected name",
-      description: "Corrected description",
-      scheduledDate: originalDate,
+      name: "Old name",
+      description: "Old description",
+      servicePriceCents: 10_000,
     });
   },
 );
@@ -126,6 +185,7 @@ it.each(["in_progress", "completed", "cancelled"] as const)(
         name: "Changed name",
         description: "Changed description",
         scheduledDate: "2026-09-18",
+        servicePriceCents: null,
       }),
     ).rejects.toBeInstanceOf(JobStateConflictError);
 
@@ -134,15 +194,40 @@ it.each(["in_progress", "completed", "cancelled"] as const)(
       name: "Old name",
       description: "Old description",
       scheduledDate: originalDate,
+      servicePriceCents: null,
     });
   },
 );
+
+it.each([
+  -1,
+  1.5,
+  Number.NaN,
+  Number.POSITIVE_INFINITY,
+  Number.MAX_SAFE_INTEGER + 1,
+])("rejects invalid service price %s", async (servicePriceCents) => {
+  await expect(
+    updateJob(env.DB, user, jobId, {
+      name: "Changed name",
+      description: "Changed description",
+      scheduledDate: originalDate,
+      servicePriceCents,
+    }),
+  ).rejects.toBeInstanceOf(JobValidationError);
+
+  expect(await getJob()).toMatchObject({
+    name: "Old name",
+    description: "Old description",
+    servicePriceCents: null,
+  });
+});
 
 it("does not alter the customer relationship", async () => {
   await updateJob(env.DB, user, jobId, {
     name: "Changed name",
     description: "Changed description",
     scheduledDate: originalDate,
+    servicePriceCents: 10_000,
   });
 
   expect(await getJob()).toMatchObject({
@@ -158,6 +243,7 @@ it("does not alter status history", async () => {
     name: "Changed name",
     description: "Changed description",
     scheduledDate: originalDate,
+    servicePriceCents: 10_000,
   });
 
   expect(await db.select().from(jobStatusHistory)).toEqual(before);
@@ -169,6 +255,7 @@ it("rejects a nonexistent job", async () => {
       name: "Changed name",
       description: "Changed description",
       scheduledDate: originalDate,
+      servicePriceCents: 10_000,
     }),
   ).rejects.toBeInstanceOf(JobNotFoundError);
 });
@@ -179,6 +266,7 @@ it("validates input before updating", async () => {
       name: " ",
       description: "Changed description",
       scheduledDate: originalDate,
+      servicePriceCents: 10_000,
     }),
   ).rejects.toBeInstanceOf(JobValidationError);
 
@@ -186,6 +274,7 @@ it("validates input before updating", async () => {
     name: "Old name",
     description: "Old description",
     scheduledDate: originalDate,
+    servicePriceCents: null,
   });
 });
 
@@ -195,6 +284,7 @@ it("requires manage permission", async () => {
       name: "Changed name",
       description: "Changed description",
       scheduledDate: originalDate,
+      servicePriceCents: 10_000,
     }),
   ).rejects.toBeInstanceOf(PermissionDeniedError);
 
@@ -202,5 +292,6 @@ it("requires manage permission", async () => {
     name: "Old name",
     description: "Old description",
     scheduledDate: originalDate,
+    servicePriceCents: null,
   });
 });

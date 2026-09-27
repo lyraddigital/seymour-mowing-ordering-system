@@ -14,8 +14,10 @@ export async function getJobById(
   jobId: string,
 ) {
   if (!can(user, "jobs.read")) throw new PermissionDeniedError();
+
   const db = createDb(binding);
   const history = alias(jobStatusHistory, "latest_history");
+
   // IDs provide a deterministic tie-break when history timestamps are equal.
   const latest = db
     .select({ id: history.id })
@@ -23,6 +25,7 @@ export async function getJobById(
     .where(eq(history.jobId, jobs.id))
     .orderBy(desc(history.createdAt), desc(history.id))
     .limit(1);
+
   const job = await db
     .select({
       id: jobs.id,
@@ -31,6 +34,7 @@ export async function getJobById(
       customerName: customers.name,
       description: jobs.description,
       scheduledDate: jobs.scheduledDate,
+      servicePriceCents: jobs.servicePriceCents,
       currentStatus: jobStatusHistory.status,
     })
     .from(jobs)
@@ -41,5 +45,6 @@ export async function getJobById(
     )
     .where(eq(jobs.id, jobId))
     .get();
+
   return job ?? null;
 }

@@ -16,10 +16,12 @@ export async function createJob(
   input: CreateJobInput,
 ) {
   if (!can(user, "jobs.manage")) throw new PermissionDeniedError();
+
   const values = validateCreateJob(input);
   const db = createDb(binding);
   const id = crypto.randomUUID();
   const now = Date.now();
+
   // D1 batch is a transaction. The conditional insert checks customer state
   // within that transaction, avoiding a race with archiving a customer.
   const [created] = await db.batch([
@@ -34,6 +36,9 @@ export async function createJob(
             description: sql<string>`${values.description}`.as("description"),
             scheduledDate: sql<string>`${values.scheduledDate}`.as(
               "scheduled_date",
+            ),
+            servicePriceCents: sql<number | null>`NULL`.as(
+              "service_price_cents",
             ),
             createdAt: sql<number>`${now}`.as("created_at"),
             updatedAt: sql<number>`${now}`.as("updated_at"),
@@ -60,7 +65,12 @@ export async function createJob(
         .where(eq(jobs.id, id)),
     ),
   ]);
-  if (!created.length)
-    throw new JobValidationError({ customerId: "Select an active customer." });
+
+  if (!created.length) {
+    throw new JobValidationError({
+      customerId: "Select an active customer.",
+    });
+  }
+
   return { id };
 }
