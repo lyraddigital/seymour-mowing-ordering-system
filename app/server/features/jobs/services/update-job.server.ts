@@ -96,7 +96,9 @@ export async function updateJob(
       );
     }
 
-    throw new JobStateConflictError("Only scheduled or in-progress jobs can be edited.");
+    throw new JobStateConflictError(
+      "Only scheduled or in-progress jobs can be edited.",
+    );
   }
 
   return updated;

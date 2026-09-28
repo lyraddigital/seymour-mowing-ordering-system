@@ -61,6 +61,7 @@ export async function getInvoiceById(
         id: jobs.id,
         name: jobs.name,
         scheduledDate: jobs.scheduledDate,
+        completedAt: invoiceJobs.completedAt,
       })
       .from(invoiceJobs)
       .innerJoin(jobs, eq(jobs.id, invoiceJobs.jobId))
@@ -73,6 +74,8 @@ export async function getInvoiceById(
         invoiceId: invoiceItems.invoiceId,
         jobId: invoiceItems.jobId,
         description: invoiceItems.description,
+        quantity: invoiceItems.quantity,
+        unitPriceCents: invoiceItems.unitPriceCents,
         amountCents: invoiceItems.amountCents,
         createdAt: invoiceItems.createdAt,
       })

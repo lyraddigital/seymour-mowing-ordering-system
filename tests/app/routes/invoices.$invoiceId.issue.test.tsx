@@ -27,6 +27,7 @@ import { createJobItem } from "../../../app/server/features/jobs/services/create
 import { createJob } from "../../../app/server/features/jobs/services/create-job.server";
 import IssueInvoicePage from "../../../app/ui/features/invoices/pages/issue-invoice-page/issue-invoice-page";
 import { internalUser } from "../../support/fixtures/internal-user";
+import { completeInvoiceJobs } from "../../support/fixtures/complete-invoice-jobs";
 
 const admin = internalUser();
 
@@ -129,6 +130,8 @@ beforeEach(async () => {
     description: "Front lawn mow",
     amountCents: 7500,
   });
+
+  await completeInvoiceJobs(admin, [jobId]);
 
   ({ id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [jobId],

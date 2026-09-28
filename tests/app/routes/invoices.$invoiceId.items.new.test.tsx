@@ -22,6 +22,7 @@ import { updateDraftInvoiceJobs } from "../../../app/server/features/invoices/se
 import { voidInvoice } from "../../../app/server/features/invoices/services/void-invoice.server";
 import AddInvoiceItemPage from "../../../app/ui/features/invoices/pages/add-invoice-item-page/add-invoice-item-page";
 import { draftInvoiceFixture } from "../../support/fixtures/draft-invoice";
+import { completeInvoiceJobs } from "../../support/fixtures/complete-invoice-jobs";
 
 let fixture: Awaited<ReturnType<typeof draftInvoiceFixture>>;
 
@@ -292,6 +293,7 @@ it("renders the single-job workflow with read-only job context", async () => {
 });
 
 it("offers only selected jobs for a multi-job invoice", async () => {
+  await completeInvoiceJobs(fixture.admin, [fixture.otherJobId]);
   await updateDraftInvoiceJobs(env.DB, fixture.admin, fixture.invoiceId, {
     jobIds: [fixture.jobId, fixture.otherJobId],
   });

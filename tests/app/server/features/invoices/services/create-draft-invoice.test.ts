@@ -17,7 +17,10 @@ import { InvoiceJobConflictError } from "../../../../../../app/server/features/i
 import { InvoiceJobSelectionError } from "../../../../../../app/server/features/invoices/errors/invoice-job-selection-error";
 import { createDraftInvoice } from "../../../../../../app/server/features/invoices/services/create-draft-invoice.server";
 import { createJobItem } from "../../../../../../app/server/features/jobs/services/create-job-item.server";
+import { cancelJob } from "../../../../../../app/server/features/jobs/services/cancel-job.server";
+import { completeJob } from "../../../../../../app/server/features/jobs/services/complete-job.server";
 import { createJob } from "../../../../../../app/server/features/jobs/services/create-job.server";
+import { startJob } from "../../../../../../app/server/features/jobs/services/start-job.server";
 import { internalUser } from "../../../../../support/fixtures/internal-user";
 
 const admin = internalUser();
@@ -59,6 +62,46 @@ beforeEach(async () => {
     description: "Mow back lawn",
     scheduledDate: "2026-09-18",
   }));
+});
+
+it("rejects a job that has not been completed", async () => {
+  await expect(
+    createDraftInvoice(env.DB, admin, { jobIds: [firstJobId] }),
+  ).rejects.toThrow("Only completed jobs can be added to an invoice.");
+
+  expect(await createDb(env.DB).select().from(invoices)).toEqual([]);
+  expect(await createDb(env.DB).select().from(invoiceJobs)).toEqual([]);
+});
+
+it("rejects in-progress and cancelled jobs", async () => {
+  await startJob(env.DB, admin, firstJobId);
+  await cancelJob(env.DB, admin, secondJobId);
+
+  for (const jobId of [firstJobId, secondJobId]) {
+    await expect(
+      createDraftInvoice(env.DB, admin, { jobIds: [jobId] }),
+    ).rejects.toThrow("Only completed jobs can be added to an invoice.");
+  }
+
+  expect(await createDb(env.DB).select().from(invoices)).toEqual([]);
+});
+
+it("defensively rejects a completed job without a service price", async () => {
+  await completeInvoiceJobs(admin, [firstJobId]);
+  await createDb(env.DB)
+    .update(jobs)
+    .set({ servicePriceCents: null })
+    .where(eq(jobs.id, firstJobId));
+
+  await expect(
+    createDraftInvoice(env.DB, admin, { jobIds: [firstJobId] }),
+  ).rejects.toThrow(
+    "Every completed job must have a service price before it can be invoiced.",
+  );
+
+  expect(await createDb(env.DB).select().from(invoices)).toEqual([]);
+  expect(await createDb(env.DB).select().from(invoiceJobs)).toEqual([]);
+  expect(await createDb(env.DB).select().from(invoiceItems)).toEqual([]);
 });
 
 it("creates a draft invoice from one job", async () => {
@@ -112,7 +155,7 @@ it("creates a draft invoice from multiple jobs for the same customer", async () 
   );
 });
 
-it("copies items from all selected jobs", async () => {
+it("snapshots service and additional-charge lines from all selected jobs", async () => {
   await createJobItem(env.DB, admin, firstJobId, {
     description: "Front lawn mow",
     amountCents: 4500,
@@ -123,6 +166,58 @@ it("copies items from all selected jobs", async () => {
     amountCents: 3500,
   });
 
+  await completeJob(env.DB, admin, firstJobId, 12_300);
+  await completeJob(env.DB, admin, secondJobId, 7_700);
+  const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
+    jobIds: [firstJobId, secondJobId],
+  });
+
+  const items = await createDb(env.DB)
+    .select()
+    .from(invoiceItems)
+    .where(eq(invoiceItems.invoiceId, invoiceId));
+
+  expect(items).toHaveLength(4);
+
+  expect(items).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        invoiceId,
+        jobId: firstJobId,
+        description: "Front lawn",
+        quantity: 1,
+        unitPriceCents: 12_300,
+        amountCents: 12_300,
+      }),
+      expect.objectContaining({
+        invoiceId,
+        jobId: firstJobId,
+        description: "Front lawn mow",
+        quantity: 1,
+        unitPriceCents: 4500,
+        amountCents: 4500,
+      }),
+      expect.objectContaining({
+        invoiceId,
+        jobId: secondJobId,
+        description: "Back lawn",
+        quantity: 1,
+        unitPriceCents: 7700,
+        amountCents: 7700,
+      }),
+      expect.objectContaining({
+        invoiceId,
+        jobId: secondJobId,
+        description: "Back lawn mow",
+        quantity: 1,
+        unitPriceCents: 3500,
+        amountCents: 3500,
+      }),
+    ]),
+  );
+});
+
+it("creates one service line per selected job without additional charges", async () => {
   await completeInvoiceJobs(admin, [firstJobId, secondJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId, secondJobId],
@@ -134,37 +229,9 @@ it("copies items from all selected jobs", async () => {
     .where(eq(invoiceItems.invoiceId, invoiceId));
 
   expect(items).toHaveLength(2);
-
-  expect(items).toEqual(
-    expect.arrayContaining([
-      expect.objectContaining({
-        invoiceId,
-        jobId: firstJobId,
-        description: "Front lawn mow",
-        amountCents: 4500,
-      }),
-      expect.objectContaining({
-        invoiceId,
-        jobId: secondJobId,
-        description: "Back lawn mow",
-        amountCents: 3500,
-      }),
-    ]),
-  );
-});
-
-it("creates an empty draft when selected jobs have no items", async () => {
-  await completeInvoiceJobs(admin, [firstJobId, secondJobId]);
-  const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
-    jobIds: [firstJobId, secondJobId],
-  });
-
-  expect(
-    await createDb(env.DB)
-      .select()
-      .from(invoiceItems)
-      .where(eq(invoiceItems.invoiceId, invoiceId)),
-  ).toEqual([]);
+  expect(items.every((item) => item.quantity === 1)).toBe(true);
+  expect(items.every((item) => item.unitPriceCents === 0)).toBe(true);
+  expect(items.every((item) => item.amountCents === 0)).toBe(true);
 
   expect(
     await createDb(env.DB)
@@ -209,18 +276,29 @@ it("creates an independent snapshot of job items", async () => {
     })
     .where(eq(jobItems.id, jobItemId));
 
-  expect(
-    await createDb(env.DB)
-      .select()
-      .from(invoiceItems)
-      .where(eq(invoiceItems.invoiceId, invoiceId)),
-  ).toEqual([
-    expect.objectContaining({
-      jobId: firstJobId,
-      description: "Front lawn mow",
-      amountCents: 4500,
-    }),
-  ]);
+  const items = await createDb(env.DB)
+    .select()
+    .from(invoiceItems)
+    .where(eq(invoiceItems.invoiceId, invoiceId));
+
+  expect(items).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        jobId: firstJobId,
+        description: "Front lawn",
+        quantity: 1,
+        unitPriceCents: 0,
+        amountCents: 0,
+      }),
+      expect.objectContaining({
+        jobId: firstJobId,
+        description: "Front lawn mow",
+        quantity: 1,
+        unitPriceCents: 4500,
+        amountCents: 4500,
+      }),
+    ]),
+  );
 });
 
 it("rejects an empty job selection", async () => {
@@ -299,7 +377,7 @@ it("rejects a job already attached to an active invoice", async () => {
 });
 
 it("rejects the whole selection when one job is already invoiced", async () => {
-  await completeInvoiceJobs(admin, [firstJobId]);
+  await completeInvoiceJobs(admin, [firstJobId, secondJobId]);
   await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });

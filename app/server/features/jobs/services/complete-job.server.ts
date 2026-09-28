@@ -22,7 +22,9 @@ export async function completeJob(
   }
 
   if (!Number.isSafeInteger(servicePriceCents) || servicePriceCents < 0) {
-    throw new JobValidationError({ servicePriceCents: "Enter a valid non-negative service price." });
+    throw new JobValidationError({
+      servicePriceCents: "Enter a valid non-negative service price.",
+    });
   }
 
   const db = createDb(binding);
@@ -40,42 +42,49 @@ export async function completeJob(
   // conditional history insert authorizes its price update.
   const [inserted] = await db.batch([
     db
-    .insert(jobStatusHistory)
-    .select(
-      db
-        .select({
-          id: sql<string>`${historyId}`.as("id"),
-          jobId: jobStatusHistory.jobId,
-          status: sql<"completed">`'completed'`.as("status"),
-          createdByUserId: sql<string>`${user.id}`.as("created_by_user_id"),
-          createdAt:
-            sql<number>`max(${Date.now()}, ${jobStatusHistory.createdAt} + 1)`.as(
-              "created_at",
+      .insert(jobStatusHistory)
+      .select(
+        db
+          .select({
+            id: sql<string>`${historyId}`.as("id"),
+            jobId: jobStatusHistory.jobId,
+            status: sql<"completed">`'completed'`.as("status"),
+            createdByUserId: sql<string>`${user.id}`.as("created_by_user_id"),
+            createdAt:
+              sql<number>`max(${Date.now()}, ${jobStatusHistory.createdAt} + 1)`.as(
+                "created_at",
+              ),
+          })
+          .from(jobStatusHistory)
+          .innerJoin(jobs, eq(jobs.id, jobStatusHistory.jobId))
+          .where(
+            and(
+              eq(jobStatusHistory.id, latest),
+              inArray(jobStatusHistory.status, ["scheduled", "in_progress"]),
             ),
-        })
-        .from(jobStatusHistory)
-        .innerJoin(jobs, eq(jobs.id, jobStatusHistory.jobId))
-        .where(
-          and(
-            eq(jobStatusHistory.id, latest),
-            inArray(jobStatusHistory.status, ["scheduled", "in_progress"]),
+          ),
+      )
+      .returning({ id: jobStatusHistory.jobId }),
+    db
+      .update(jobs)
+      .set({ servicePriceCents, updatedAt: Date.now() })
+      .where(
+        and(
+          eq(jobs.id, jobId),
+          exists(
+            db
+              .select({ id: jobStatusHistory.id })
+              .from(jobStatusHistory)
+              .where(eq(jobStatusHistory.id, historyId)),
           ),
         ),
-    )
-    .returning({ id: jobStatusHistory.jobId }),
-    db.update(jobs)
-      .set({ servicePriceCents, updatedAt: Date.now() })
-      .where(and(eq(jobs.id, jobId), exists(
-        db.select({ id: jobStatusHistory.id }).from(jobStatusHistory)
-          .where(eq(jobStatusHistory.id, historyId)),
-      ))),
+      ),
   ]);
 
   if (!inserted.length) {
     const existing = await db
       .select({
         id: jobs.id,
-        servicePriceCents: jobs.servicePriceCents,
       })
       .from(jobs)
       .where(eq(jobs.id, jobId))

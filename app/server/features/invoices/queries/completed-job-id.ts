@@ -1,14 +1,21 @@
 import { sql } from "drizzle-orm";
-import { jobs } from "../../../db/schema/jobs";
 
-// A null id deliberately fails the invoice_jobs NOT NULL constraint during
-// allocation, rolling back the batch if a job was concurrently reopened.
-export function completedJobId(jobId: string | typeof jobs.id) {
-  // Qualify the outer column explicitly: Drizzle unqualifies columns in select
-  // expressions, which would otherwise bind to the history row's own id.
-  const id = typeof jobId === "string" ? sql`${jobId}` : sql`jobs.id`;
+// Null values deliberately fail invoice_jobs constraints during allocation,
+// rolling back the batch if a job is concurrently reopened or loses pricing.
+export function completedJobId(jobId: string) {
   return sql<string | null>`(select case when history.status = 'completed'
+    and job.service_price_cents is not null
     then history.job_id end from job_status_history history
-    where history.job_id = ${id}
+    inner join jobs job on job.id = history.job_id
+    where history.job_id = ${jobId}
+    order by history.created_at desc, history.id desc limit 1)`;
+}
+
+export function completedJobAt(jobId: string) {
+  return sql<number | null>`(select case when history.status = 'completed'
+    and job.service_price_cents is not null
+    then history.created_at end from job_status_history history
+    inner join jobs job on job.id = history.job_id
+    where history.job_id = ${jobId}
     order by history.created_at desc, history.id desc limit 1)`;
 }

@@ -40,7 +40,12 @@ export async function updateInvoiceItem(
   const [changed] = await db.batch([
     db
       .update(invoiceItems)
-      .set({ description: values.description, amountCents: values.amountCents })
+      .set({
+        description: values.description,
+        quantity: 1,
+        unitPriceCents: values.amountCents,
+        amountCents: values.amountCents,
+      })
       .where(
         and(
           eq(invoiceItems.id, itemId),

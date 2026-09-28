@@ -78,16 +78,18 @@ it("returns invoices with customer and job context", async () => {
       status: "draft",
       totalCents: 0,
       jobs: [
-        {
+        expect.objectContaining({
           id: firstJobId,
           name: "Front lawn",
           scheduledDate: "2026-09-17",
-        },
-        {
+          completedAt: expect.any(Number),
+        }),
+        expect.objectContaining({
           id: secondJobId,
           name: "Back lawn",
           scheduledDate: "2026-09-18",
-        },
+          completedAt: expect.any(Number),
+        }),
       ],
     }),
   ]);

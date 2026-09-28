@@ -59,6 +59,7 @@ export async function listInvoices(
       id: jobs.id,
       name: jobs.name,
       scheduledDate: jobs.scheduledDate,
+      completedAt: invoiceJobs.completedAt,
     })
     .from(invoiceJobs)
     .innerJoin(jobs, eq(jobs.id, invoiceJobs.jobId))
@@ -79,6 +80,7 @@ export async function listInvoices(
       id: job.id,
       name: job.name,
       scheduledDate: job.scheduledDate,
+      completedAt: job.completedAt,
     });
 
     jobsByInvoice.set(job.invoiceId, existing);

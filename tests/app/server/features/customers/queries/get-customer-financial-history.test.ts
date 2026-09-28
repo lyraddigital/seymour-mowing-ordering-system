@@ -17,6 +17,7 @@ import { createJob } from "../../../../../../app/server/features/jobs/services/c
 import { recordPayment } from "../../../../../../app/server/features/payments/services/record-payment.server";
 import { voidPayment } from "../../../../../../app/server/features/payments/services/void-payment.server";
 import { draftInvoiceFixture } from "../../../../../support/fixtures/draft-invoice";
+import { completeInvoiceJobs } from "../../../../../support/fixtures/complete-invoice-jobs";
 
 let fixture: Awaited<ReturnType<typeof draftInvoiceFixture>>;
 const history = (customerId = "customer") =>
@@ -151,6 +152,7 @@ it("keeps voided invoices in invoiced history but excludes their balance; retain
 });
 
 it("does not multiply multi-job invoice totals by multiple payments", async () => {
+  await completeInvoiceJobs(fixture.admin, [fixture.otherJobId]);
   await updateDraftInvoiceJobs(env.DB, fixture.admin, fixture.invoiceId, {
     jobIds: [fixture.jobId, fixture.otherJobId],
   });
@@ -201,6 +203,7 @@ it("isolates invoices, payments and all totals between customers", async () => {
     description: "Mow",
     scheduledDate: "2026-09-21",
   });
+  await completeInvoiceJobs(fixture.admin, [job.id]);
   const invoice = await createDraftInvoice(env.DB, fixture.admin, {
     jobIds: [job.id],
   });
@@ -236,6 +239,7 @@ it("isolates invoices, payments and all totals between customers", async () => {
 });
 
 it("orders invoices by creation time then id, and payments by payment date then creation time, newest first", async () => {
+  await completeInvoiceJobs(fixture.admin, [fixture.otherJobId]);
   const second = await createDraftInvoice(env.DB, fixture.admin, {
     jobIds: [fixture.otherJobId],
   });

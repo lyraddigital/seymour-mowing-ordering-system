@@ -14,6 +14,7 @@ import { PaymentValidationError } from "../../../../../../app/server/features/pa
 import { recordPayment } from "../../../../../../app/server/features/payments/services/record-payment.server";
 import { voidPayment } from "../../../../../../app/server/features/payments/services/void-payment.server";
 import { issuedInvoiceFixture } from "../../../../../support/fixtures/issued-invoice";
+import { completeInvoiceJobs } from "../../../../../support/fixtures/complete-invoice-jobs";
 
 const now = new Date("2026-09-25T02:00:00.000Z");
 let fixture: Awaited<ReturnType<typeof issuedInvoiceFixture>>;
@@ -187,6 +188,7 @@ it("does not count voided payments when checking the balance", async () => {
 });
 
 it("rejects draft invoices", async () => {
+  await completeInvoiceJobs(fixture.admin, [fixture.otherJobId]);
   const { id } = await createDraftInvoice(env.DB, fixture.admin, {
     jobIds: [fixture.otherJobId],
   });

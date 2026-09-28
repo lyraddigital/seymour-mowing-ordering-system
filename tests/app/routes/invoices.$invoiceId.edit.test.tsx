@@ -151,6 +151,12 @@ beforeEach(async () => {
     description: "Mow nature strip",
     scheduledDate: "2026-09-21",
   }));
+
+  await completeInvoiceJobs(admin, [
+    firstJobId,
+    secondJobId,
+    otherCustomerJobId,
+  ]);
 });
 
 it("loads the current jobs and other available jobs for the invoice customer", async () => {

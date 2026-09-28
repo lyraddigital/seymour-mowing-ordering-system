@@ -22,6 +22,8 @@ export const invoiceJobs = sqliteTable(
       .notNull()
       .references(() => jobs.id),
 
+    completedAt: integer("completed_at").notNull(),
+
     releasedAt: integer("released_at"),
   },
   (table) => [

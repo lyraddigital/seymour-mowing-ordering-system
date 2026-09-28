@@ -106,7 +106,7 @@ it("deletes all invoice items belonging to the draft", async () => {
       .select()
       .from(invoiceItems)
       .where(eq(invoiceItems.invoiceId, invoiceId)),
-  ).toHaveLength(2);
+  ).toHaveLength(4);
 
   await deleteDraftInvoice(env.DB, admin, invoiceId);
 
@@ -271,14 +271,17 @@ it("does not delete items from an issued invoice", async () => {
       .select()
       .from(invoiceItems)
       .where(eq(invoiceItems.invoiceId, invoiceId)),
-  ).toEqual([
-    expect.objectContaining({
-      invoiceId,
-      jobId: firstJobId,
-      description: "Front lawn",
-      amountCents: 4500,
-    }),
-  ]);
+  ).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        invoiceId,
+        jobId: firstJobId,
+        description: "Front lawn",
+        quantity: 1,
+        amountCents: 4500,
+      }),
+    ]),
+  );
 });
 
 it("rejects deleting a voided invoice", async () => {

@@ -88,7 +88,6 @@ it.each(["admin", "operator"] as const)(
         name: " New name ",
         description: " New description ",
         scheduledDate: "2026-09-18",
-
       }),
     ).toEqual({ id: jobId });
 
@@ -106,13 +105,24 @@ it.each(["admin", "operator"] as const)(
   },
 );
 
-it.each(["scheduled", "in_progress"] as const)("ignores forged billing fields while %s", async (status) => {
-  await setServicePrice(10_000);
-  if (status === "in_progress") await setStatus(status);
-  const input = { name: "Corrected name", description: "Corrected description", scheduledDate: originalDate, servicePriceCents: 15_000 };
-  await updateJob(env.DB, user, jobId, input);
-  expect(await getJob()).toMatchObject({ name: "Corrected name", servicePriceCents: 10_000 });
-});
+it.each(["scheduled", "in_progress"] as const)(
+  "ignores forged billing fields while %s",
+  async (status) => {
+    await setServicePrice(10_000);
+    if (status === "in_progress") await setStatus(status);
+    const input = {
+      name: "Corrected name",
+      description: "Corrected description",
+      scheduledDate: originalDate,
+      servicePriceCents: 15_000,
+    };
+    await updateJob(env.DB, user, jobId, input);
+    expect(await getJob()).toMatchObject({
+      name: "Corrected name",
+      servicePriceCents: 10_000,
+    });
+  },
+);
 
 it.each(["completed", "cancelled"] as const)(
   "rejects ordinary edits while %s",
@@ -125,14 +135,12 @@ it.each(["completed", "cancelled"] as const)(
         name: "Changed name",
         description: "Changed description",
         scheduledDate: originalDate,
-
       }),
     ).rejects.toBeInstanceOf(JobStateConflictError);
 
     expect(await getJob()).toMatchObject({
       name: "Old name",
       description: "Old description",
-
     });
   },
 );
@@ -147,7 +155,6 @@ it.each(["in_progress", "completed", "cancelled"] as const)(
         name: "Changed name",
         description: "Changed description",
         scheduledDate: "2026-09-18",
-
       }),
     ).rejects.toBeInstanceOf(JobStateConflictError);
 
@@ -156,7 +163,6 @@ it.each(["in_progress", "completed", "cancelled"] as const)(
       name: "Old name",
       description: "Old description",
       scheduledDate: originalDate,
-
     });
   },
 );
@@ -166,7 +172,6 @@ it("does not alter the customer relationship", async () => {
     name: "Changed name",
     description: "Changed description",
     scheduledDate: originalDate,
-
   });
 
   expect(await getJob()).toMatchObject({
@@ -182,7 +187,6 @@ it("does not alter status history", async () => {
     name: "Changed name",
     description: "Changed description",
     scheduledDate: originalDate,
-
   });
 
   expect(await db.select().from(jobStatusHistory)).toEqual(before);
@@ -194,7 +198,6 @@ it("rejects a nonexistent job", async () => {
       name: "Changed name",
       description: "Changed description",
       scheduledDate: originalDate,
-
     }),
   ).rejects.toBeInstanceOf(JobNotFoundError);
 });
@@ -205,7 +208,6 @@ it("validates input before updating", async () => {
       name: " ",
       description: "Changed description",
       scheduledDate: originalDate,
-
     }),
   ).rejects.toBeInstanceOf(JobValidationError);
 
@@ -213,7 +215,6 @@ it("validates input before updating", async () => {
     name: "Old name",
     description: "Old description",
     scheduledDate: originalDate,
-
   });
 });
 
@@ -223,7 +224,6 @@ it("requires manage permission", async () => {
       name: "Changed name",
       description: "Changed description",
       scheduledDate: originalDate,
-
     }),
   ).rejects.toBeInstanceOf(PermissionDeniedError);
 
@@ -231,6 +231,5 @@ it("requires manage permission", async () => {
     name: "Old name",
     description: "Old description",
     scheduledDate: originalDate,
-
   });
 });

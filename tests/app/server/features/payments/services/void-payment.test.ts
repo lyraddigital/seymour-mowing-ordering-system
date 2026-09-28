@@ -13,6 +13,7 @@ import { createDraftInvoice } from "../../../../../../app/server/features/invoic
 import { PaymentNotFoundError } from "../../../../../../app/server/features/payments/errors/payment-not-found-error";
 import { PaymentStateConflictError } from "../../../../../../app/server/features/payments/errors/payment-state-conflict-error";
 import { isJobInvoiceable } from "../../../../../../app/server/features/invoices/queries/is-job-invoiceable.server";
+import { completeInvoiceJobs } from "../../../../../support/fixtures/complete-invoice-jobs";
 let fixture: Awaited<ReturnType<typeof issuedInvoiceFixture>>;
 beforeEach(async () => {
   fixture = await issuedInvoiceFixture();
@@ -84,6 +85,7 @@ it("rejects a payment through a different invoice", async () => {
     fixture.invoiceId,
     { amountCents: 100, paymentDate: "2026-09-24" },
   );
+  await completeInvoiceJobs(fixture.admin, [fixture.otherJobId]);
   const { id } = await createDraftInvoice(env.DB, fixture.admin, {
     jobIds: [fixture.otherJobId],
   });

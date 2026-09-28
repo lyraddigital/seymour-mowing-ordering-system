@@ -25,6 +25,10 @@ export const invoiceItems = sqliteTable(
 
     description: text("description").notNull(),
 
+    quantity: integer("quantity").notNull(),
+
+    unitPriceCents: integer("unit_price_cents").notNull(),
+
     amountCents: integer("amount_cents").notNull(),
 
     createdAt: integer("created_at").notNull(),
@@ -35,7 +39,17 @@ export const invoiceItems = sqliteTable(
       sql`length(trim(${table.description})) between 1 and 500`,
     ),
 
-    check("invoice_items_amount_cents_valid", sql`${table.amountCents} >= 0`),
+    check("invoice_items_quantity_valid", sql`${table.quantity} > 0`),
+
+    check(
+      "invoice_items_unit_price_cents_valid",
+      sql`${table.unitPriceCents} >= 0`,
+    ),
+
+    check(
+      "invoice_items_amount_cents_valid",
+      sql`${table.amountCents} = ${table.quantity} * ${table.unitPriceCents}`,
+    ),
 
     index("invoice_items_invoice_id_idx").on(
       table.invoiceId,

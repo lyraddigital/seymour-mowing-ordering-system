@@ -12,6 +12,7 @@ import { listPayments } from "../../../../../../app/server/features/payments/que
 import { recordPayment } from "../../../../../../app/server/features/payments/services/record-payment.server";
 import { voidPayment } from "../../../../../../app/server/features/payments/services/void-payment.server";
 import { issuedInvoiceFixture } from "../../../../../support/fixtures/issued-invoice";
+import { completeInvoiceJobs } from "../../../../../support/fixtures/complete-invoice-jobs";
 
 let fixture: Awaited<ReturnType<typeof issuedInvoiceFixture>>;
 
@@ -83,6 +84,7 @@ it("retains both active and voided payments after their invoice is voided", asyn
 });
 
 it("orders across invoices by payment date, creation time and id descending", async () => {
+  await completeInvoiceJobs(fixture.admin, [fixture.otherJobId]);
   const second = await createDraftInvoice(env.DB, fixture.admin, {
     jobIds: [fixture.otherJobId],
   });

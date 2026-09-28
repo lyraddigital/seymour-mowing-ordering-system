@@ -1,5 +1,6 @@
 import { completeInvoiceJobs } from "../../../../../support/fixtures/complete-invoice-jobs";
 import { env } from "cloudflare:workers";
+import { eq } from "drizzle-orm";
 import { beforeEach, expect, it } from "vitest";
 
 import { PermissionDeniedError } from "../../../../../../app/server/auth/authorization/errors/permission-denied-error";
@@ -17,6 +18,8 @@ import { createDraftInvoice } from "../../../../../../app/server/features/invoic
 import { issueInvoice } from "../../../../../../app/server/features/invoices/services/issue-invoice.server";
 import { voidInvoice } from "../../../../../../app/server/features/invoices/services/void-invoice.server";
 import { createJob } from "../../../../../../app/server/features/jobs/services/create-job.server";
+import { cancelJob } from "../../../../../../app/server/features/jobs/services/cancel-job.server";
+import { startJob } from "../../../../../../app/server/features/jobs/services/start-job.server";
 import { internalUser } from "../../../../../support/fixtures/internal-user";
 
 const admin = internalUser();
@@ -52,9 +55,33 @@ beforeEach(async () => {
   }));
 });
 
-it("returns true when the job has no active invoice", async () => {
+it("returns false while the job is scheduled", async () => {
+  expect(await isJobInvoiceable(env.DB, admin, jobId)).toBe(false);
+});
+
+it("returns false while the job is in progress", async () => {
+  await startJob(env.DB, admin, jobId);
+  expect(await isJobInvoiceable(env.DB, admin, jobId)).toBe(false);
+});
+
+it("returns false when the job is cancelled", async () => {
+  await cancelJob(env.DB, admin, jobId);
+  expect(await isJobInvoiceable(env.DB, admin, jobId)).toBe(false);
+});
+
+it("returns true when a completed job has no active invoice", async () => {
   await completeInvoiceJobs(admin, [jobId]);
   expect(await isJobInvoiceable(env.DB, admin, jobId)).toBe(true);
+});
+
+it("returns false when a completed job is missing its service price", async () => {
+  await completeInvoiceJobs(admin, [jobId]);
+  await createDb(env.DB)
+    .update(jobs)
+    .set({ servicePriceCents: null })
+    .where(eq(jobs.id, jobId));
+
+  expect(await isJobInvoiceable(env.DB, admin, jobId)).toBe(false);
 });
 
 it("returns false when the job belongs to a draft invoice", async () => {

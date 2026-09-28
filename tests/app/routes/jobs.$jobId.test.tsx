@@ -137,7 +137,9 @@ it("renders the job detail hierarchy for an administrator", async () => {
   expect(html).not.toContain('id="job-invoice-heading"');
   expect(html).not.toContain("Create invoice");
   expect(html).toContain("Complete this job?");
-  expect(html).toContain("Service price (AUD)");
+  expect(html).toContain("Service price");
+  expect(html).toContain('aria-label="Close"');
+  expect(html).toContain("AUD");
   expect(html).toContain("Additional charges");
   expect(html).toContain("Continue");
   expect(html).toContain("Back");
@@ -320,11 +322,14 @@ it("requires the authenticated user context", async () => {
   await expect(loader(args())).rejects.toThrow();
 });
 
-
 it("hides invoices for in-progress and reopened jobs", async () => {
   await startJob(env.DB, user, jobId);
-  expect(renderPage(await loader(args()))).not.toContain('id="job-invoice-heading"');
+  expect(renderPage(await loader(args()))).not.toContain(
+    'id="job-invoice-heading"',
+  );
   await completeJob(env.DB, user, jobId, 12345);
   await reopenJob(env.DB, user, jobId);
-  expect(renderPage(await loader(args()))).not.toContain('id="job-invoice-heading"');
+  expect(renderPage(await loader(args()))).not.toContain(
+    'id="job-invoice-heading"',
+  );
 });

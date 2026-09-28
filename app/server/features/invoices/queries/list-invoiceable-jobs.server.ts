@@ -1,5 +1,5 @@
-import { completedJobId } from "./completed-job-id";
-import { and, asc, eq, isNull, isNotNull, sql } from "drizzle-orm";
+import { and, asc, desc, eq, isNull, sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/sqlite-core";
 
 import { PermissionDeniedError } from "../../../auth/authorization/errors/permission-denied-error";
 import { can } from "../../../auth/authorization/policies/can";
@@ -9,6 +9,7 @@ import { customers } from "../../../db/schema/customers";
 import { invoiceJobs } from "../../../db/schema/invoice-jobs";
 import { jobItems } from "../../../db/schema/job-items";
 import { jobs } from "../../../db/schema/jobs";
+import { jobStatusHistory } from "../../../db/schema/job-status-history";
 import type { InvoiceableJobSummary } from "../types/invoiceable-job-summary";
 
 export async function listInvoiceableJobs(
@@ -20,6 +21,13 @@ export async function listInvoiceableJobs(
   }
 
   const db = createDb(binding);
+  const history = alias(jobStatusHistory, "latest_history");
+  const latest = db
+    .select({ id: history.id })
+    .from(history)
+    .where(eq(history.jobId, jobs.id))
+    .orderBy(desc(history.createdAt), desc(history.id))
+    .limit(1);
 
   return db
     .select({
@@ -29,7 +37,7 @@ export async function listInvoiceableJobs(
       name: jobs.name,
       scheduledDate: jobs.scheduledDate,
       totalCents: sql<number>`
-        coalesce(
+        ${jobs.servicePriceCents} + coalesce(
           (
             select sum(${jobItems.amountCents})
             from ${jobItems}
@@ -41,10 +49,20 @@ export async function listInvoiceableJobs(
     })
     .from(jobs)
     .innerJoin(customers, eq(customers.id, jobs.customerId))
+    .innerJoin(
+      jobStatusHistory,
+      and(eq(jobStatusHistory.jobId, jobs.id), eq(jobStatusHistory.id, latest)),
+    )
     .leftJoin(
       invoiceJobs,
       and(eq(invoiceJobs.jobId, jobs.id), isNull(invoiceJobs.releasedAt)),
     )
-    .where(and(isNull(invoiceJobs.invoiceId), isNotNull(completedJobId(jobs.id))))
+    .where(
+      and(
+        isNull(invoiceJobs.invoiceId),
+        eq(jobStatusHistory.status, "completed"),
+        sql`${jobs.servicePriceCents} is not null`,
+      ),
+    )
     .orderBy(asc(customers.name), asc(jobs.scheduledDate), asc(jobs.id));
 }

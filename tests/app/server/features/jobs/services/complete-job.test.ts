@@ -71,9 +71,11 @@ it.each(["admin", "operator"] as const)(
     const beforeHistory = await db.select().from(jobStatusHistory);
     const before = Date.now();
 
-    expect(await completeJob(env.DB, { ...user, role }, "job", 10_000)).toEqual({
-      id: "job",
-    });
+    expect(await completeJob(env.DB, { ...user, role }, "job", 10_000)).toEqual(
+      {
+        id: "job",
+      },
+    );
 
     const afterHistory = await db.select().from(jobStatusHistory);
 
@@ -92,7 +94,9 @@ it.each(["admin", "operator"] as const)(
       afterHistory.find((row) => row.status === "completed")!.createdAt,
     ).toBeGreaterThanOrEqual(before);
 
-    expect(await db.select().from(jobs).where(eq(jobs.id, "job")).get()).toMatchObject({ servicePriceCents: 10_000 });
+    expect(
+      await db.select().from(jobs).where(eq(jobs.id, "job")).get(),
+    ).toMatchObject({ servicePriceCents: 10_000 });
 
     expect(await getJobById(env.DB, user, "job")).toMatchObject({
       currentStatus: "completed",
@@ -117,8 +121,9 @@ it("rejects completion when the service price has not been set", async () => {
     .from(jobStatusHistory)
     .where(eq(jobStatusHistory.jobId, "job"));
 
-  await expect(completeJob(env.DB, user, "job", undefined as unknown as number)).rejects.toThrow(
-  );
+  await expect(
+    completeJob(env.DB, user, "job", undefined as unknown as number),
+  ).rejects.toThrow();
 
   expect(
     await db
@@ -183,12 +188,14 @@ it.each(["completed", "cancelled"] as const)(
 
     const before = await db.select().from(jobStatusHistory);
 
-    await expect(completeJob(env.DB, user, "job", 10_000)).rejects.toBeInstanceOf(
-      JobStateConflictError,
-    );
+    await expect(
+      completeJob(env.DB, user, "job", 10_000),
+    ).rejects.toBeInstanceOf(JobStateConflictError);
 
     expect(await db.select().from(jobStatusHistory)).toEqual(before);
-    expect(await getJobById(env.DB, user, "job")).toMatchObject({ servicePriceCents: 10000 });
+    expect(await getJobById(env.DB, user, "job")).toMatchObject({
+      servicePriceCents: 10000,
+    });
   },
 );
 
@@ -273,13 +280,24 @@ it("preserves history if the responsible user foreign key fails", async () => {
   expect(await db.select().from(jobStatusHistory)).toEqual(before);
 });
 
-
-it.each([undefined, null, -1, 1.5, NaN, Infinity, Number.MAX_SAFE_INTEGER + 1, "100"])(
-  "rejects invalid final price %s without changing billing or history", async (price) => {
+it.each([
+  undefined,
+  null,
+  -1,
+  1.5,
+  NaN,
+  Infinity,
+  Number.MAX_SAFE_INTEGER + 1,
+  "100",
+])(
+  "rejects invalid final price %s without changing billing or history",
+  async (price) => {
     const db = createDb(env.DB);
     const beforeJobs = await db.select().from(jobs);
     const beforeHistory = await db.select().from(jobStatusHistory);
-    await expect(completeJob(env.DB, user, "job", price as number)).rejects.toBeInstanceOf(JobValidationError);
+    await expect(
+      completeJob(env.DB, user, "job", price as number),
+    ).rejects.toBeInstanceOf(JobValidationError);
     expect(await db.select().from(jobs)).toEqual(beforeJobs);
     expect(await db.select().from(jobStatusHistory)).toEqual(beforeHistory);
   },
@@ -287,26 +305,52 @@ it.each([undefined, null, -1, 1.5, NaN, Infinity, Number.MAX_SAFE_INTEGER + 1, "
 
 it("persists the final price, retains charges through reopening, and accepts a corrected price on re-completion", async () => {
   const db = createDb(env.DB);
-  await db.update(jobs).set({ servicePriceCents: null }).where(eq(jobs.id, "job"));
-  await db.insert(jobItems).values({ id: "charge", jobId: "job", description: "Green waste", amountCents: 2500, createdAt: 1, updatedAt: 1 });
+  await db
+    .update(jobs)
+    .set({ servicePriceCents: null })
+    .where(eq(jobs.id, "job"));
+  await db.insert(jobItems).values({
+    id: "charge",
+    jobId: "job",
+    description: "Green waste",
+    amountCents: 2500,
+    createdAt: 1,
+    updatedAt: 1,
+  });
   const charges = await db.select().from(jobItems);
   await completeJob(env.DB, user, "job", 12345);
-  expect(await getJobById(env.DB, user, "job")).toMatchObject({ currentStatus: "completed", servicePriceCents: 12345 });
+  expect(await getJobById(env.DB, user, "job")).toMatchObject({
+    currentStatus: "completed",
+    servicePriceCents: 12345,
+  });
   await reopenJob(env.DB, user, "job");
-  expect(await getJobById(env.DB, user, "job")).toMatchObject({ currentStatus: "in_progress", servicePriceCents: 12345 });
+  expect(await getJobById(env.DB, user, "job")).toMatchObject({
+    currentStatus: "in_progress",
+    servicePriceCents: 12345,
+  });
   expect(await db.select().from(jobItems)).toEqual(charges);
   await completeJob(env.DB, user, "job", 9876);
-  expect(await getJobById(env.DB, user, "job")).toMatchObject({ currentStatus: "completed", servicePriceCents: 9876 });
+  expect(await getJobById(env.DB, user, "job")).toMatchObject({
+    currentStatus: "completed",
+    servicePriceCents: 9876,
+  });
   expect(await db.select().from(jobItems)).toEqual(charges);
 });
 
 it("rolls back completed history when the price write fails", async () => {
   const before = await createDb(env.DB).select().from(jobStatusHistory);
-  await env.DB.exec("CREATE TRIGGER fail_completion_price BEFORE UPDATE OF service_price_cents ON jobs BEGIN SELECT RAISE(ABORT, 'price write failed'); END");
+  await env.DB.exec(
+    "CREATE TRIGGER fail_completion_price BEFORE UPDATE OF service_price_cents ON jobs BEGIN SELECT RAISE(ABORT, 'price write failed'); END",
+  );
   try {
     await expect(completeJob(env.DB, user, "job", 23456)).rejects.toThrow();
-    expect(await createDb(env.DB).select().from(jobStatusHistory)).toEqual(before);
-    expect(await getJobById(env.DB, user, "job")).toMatchObject({ currentStatus: "scheduled", servicePriceCents: 10000 });
+    expect(await createDb(env.DB).select().from(jobStatusHistory)).toEqual(
+      before,
+    );
+    expect(await getJobById(env.DB, user, "job")).toMatchObject({
+      currentStatus: "scheduled",
+      servicePriceCents: 10000,
+    });
   } finally {
     await env.DB.exec("DROP TRIGGER fail_completion_price");
   }

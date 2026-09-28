@@ -1,21 +1,185 @@
 .dialog {
   width: min(560px, calc(100vw - 32px));
   max-height: calc(100dvh - 48px);
-  padding: 28px;
+  padding: 0;
+  overflow: hidden auto;
   border: 1px solid var(--border);
   border-radius: 12px;
   color: var(--text);
   background: var(--surface);
   box-shadow: 0 20px 60px #12351f33;
 }
-.dialog::backdrop { background: #12351f80; }
-.dialog h2 { margin: 0; }
-.dialog p { line-height: 1.6; }
-.context { color: var(--text-muted); }
-.dialog label { display: block; margin-bottom: 8px; font-weight: 600; }
-.dialog input:not([type="hidden"]) { width: 100%; }
-.actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
-.charges { list-style: none; padding: 0; }
-.charges li, .total { display: flex; justify-content: space-between; gap: 20px; padding: 12px 0; border-bottom: 1px solid var(--border); }
-.charges strong, .total strong { font-variant-numeric: tabular-nums; }
-.error { color: var(--danger); }
+
+.dialog::backdrop {
+  background: #12351f80;
+}
+
+.header {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 24px 72px 18px 24px;
+  border-bottom: 1px solid var(--border);
+  background: #fbfcfa;
+}
+
+.dialog h2 {
+  margin: 0;
+  color: var(--brand-forest);
+  font-size: 22px;
+  line-height: 1.25;
+}
+
+.dialog p {
+  line-height: 1.6;
+}
+
+.context {
+  margin: 5px 0 0;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.closeButton {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--text-muted);
+  background: transparent;
+  font: inherit;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.closeButton:hover {
+  color: var(--text);
+  background: var(--background);
+}
+
+.closeButton:focus-visible {
+  outline: 3px solid #62793d;
+  outline-offset: 2px;
+}
+
+.closeButton:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.body {
+  padding: 24px;
+  white-space: normal;
+}
+
+.dialog label {
+  display: block;
+  margin-bottom: 7px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.priceField {
+  max-width: 320px;
+}
+
+.moneyField {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  min-height: 44px;
+  overflow: hidden;
+  border: 1px solid #adb9a5;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.moneyField:hover {
+  border-color: #65745f;
+}
+
+.moneyField:focus-within {
+  outline: 3px solid #62793d;
+  outline-offset: 2px;
+}
+
+.moneyFieldError {
+  border: 2px solid var(--danger);
+  background: #fff9f7;
+}
+
+.moneyField > span {
+  padding-left: 12px;
+  color: var(--text-muted);
+}
+
+.moneyField input {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 10px 8px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+}
+
+.moneyField .currencyCode {
+  padding: 0 12px 0 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 24px;
+}
+.charges {
+  list-style: none;
+  padding: 0;
+}
+.charges li,
+.total {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+.charges strong,
+.total strong {
+  font-variant-numeric: tabular-nums;
+}
+.error {
+  margin: 7px 0 0;
+  color: var(--danger);
+  font-size: 13px;
+}
+
+@media (max-width: 520px) {
+  .header {
+    padding: 20px 64px 16px 20px;
+  }
+
+  .body {
+    padding: 20px;
+  }
+
+  .priceField {
+    max-width: none;
+  }
+}

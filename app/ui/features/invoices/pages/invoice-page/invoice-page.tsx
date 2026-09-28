@@ -218,10 +218,7 @@ export default function InvoicePage({
                   <Link to={`/jobs/${job.id}`}>{job.name}</Link>
 
                   <span>
-                    Scheduled{" "}
-                    {calendarDateFormatter.format(
-                      new Date(`${job.scheduledDate}T00:00:00Z`),
-                    )}
+                    Completed {dateFormatter.format(new Date(job.completedAt))}
                   </span>
                 </div>
 
@@ -278,6 +275,12 @@ export default function InvoicePage({
                   <th scope="col">Job</th>
                   <th scope="col">Description</th>
                   <th scope="col" className={ui.numeric}>
+                    Qty
+                  </th>
+                  <th scope="col" className={ui.numeric}>
+                    Unit price
+                  </th>
+                  <th scope="col" className={ui.numeric}>
                     Amount
                   </th>
 
@@ -304,6 +307,12 @@ export default function InvoicePage({
                       </td>
 
                       <td>{item.description}</td>
+
+                      <td className={ui.numeric}>{item.quantity}</td>
+
+                      <td className={ui.numeric}>
+                        {currencyFormatter.format(item.unitPriceCents / 100)}
+                      </td>
 
                       <td className={ui.numeric}>
                         {currencyFormatter.format(item.amountCents / 100)}

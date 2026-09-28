@@ -48,6 +48,10 @@ export async function createInvoiceItem(
             invoiceId: invoices.id,
             jobId: invoiceJobs.jobId,
             description: sql<string>`${values.description}`.as("description"),
+            quantity: sql<number>`1`.as("quantity"),
+            unitPriceCents: sql<number>`${values.amountCents}`.as(
+              "unit_price_cents",
+            ),
             amountCents: sql<number>`${values.amountCents}`.as("amount_cents"),
             createdAt: sql<number>`${Date.now()}`.as("created_at"),
           })

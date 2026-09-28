@@ -983,7 +983,7 @@ Reopening retains billing data, returns the Job to in-progress, and enables corr
 
 Only completed Jobs are invoiceable and expose invoice actions or relationships in the Job UI. Domain services enforce lifecycle invariants; UI visibility is not a security or domain boundary.
 
-Invoice snapshots remain independent of subsequent Job changes. Do not implicitly refresh snapshots when a Job is corrected.
+Invoice snapshots remain independent of subsequent Job changes. Do not implicitly refresh snapshot lines or completion dates when a Job is corrected or its lifecycle later changes.
 
 ---
 
@@ -1274,9 +1274,9 @@ This is intentional for the current Job Item model because Job Items remain muta
 
 This deletion rule does not apply to issued Invoice Items.
 
-When Invoice functionality is implemented, Invoice Items must be separate records from Job Items.
+Invoice Items are separate records from Job Items.
 
-Creating or issuing an Invoice from a Job must copy the relevant pricing information into Invoice Items.
+Adding a completed Job to an Invoice snapshots its service line and additional charges into Invoice Items.
 
 Issued Invoice Items must not remain mutable projections of Job Items.
 
@@ -1307,6 +1307,12 @@ Invoice Items are distinct records from Job Items.
 Do not model Invoice Items as mutable projections of Job Items.
 
 Changes to Job Items after they have been snapshotted must not automatically alter existing Invoice Items.
+
+Each selected Job contributes exactly one service line with quantity `1`, using the Job name and final `servicePriceCents`. Each current Job Item contributes a separate additional-charge line. Until Job Items gain explicit quantity and unit-price fields, map each Job Item to quantity `1` with its `amountCents` as both unit price and amount.
+
+Invoice Items store `description`, integer `quantity`, `unitPriceCents`, and `amountCents`. The database must enforce `amountCents = quantity * unitPriceCents`.
+
+The Job completion timestamp used by an Invoice is snapshotted on the Invoice/Job association when the Job is allocated. Invoice rendering must not derive that date from later Job status history.
 
 Money must be stored as integer cents.
 
@@ -1465,7 +1471,7 @@ Do not create an Invoice immediately from a Job-detail POST simply because the s
 
 Only completed Jobs may be selected for invoice creation or added to a draft. Enforce the authoritative latest status when allocating the Job, including races with reopening.
 
-When a draft Invoice is created, current Job Items for all selected Jobs are snapshotted into Invoice Items.
+When a draft Invoice is created, each selected Job's service and current Job Items are snapshotted into Invoice Items. The authoritative completed status, required service price, and completion timestamp must be validated server-side as part of the atomic allocation operation.
 
 Each Invoice Item records its source Job using `jobId`.
 
@@ -1492,7 +1498,7 @@ When editing a draft's Job selection:
 - Removing a Job removes that Invoice's active `invoice_jobs` association for the Job.
 - A removed Job becomes available for another active Invoice.
 - Adding a Job creates a new active `invoice_jobs` association.
-- Adding a Job snapshots that Job's current Job Items into new Invoice Items.
+- Adding a Job snapshots that Job's service line, current Job Items, and completion timestamp into Invoice-owned data.
 
 Do not rebuild or refresh Invoice Items for Jobs that remain selected.
 
@@ -1512,8 +1518,12 @@ Current Invoice Item fields are conceptually:
 invoiceId
 jobId
 description
+quantity
+unitPriceCents
 amountCents
 ```
+
+`amountCents` must equal `quantity * unitPriceCents`. Invoice totals derive only from these snapshotted amounts, never from live Job pricing.
 
 Invoice Items do not currently contain `jobItemId`.
 

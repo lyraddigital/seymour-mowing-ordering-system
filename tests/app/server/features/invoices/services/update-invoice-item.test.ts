@@ -3,6 +3,7 @@ import { env } from "cloudflare:workers";
 import { eq } from "drizzle-orm";
 import { beforeEach, expect, it } from "vitest";
 import { draftInvoiceFixture } from "../../../../../support/fixtures/draft-invoice";
+import { completeInvoiceJobs } from "../../../../../support/fixtures/complete-invoice-jobs";
 import { PermissionDeniedError } from "../../../../../../app/server/auth/authorization/errors/permission-denied-error";
 import { createDb } from "../../../../../../app/server/db/client/create-db.server";
 import { invoiceItems } from "../../../../../../app/server/db/schema/invoice-items";
@@ -88,7 +89,11 @@ it("rolls back the item write if updating the parent fails", async () => {
   }
 });
 it("edits only description and amount, preserving source job and creation time", async () => {
-  const before = await createDb(env.DB).select().from(invoiceItems).get();
+  const before = await createDb(env.DB)
+    .select()
+    .from(invoiceItems)
+    .where(eq(invoiceItems.id, itemId))
+    .get();
   const input = {
     description: " Changed ",
     amountCents: 1234,
@@ -101,13 +106,22 @@ it("edits only description and amount, preserving source job and creation time",
     itemId,
     input,
   );
-  expect(await createDb(env.DB).select().from(invoiceItems).get()).toEqual({
+  expect(
+    await createDb(env.DB)
+      .select()
+      .from(invoiceItems)
+      .where(eq(invoiceItems.id, itemId))
+      .get(),
+  ).toEqual({
     ...before,
     description: "Changed",
+    quantity: 1,
+    unitPriceCents: 1234,
     amountCents: 1234,
   });
 });
 it("rejects another invoice's item and leaves both invoices unchanged", async () => {
+  await completeInvoiceJobs(fixture.admin, [fixture.otherJobId]);
   const { id } = await createDraftInvoice(env.DB, fixture.admin, {
     jobIds: [fixture.otherJobId],
   });
@@ -117,7 +131,7 @@ it("rejects another invoice's item and leaves both invoices unchanged", async ()
     InvoiceItemNotFoundError,
   );
   expect(await db.select().from(invoices)).toEqual(parents);
-  expect(await db.select().from(invoiceItems)).toHaveLength(1);
+  expect(await db.select().from(invoiceItems)).toHaveLength(3);
 });
 it("rejects a missing item", async () => {
   itemId = "missing";

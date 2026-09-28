@@ -150,6 +150,11 @@ beforeEach(async () => {
 });
 
 it("loads jobs available for invoicing", async () => {
+  await completeInvoiceJobs(admin, [
+    firstJobId,
+    secondJobId,
+    otherCustomerJobId,
+  ]);
   const result = await loader(loaderArgs());
 
   expect(result.jobs).toEqual(
@@ -182,6 +187,12 @@ it("renders the create invoice workflow", async () => {
     amountCents: 4500,
   });
 
+  await completeInvoiceJobs(admin, [
+    firstJobId,
+    secondJobId,
+    otherCustomerJobId,
+  ]);
+
   const result = await loader(loaderArgs());
 
   const html = renderPage({
@@ -213,6 +224,12 @@ it("preselects an eligible job from the query string", async () => {
     amountCents: 4500,
   });
 
+  await completeInvoiceJobs(admin, [
+    firstJobId,
+    secondJobId,
+    otherCustomerJobId,
+  ]);
+
   const result = await loader(loaderArgs(`?jobId=${firstJobId}`));
 
   expect(result.initialJobId).toBe(firstJobId);
@@ -238,7 +255,7 @@ it("does not preselect an unknown job", async () => {
 });
 
 it("does not return a job already attached to an active invoice", async () => {
-  await completeInvoiceJobs(admin, [firstJobId]);
+  await completeInvoiceJobs(admin, [firstJobId, secondJobId]);
   await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });
@@ -270,6 +287,8 @@ it("creates a draft invoice from selected jobs", async () => {
     description: "Back lawn mow",
     amountCents: 3500,
   });
+
+  await completeInvoiceJobs(admin, [firstJobId, secondJobId]);
 
   const response = await action(actionArgs([firstJobId, secondJobId]));
 
@@ -344,6 +363,7 @@ it("returns 400 when no jobs are selected", async () => {
 });
 
 it("returns and renders feedback when jobs belong to different customers", async () => {
+  await completeInvoiceJobs(admin, [firstJobId, otherCustomerJobId]);
   const result = await action(actionArgs([firstJobId, otherCustomerJobId]));
 
   expect(result).toMatchObject({
@@ -379,7 +399,7 @@ it("returns and renders feedback when jobs belong to different customers", async
 });
 
 it("returns 400 when a selected job is already on an active invoice", async () => {
-  await completeInvoiceJobs(admin, [firstJobId]);
+  await completeInvoiceJobs(admin, [firstJobId, secondJobId]);
   await createDraftInvoice(env.DB, admin, {
     jobIds: [firstJobId],
   });

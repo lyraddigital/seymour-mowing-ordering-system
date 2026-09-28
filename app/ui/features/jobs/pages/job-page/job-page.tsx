@@ -167,58 +167,63 @@ export default function JobPage({
         canManage={canManage && active}
       />
 
-      {job.currentStatus === "completed" && <section className={styles.invoice} aria-labelledby="job-invoice-heading">
-        <span className={styles.sectionIcon}>
-          <Icon name="invoice" />
-        </span>
+      {job.currentStatus === "completed" && (
+        <section
+          className={styles.invoice}
+          aria-labelledby="job-invoice-heading"
+        >
+          <span className={styles.sectionIcon}>
+            <Icon name="invoice" />
+          </span>
 
-        <div className={styles.invoiceContent}>
-          <h2 id="job-invoice-heading">Invoice</h2>
+          <div className={styles.invoiceContent}>
+            <h2 id="job-invoice-heading">Invoice</h2>
 
-          {invoice ? (
-            <div className={styles.invoiceRelationship}>
-              <div>
-                <div className={styles.invoiceTitle}>
-                  <Link to={`/invoices/${invoice.id}`}>
-                    {invoice.invoiceNumber ?? "Draft invoice"}
-                  </Link>
+            {invoice ? (
+              <div className={styles.invoiceRelationship}>
+                <div>
+                  <div className={styles.invoiceTitle}>
+                    <Link to={`/invoices/${invoice.id}`}>
+                      {invoice.invoiceNumber ?? "Draft invoice"}
+                    </Link>
 
-                  <span className={ui[invoice.status]}>
-                    {formatInvoiceStatus(invoice.status)}
-                  </span>
+                    <span className={ui[invoice.status]}>
+                      {formatInvoiceStatus(invoice.status)}
+                    </span>
+                  </div>
+
+                  <p>This job is currently assigned to this invoice.</p>
                 </div>
 
-                <p>This job is currently assigned to this invoice.</p>
-              </div>
-
-              <Link
-                className={ui.secondaryAction}
-                to={`/invoices/${invoice.id}`}
-              >
-                View invoice
-              </Link>
-            </div>
-          ) : (
-            <div className={styles.invoiceRelationship}>
-              <div>
-                <p className={styles.noInvoice}>
-                  This job has not been added to an invoice yet.
-                </p>
-              </div>
-
-              {canCreateInvoice && (
                 <Link
-                  className={ui.primaryAction}
-                  to={`/invoices/new?jobId=${job.id}`}
+                  className={ui.secondaryAction}
+                  to={`/invoices/${invoice.id}`}
                 >
-                  <Icon name="plus" />
-                  Create invoice
+                  View invoice
                 </Link>
-              )}
-            </div>
-          )}
-        </div>
-      </section>}
+              </div>
+            ) : (
+              <div className={styles.invoiceRelationship}>
+                <div>
+                  <p className={styles.noInvoice}>
+                    This job has not been added to an invoice yet.
+                  </p>
+                </div>
+
+                {canCreateInvoice && (
+                  <Link
+                    className={ui.primaryAction}
+                    to={`/invoices/new?jobId=${job.id}`}
+                  >
+                    <Icon name="plus" />
+                    Create invoice
+                  </Link>
+                )}
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       {canManage && active && (
         <section className={styles.danger} aria-labelledby="job-danger-heading">

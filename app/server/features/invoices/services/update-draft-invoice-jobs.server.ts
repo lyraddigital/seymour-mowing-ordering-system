@@ -1,5 +1,6 @@
-import { completedJobId } from "../queries/completed-job-id";
-import { and, eq, inArray, isNull, ne, sql } from "drizzle-orm";
+import { completedJobAt, completedJobId } from "../queries/completed-job-id";
+import { and, desc, eq, inArray, isNull, ne, sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/sqlite-core";
 
 import { PermissionDeniedError } from "../../../auth/authorization/errors/permission-denied-error";
 import { can } from "../../../auth/authorization/policies/can";
@@ -10,6 +11,7 @@ import { invoiceJobs } from "../../../db/schema/invoice-jobs";
 import { invoices } from "../../../db/schema/invoices";
 import { jobItems } from "../../../db/schema/job-items";
 import { jobs } from "../../../db/schema/jobs";
+import { jobStatusHistory } from "../../../db/schema/job-status-history";
 import { InvoiceJobConflictError } from "../errors/invoice-job-conflict-error";
 import { InvoiceJobSelectionError } from "../errors/invoice-job-selection-error";
 import { InvoiceNotFoundError } from "../errors/invoice-not-found-error";
@@ -61,13 +63,26 @@ export async function updateDraftInvoiceJobs(
     );
   }
 
+  const history = alias(jobStatusHistory, "latest_history");
+  const latest = db
+    .select({ id: history.id })
+    .from(history)
+    .where(eq(history.jobId, jobs.id))
+    .orderBy(desc(history.createdAt), desc(history.id))
+    .limit(1);
+
   const selectedJobs = await db
     .select({
       id: jobs.id,
       customerId: jobs.customerId,
-      completedId: completedJobId(jobs.id),
+      servicePriceCents: jobs.servicePriceCents,
+      currentStatus: jobStatusHistory.status,
     })
     .from(jobs)
+    .innerJoin(
+      jobStatusHistory,
+      and(eq(jobStatusHistory.jobId, jobs.id), eq(jobStatusHistory.id, latest)),
+    )
     .where(inArray(jobs.id, jobIds));
 
   if (selectedJobs.length !== jobIds.length) {
@@ -82,8 +97,16 @@ export async function updateDraftInvoiceJobs(
     );
   }
 
-  if (selectedJobs.some((job) => job.completedId === null)) {
-    throw new InvoiceJobSelectionError("Only completed jobs can be added to an invoice.");
+  if (selectedJobs.some((job) => job.currentStatus !== "completed")) {
+    throw new InvoiceJobSelectionError(
+      "Only completed jobs can be added to an invoice.",
+    );
+  }
+
+  if (selectedJobs.some((job) => job.servicePriceCents === null)) {
+    throw new InvoiceJobSelectionError(
+      "Every completed job must have a service price before it can be invoiced.",
+    );
   }
 
   const conflictingAssignments = await db
@@ -167,6 +190,7 @@ export async function updateDraftInvoiceJobs(
           addedJobIds.map((jobId) => ({
             invoiceId,
             jobId: completedJobId(jobId),
+            completedAt: completedJobAt(jobId),
             releasedAt: null,
           })),
         ),
@@ -175,7 +199,25 @@ export async function updateDraftInvoiceJobs(
           db
             .select({
               id: sql<string>`
-                ${invoiceId} || ':' || ${jobItems.id}
+                ${invoiceId} || ':' || ${jobs.id} || ':0-service'
+              `.as("id"),
+              invoiceId: sql<string>`${invoiceId}`.as("invoice_id"),
+              jobId: jobs.id,
+              description: jobs.name,
+              quantity: sql<number>`1`.as("quantity"),
+              unitPriceCents: jobs.servicePriceCents,
+              amountCents: jobs.servicePriceCents,
+              createdAt: sql<number>`${now}`.as("created_at"),
+            })
+            .from(jobs)
+            .where(inArray(jobs.id, addedJobIds)),
+        ),
+
+        db.insert(invoiceItems).select(
+          db
+            .select({
+              id: sql<string>`
+                ${invoiceId} || ':' || ${jobItems.jobId} || ':1-charge:' || ${jobItems.id}
               `.as("id"),
 
               invoiceId: sql<string>`
@@ -184,6 +226,8 @@ export async function updateDraftInvoiceJobs(
 
               jobId: jobItems.jobId,
               description: jobItems.description,
+              quantity: sql<number>`1`.as("quantity"),
+              unitPriceCents: jobItems.amountCents,
               amountCents: jobItems.amountCents,
 
               createdAt: sql<number>`
@@ -202,6 +246,7 @@ export async function updateDraftInvoiceJobs(
           addedJobIds.map((jobId) => ({
             invoiceId,
             jobId: completedJobId(jobId),
+            completedAt: completedJobAt(jobId),
             releasedAt: null,
           })),
         ),
@@ -210,7 +255,25 @@ export async function updateDraftInvoiceJobs(
           db
             .select({
               id: sql<string>`
-                ${invoiceId} || ':' || ${jobItems.id}
+                ${invoiceId} || ':' || ${jobs.id} || ':0-service'
+              `.as("id"),
+              invoiceId: sql<string>`${invoiceId}`.as("invoice_id"),
+              jobId: jobs.id,
+              description: jobs.name,
+              quantity: sql<number>`1`.as("quantity"),
+              unitPriceCents: jobs.servicePriceCents,
+              amountCents: jobs.servicePriceCents,
+              createdAt: sql<number>`${now}`.as("created_at"),
+            })
+            .from(jobs)
+            .where(inArray(jobs.id, addedJobIds)),
+        ),
+
+        db.insert(invoiceItems).select(
+          db
+            .select({
+              id: sql<string>`
+                ${invoiceId} || ':' || ${jobItems.jobId} || ':1-charge:' || ${jobItems.id}
               `.as("id"),
 
               invoiceId: sql<string>`
@@ -219,6 +282,8 @@ export async function updateDraftInvoiceJobs(
 
               jobId: jobItems.jobId,
               description: jobItems.description,
+              quantity: sql<number>`1`.as("quantity"),
+              unitPriceCents: jobItems.amountCents,
               amountCents: jobItems.amountCents,
 
               createdAt: sql<number>`
@@ -255,8 +320,13 @@ export async function updateDraftInvoiceJobs(
       ]);
     }
   } catch (error) {
-    if (error instanceof Error && error.message.includes("NOT NULL constraint failed: invoice_jobs.job_id")) {
-      throw new InvoiceJobSelectionError("Only completed jobs can be added to an invoice.");
+    if (
+      error instanceof Error &&
+      error.message.includes("NOT NULL constraint failed: invoice_jobs")
+    ) {
+      throw new InvoiceJobSelectionError(
+        "Only completed jobs can be added to an invoice.",
+      );
     }
 
     if (

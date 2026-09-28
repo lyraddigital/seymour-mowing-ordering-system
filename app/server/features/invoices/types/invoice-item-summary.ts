@@ -3,6 +3,8 @@ export interface InvoiceItemSummary {
   invoiceId: string;
   jobId: string;
   description: string;
+  quantity: number;
+  unitPriceCents: number;
   amountCents: number;
   createdAt: number;
 }

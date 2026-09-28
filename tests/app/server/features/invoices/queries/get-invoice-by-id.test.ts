@@ -5,6 +5,7 @@ import { voidPayment } from "../../../../../../app/server/features/payments/serv
 import { recordPayment } from "../../../../../../app/server/features/payments/services/record-payment.server";
 import { payments } from "../../../../../../app/server/db/schema/payments";
 import { env } from "cloudflare:workers";
+import { eq } from "drizzle-orm";
 import { beforeEach, expect, it } from "vitest";
 
 import { PermissionDeniedError } from "../../../../../../app/server/auth/authorization/errors/permission-denied-error";
@@ -20,6 +21,7 @@ import { users } from "../../../../../../app/server/db/schema/users";
 import { getInvoiceById } from "../../../../../../app/server/features/invoices/queries/get-invoice-by-id.server";
 import { createDraftInvoice } from "../../../../../../app/server/features/invoices/services/create-draft-invoice.server";
 import { createJobItem } from "../../../../../../app/server/features/jobs/services/create-job-item.server";
+import { completeJob } from "../../../../../../app/server/features/jobs/services/complete-job.server";
 import { createJob } from "../../../../../../app/server/features/jobs/services/create-job.server";
 import { internalUser } from "../../../../../support/fixtures/internal-user";
 
@@ -83,20 +85,38 @@ it("returns invoice detail with multiple jobs", async () => {
       status: "draft",
       totalCents: 0,
       jobs: [
-        {
+        expect.objectContaining({
           id: firstJobId,
           name: "Front lawn",
           scheduledDate: "2026-09-17",
-        },
-        {
+          completedAt: expect.any(Number),
+        }),
+        expect.objectContaining({
           id: secondJobId,
           name: "Back lawn",
           scheduledDate: "2026-09-18",
-        },
+          completedAt: expect.any(Number),
+        }),
       ],
     }),
-    items: [],
+    items: expect.arrayContaining([
+      expect.objectContaining({
+        jobId: firstJobId,
+        description: "Front lawn",
+        quantity: 1,
+        unitPriceCents: 0,
+        amountCents: 0,
+      }),
+      expect.objectContaining({
+        jobId: secondJobId,
+        description: "Back lawn",
+        quantity: 1,
+        unitPriceCents: 0,
+        amountCents: 0,
+      }),
+    ]),
   });
+  expect(result?.items).toHaveLength(2);
 });
 
 it("returns invoice items with their source jobs", async () => {
@@ -117,7 +137,7 @@ it("returns invoice items with their source jobs", async () => {
 
   const result = await getInvoiceById(env.DB, admin, invoiceId);
 
-  expect(result?.items).toHaveLength(2);
+  expect(result?.items).toHaveLength(4);
 
   expect(result?.items).toEqual(
     expect.arrayContaining([
@@ -125,12 +145,16 @@ it("returns invoice items with their source jobs", async () => {
         invoiceId,
         jobId: firstJobId,
         description: "Front lawn mow",
+        quantity: 1,
+        unitPriceCents: 4500,
         amountCents: 4500,
       }),
       expect.objectContaining({
         invoiceId,
         jobId: secondJobId,
         description: "Back lawn mow",
+        quantity: 1,
+        unitPriceCents: 3500,
         amountCents: 3500,
       }),
     ]),
@@ -170,6 +194,70 @@ it("returns jobs in scheduled-date order", async () => {
     firstJobId,
     secondJobId,
   ]);
+});
+
+it("keeps billing lines and completion dates independent from later job changes", async () => {
+  const { id: chargeId } = await createJobItem(env.DB, admin, firstJobId, {
+    description: "Green waste disposal",
+    amountCents: 2345,
+  });
+  await completeJob(env.DB, admin, firstJobId, 12_300);
+
+  const completedHistory = await createDb(env.DB)
+    .select()
+    .from(jobStatusHistory)
+    .where(eq(jobStatusHistory.jobId, firstJobId));
+  const completedAt = Math.max(
+    ...completedHistory
+      .filter((entry) => entry.status === "completed")
+      .map((entry) => entry.createdAt),
+  );
+
+  const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
+    jobIds: [firstJobId],
+  });
+
+  const db = createDb(env.DB);
+  await db
+    .update(jobs)
+    .set({
+      name: "Changed job name",
+      description: "Changed job description",
+      servicePriceCents: 99_999,
+    })
+    .where(eq(jobs.id, firstJobId));
+  await db
+    .update(jobItems)
+    .set({ description: "Changed charge", amountCents: 8888 })
+    .where(eq(jobItems.id, chargeId));
+  await db.insert(jobStatusHistory).values({
+    id: "later-status",
+    jobId: firstJobId,
+    status: "in_progress",
+    createdByUserId: admin.id,
+    createdAt: completedAt + 1000,
+  });
+
+  const result = await getInvoiceById(env.DB, admin, invoiceId);
+
+  expect(result?.invoice.jobs[0].completedAt).toBe(completedAt);
+  expect(result?.invoice.totalCents).toBe(14_645);
+  expect(result?.items).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        description: "Front lawn",
+        quantity: 1,
+        unitPriceCents: 12_300,
+        amountCents: 12_300,
+      }),
+      expect.objectContaining({
+        description: "Green waste disposal",
+        quantity: 1,
+        unitPriceCents: 2345,
+        amountCents: 2345,
+      }),
+    ]),
+  );
 });
 
 it("returns null for a missing invoice", async () => {

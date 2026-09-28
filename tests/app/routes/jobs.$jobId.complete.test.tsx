@@ -9,6 +9,7 @@ import { createDb } from "../../../app/server/db/client/create-db.server";
 import { customers } from "../../../app/server/db/schema/customers";
 import { users } from "../../../app/server/db/schema/users";
 import { jobs } from "../../../app/server/db/schema/jobs";
+import { jobItems } from "../../../app/server/db/schema/job-items";
 import { jobStatusHistory } from "../../../app/server/db/schema/job-status-history";
 import { createJob } from "../../../app/server/features/jobs/services/create-job.server";
 import { completeJob } from "../../../app/server/features/jobs/services/complete-job.server";
@@ -50,6 +51,7 @@ beforeEach(async () => {
 
   const db = createDb(env.DB);
 
+  await db.delete(jobItems);
   await db.delete(jobStatusHistory);
   await db.delete(jobs);
   await db.delete(customers);
@@ -126,19 +128,48 @@ it.each(["GET", "PUT", "PATCH", "DELETE"])(
   },
 );
 
-
-it.each(["", " ", "-1", "abc", "1.234", "1e2", "Infinity", "9007199254740992"])("returns validation data preserving %j", async (servicePrice) => {
-  const response = await submit(jobId, "POST", servicePrice);
-  if (response instanceof Response) throw new Error("Expected validation data");
-  expect(response.init?.status).toBe(400);
-  expect(response.data).toMatchObject({ servicePrice, error: expect.any(String) });
-  expect(await getJobById(env.DB, user, jobId)).toMatchObject({ currentStatus: "scheduled", servicePriceCents: 10000 });
-});
+it.each(["", " ", "-1", "abc", "1.234", "1e2", "Infinity", "9007199254740992"])(
+  "returns validation data preserving %j",
+  async (servicePrice) => {
+    const response = await submit(jobId, "POST", servicePrice);
+    if (response instanceof Response)
+      throw new Error("Expected validation data");
+    expect(response.init?.status).toBe(400);
+    expect(response.data).toMatchObject({
+      servicePrice,
+      error: expect.any(String),
+    });
+    expect(await getJobById(env.DB, user, jobId)).toMatchObject({
+      currentStatus: "scheduled",
+      servicePriceCents: 10000,
+    });
+  },
+);
 
 it("loads current billing for review with server-side authorization", async () => {
+  await createDb(env.DB).insert(jobItems).values({
+    id: "charge",
+    jobId,
+    description: "Green waste disposal",
+    amountCents: 2_500,
+    createdAt: 1,
+    updatedAt: 1,
+  });
   const url = `https://example.test/jobs/${jobId}/complete`;
-  const args = { context, params: { jobId }, request: new Request(url), url: new URL(url), pattern: "/jobs/:jobId/complete" };
-  expect(await loader(args)).toMatchObject({ job: { servicePriceCents: 10000 }, charges: { items: [], totalCents: 0 } });
+  const args = {
+    context,
+    params: { jobId },
+    request: new Request(url),
+    url: new URL(url),
+    pattern: "/jobs/:jobId/complete",
+  };
+  expect(await loader(args)).toMatchObject({
+    job: { servicePriceCents: 10_000 },
+    charges: {
+      items: [{ description: "Green waste disposal", amountCents: 2_500 }],
+      totalCents: 2_500,
+    },
+  });
   context.set(currentUserContext, { ...user, role: "unknown" as "admin" });
   await expect(loader(args)).rejects.toMatchObject({ status: 403 });
 });

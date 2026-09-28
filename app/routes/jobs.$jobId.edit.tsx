@@ -35,8 +35,13 @@ export async function loader({ context, params }: Route.LoaderArgs) {
       throw new Response("Job not found", { status: 404 });
     }
 
-    if (job.currentStatus !== "scheduled" && job.currentStatus !== "in_progress") {
-      throw new Response("Only scheduled or in-progress jobs can be edited.", { status: 409 });
+    if (
+      job.currentStatus !== "scheduled" &&
+      job.currentStatus !== "in_progress"
+    ) {
+      throw new Response("Only scheduled or in-progress jobs can be edited.", {
+        status: 409,
+      });
     }
 
     return { job };
@@ -68,7 +73,6 @@ export async function action({ request, context, params }: Route.ActionArgs) {
     scheduledDate: text("scheduledDate"),
     description: text("description"),
   };
-
 
   const input: UpdateJobInput = {
     name: values.name,

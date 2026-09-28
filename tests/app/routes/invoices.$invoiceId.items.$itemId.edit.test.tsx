@@ -22,6 +22,7 @@ import { issueInvoice } from "../../../app/server/features/invoices/services/iss
 import { voidInvoice } from "../../../app/server/features/invoices/services/void-invoice.server";
 import EditInvoiceItemPage from "../../../app/ui/features/invoices/pages/edit-invoice-item-page/edit-invoice-item-page";
 import { draftInvoiceFixture } from "../../support/fixtures/draft-invoice";
+import { completeInvoiceJobs } from "../../support/fixtures/complete-invoice-jobs";
 
 let fixture: Awaited<ReturnType<typeof draftInvoiceFixture>>;
 
@@ -142,6 +143,7 @@ it.each(["issued", "voided"] as const)(
 );
 
 it("returns 404 for another invoice's item", async () => {
+  await completeInvoiceJobs(fixture.admin, [fixture.otherJobId]);
   const { id } = await createDraftInvoice(env.DB, fixture.admin, {
     jobIds: [fixture.otherJobId],
   });

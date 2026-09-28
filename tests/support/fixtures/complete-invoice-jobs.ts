@@ -8,6 +8,7 @@ export async function completeInvoiceJobs(user: CurrentUser, jobIds: string[]) {
   for (const jobId of jobIds) {
     const job = await getJobById(env.DB, user, jobId);
     if (!job) throw new Error(`Missing fixture job ${jobId}`);
-    if (job.currentStatus !== "completed") await completeJob(env.DB, user, jobId, 10_000);
+    if (job.currentStatus !== "completed")
+      await completeJob(env.DB, user, jobId, 0);
   }
 }

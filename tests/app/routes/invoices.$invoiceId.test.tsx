@@ -143,23 +143,35 @@ it("loads invoice details", async () => {
       paidCents: 0,
       balanceCents: 4500,
       jobs: [
-        {
+        expect.objectContaining({
           id: jobId,
           name: "Front lawn",
           scheduledDate: "2026-09-18",
-        },
+          completedAt: expect.any(Number),
+        }),
       ],
     }),
-    items: [
+    items: expect.arrayContaining([
+      expect.objectContaining({
+        invoiceId,
+        jobId,
+        description: "Front lawn",
+        quantity: 1,
+        unitPriceCents: 0,
+        amountCents: 0,
+      }),
       expect.objectContaining({
         invoiceId,
         jobId,
         description: "Front lawn mow",
+        quantity: 1,
+        unitPriceCents: 4500,
         amountCents: 4500,
       }),
-    ],
+    ]),
     canManage: true,
   });
+  expect(result.items).toHaveLength(2);
 });
 
 it("returns 404 for a missing invoice", async () => {
@@ -204,10 +216,12 @@ it("renders the invoice detail hierarchy", async () => {
 
   expect(html).toContain("Jobs");
   expect(html).toContain("Front lawn");
-  expect(html).toContain("18 September 2026");
+  expect(html).toContain("Completed");
   expect(html).toContain(`href="/jobs/${jobId}"`);
 
   expect(html).toContain("Invoice items");
+  expect(html).toContain("Qty");
+  expect(html).toContain("Unit price");
   expect(html).toContain("Front lawn mow");
 
   expect(html).toContain("Payments");
@@ -419,7 +433,7 @@ it("renders derived totals after adding, editing and deleting an item", async ()
   html = renderPage(result);
 
   expect(html).toContain("$0.00");
-  expect(html).toContain("No invoice items have been added yet.");
+  expect(html).toContain("Front lawn");
 });
 
 it("shows financial metrics, payment history and controls through payment lifecycle", async () => {

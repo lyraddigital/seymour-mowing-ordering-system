@@ -21,6 +21,7 @@ import { recordPayment } from "../../../app/server/features/payments/services/re
 import { voidPayment } from "../../../app/server/features/payments/services/void-payment.server";
 import CustomerPage from "../../../app/ui/features/customers/pages/customer-page/customer-page";
 import { issuedInvoiceFixture } from "../../support/fixtures/issued-invoice";
+import { completeInvoiceJobs } from "../../support/fixtures/complete-invoice-jobs";
 
 let fixture: Awaited<ReturnType<typeof issuedInvoiceFixture>>;
 let context: RouterContextProvider;
@@ -76,6 +77,7 @@ it.each(["admin", "operator"] as const)(
     );
     await voidPayment(env.DB, fixture.admin, fixture.invoiceId, voided.id);
     await voidInvoice(env.DB, fixture.admin, fixture.invoiceId);
+    await completeInvoiceJobs(fixture.admin, [fixture.otherJobId]);
     const draft = await createDraftInvoice(env.DB, fixture.admin, {
       jobIds: [fixture.otherJobId],
     });

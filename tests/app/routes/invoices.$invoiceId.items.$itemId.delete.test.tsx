@@ -9,6 +9,7 @@ import { issueInvoice } from "../../../app/server/features/invoices/services/iss
 import { voidInvoice } from "../../../app/server/features/invoices/services/void-invoice.server";
 import { action } from "../../../app/routes/invoices.$invoiceId.items.$itemId.delete";
 import { createDraftInvoice } from "../../../app/server/features/invoices/services/create-draft-invoice.server";
+import { completeInvoiceJobs } from "../../support/fixtures/complete-invoice-jobs";
 let fixture: Awaited<ReturnType<typeof draftInvoiceFixture>>;
 let context: RouterContextProvider;
 let itemId: string;
@@ -70,6 +71,7 @@ it.each(["issued", "voided"] as const)(
   },
 );
 it("returns 404 for another invoice's item", async () => {
+  await completeInvoiceJobs(fixture.admin, [fixture.otherJobId]);
   const { id } = await createDraftInvoice(env.DB, fixture.admin, {
     jobIds: [fixture.otherJobId],
   });

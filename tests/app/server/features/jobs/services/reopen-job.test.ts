@@ -129,6 +129,7 @@ it("rejects reopening while the job is allocated to an active invoice", async ()
   await db.insert(invoiceJobs).values({
     invoiceId: "invoice",
     jobId,
+    completedAt: 2,
     releasedAt: null,
   });
 
@@ -163,6 +164,7 @@ it("allows reopening after an invoice allocation has been released", async () =>
   await db.insert(invoiceJobs).values({
     invoiceId: "invoice",
     jobId,
+    completedAt: 2,
     releasedAt: 4,
   });
 

@@ -8,6 +8,7 @@ import { recordPayment } from "../../../app/server/features/payments/services/re
 import { voidInvoice } from "../../../app/server/features/invoices/services/void-invoice.server";
 import { createDraftInvoice } from "../../../app/server/features/invoices/services/create-draft-invoice.server";
 import { action } from "../../../app/routes/invoices.$invoiceId.payments.$paymentId.void";
+import { completeInvoiceJobs } from "../../support/fixtures/complete-invoice-jobs";
 let fixture: Awaited<ReturnType<typeof issuedInvoiceFixture>>;
 let context: RouterContextProvider;
 beforeEach(async () => {
@@ -54,6 +55,7 @@ it("returns 404 for nested ownership mismatch", async () => {
     fixture.invoiceId,
     { amountCents: 1000, paymentDate: "2026-09-24" },
   );
+  await completeInvoiceJobs(fixture.admin, [fixture.otherJobId]);
   const { id } = await createDraftInvoice(env.DB, fixture.admin, {
     jobIds: [fixture.otherJobId],
   });

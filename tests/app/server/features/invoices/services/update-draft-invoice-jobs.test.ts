@@ -118,6 +118,23 @@ it("adds a job to a draft invoice", async () => {
   expect(assignments).toHaveLength(2);
 });
 
+it("rejects adding a job that has not been completed", async () => {
+  await completeInvoiceJobs(admin, [firstJobId]);
+  const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
+    jobIds: [firstJobId],
+  });
+
+  const before = await createDb(env.DB).select().from(invoiceJobs);
+
+  await expect(
+    updateDraftInvoiceJobs(env.DB, admin, invoiceId, {
+      jobIds: [firstJobId, secondJobId],
+    }),
+  ).rejects.toThrow("Only completed jobs can be added to an invoice.");
+
+  expect(await createDb(env.DB).select().from(invoiceJobs)).toEqual(before);
+});
+
 it("removes a job from a draft invoice", async () => {
   await completeInvoiceJobs(admin, [firstJobId, secondJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
@@ -238,14 +255,27 @@ it("removes snapshots belonging to removed jobs", async () => {
     .from(invoiceItems)
     .where(eq(invoiceItems.invoiceId, invoiceId));
 
-  expect(snapshots).toEqual([
-    expect.objectContaining({
-      invoiceId,
-      jobId: firstJobId,
-      description: "Front lawn mow",
-      amountCents: 4500,
-    }),
-  ]);
+  expect(snapshots).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        invoiceId,
+        jobId: firstJobId,
+        description: "Front lawn",
+        quantity: 1,
+        unitPriceCents: 0,
+        amountCents: 0,
+      }),
+      expect.objectContaining({
+        invoiceId,
+        jobId: firstJobId,
+        description: "Front lawn mow",
+        quantity: 1,
+        unitPriceCents: 4500,
+        amountCents: 4500,
+      }),
+    ]),
+  );
+  expect(snapshots).toHaveLength(2);
 });
 
 it("allows a job removed from a draft to be invoiced elsewhere", async () => {
@@ -444,10 +474,29 @@ it("preserves manual and edited items for retained jobs, then removes them with 
   await updateDraftInvoiceJobs(env.DB, admin, invoiceId, {
     jobIds: [firstJobId, secondJobId],
   });
-  expect(await db.select().from(invoiceItems)).toEqual(before);
+  expect(await db.select().from(invoiceItems)).toEqual(
+    expect.arrayContaining([
+      ...before,
+      expect.objectContaining({
+        jobId: secondJobId,
+        description: "Back lawn",
+        quantity: 1,
+        unitPriceCents: 0,
+        amountCents: 0,
+      }),
+    ]),
+  );
   await completeInvoiceJobs(admin, [secondJobId]);
   await updateDraftInvoiceJobs(env.DB, admin, invoiceId, {
     jobIds: [secondJobId],
   });
-  expect(await db.select().from(invoiceItems)).toEqual([]);
+  expect(await db.select().from(invoiceItems)).toEqual([
+    expect.objectContaining({
+      jobId: secondJobId,
+      description: "Back lawn",
+      quantity: 1,
+      unitPriceCents: 0,
+      amountCents: 0,
+    }),
+  ]);
 });
