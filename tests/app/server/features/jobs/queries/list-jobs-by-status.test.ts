@@ -109,7 +109,8 @@ it("returns completed billing totals, completion date, and active invoice alloca
     id: "charge",
     jobId: "completed",
     description: "Green waste",
-    amountCents: 2_345,
+    quantity: 3,
+    unitPriceCents: 2_345,
     createdAt: 1,
     updatedAt: 1,
   });
@@ -130,7 +131,7 @@ it("returns completed billing totals, completion date, and active invoice alloca
     {
       id: "completed",
       statusChangedAt: completionTime,
-      totalCents: 12_345,
+      totalCents: 17_035,
       invoiceId: "invoice",
       invoiceNumber: null,
     },

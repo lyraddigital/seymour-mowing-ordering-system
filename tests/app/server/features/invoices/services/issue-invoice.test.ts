@@ -223,12 +223,14 @@ it.each(["", "not-a-date", "2026-02-30", "23/09/2026", "0000-01-01"])(
 it("does not change invoice items when issuing", async () => {
   await createJobItem(env.DB, admin, firstJobId, {
     description: "Front lawn",
-    amountCents: 4500,
+    quantity: 1,
+    unitPriceCents: 4500,
   });
 
   await createJobItem(env.DB, admin, secondJobId, {
     description: "Back lawn",
-    amountCents: 3500,
+    quantity: 1,
+    unitPriceCents: 3500,
   });
 
   await completeInvoiceJobs(admin, [firstJobId, secondJobId]);

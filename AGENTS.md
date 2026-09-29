@@ -1143,8 +1143,11 @@ Current Job Item fields are:
 
 ```text
 description
-amountCents
+quantity
+unitPriceCents
 ```
+
+Quantity is a positive integer, defaulting to 1. Unit price is non-negative integer cents. The line amount is derived as quantity × unitPriceCents; it is not stored separately.
 
 Money must be stored as integer cents.
 
@@ -1165,7 +1168,7 @@ Do not introduce a mutable stored Job-total field as a separate source of truth.
 The current Job total is:
 
 ```text
-servicePriceCents + sum(job_items.amount_cents)
+servicePriceCents + sum(job_items.quantity * job_items.unit_price_cents)
 ```
 
 Job Items may currently be:
@@ -1260,7 +1263,7 @@ Do not model Invoice Items as mutable projections of Job Items.
 
 Changes to Job Items after they have been snapshotted must not automatically alter existing Invoice Items.
 
-Each selected Job contributes exactly one service line with quantity `1`, using the Job name and final `servicePriceCents`. Each current Job Item contributes a separate additional-charge line. Until Job Items gain explicit quantity and unit-price fields, map each Job Item to quantity `1` with its `amountCents` as both unit price and amount.
+Each selected Job contributes exactly one service line with quantity `1`, using the Job name and final `servicePriceCents`. Each current Job Item contributes a separate additional-charge line. Snapshot each Job Item’s actual `quantity` and `unitPriceCents`, with `amountCents = quantity * unitPriceCents`.
 
 Invoice Items store `description`, integer `quantity`, `unitPriceCents`, and `amountCents`. The database must enforce `amountCents = quantity * unitPriceCents`.
 

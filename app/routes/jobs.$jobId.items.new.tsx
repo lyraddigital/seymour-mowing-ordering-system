@@ -12,7 +12,7 @@ import { getJobById } from "../server/features/jobs/queries/get-job-by-id.server
 import { createJobItem } from "../server/features/jobs/services/create-job-item.server";
 import AddJobItemPage from "../ui/features/jobs/pages/add-job-item-page/add-job-item-page";
 
-function parseAmountCents(value: string) {
+function parseUnitPriceCents(value: string) {
   const trimmed = value.trim();
 
   if (!/^\d+(?:\.\d{1,2})?$/.test(trimmed)) {
@@ -68,7 +68,8 @@ export async function action({ request, context, params }: Route.ActionArgs) {
 
   const values = {
     description: text("description"),
-    amount: text("amount"),
+    quantity: text("quantity"),
+    unitPrice: text("unitPrice"),
   };
 
   try {
@@ -78,7 +79,10 @@ export async function action({ request, context, params }: Route.ActionArgs) {
       params.jobId,
       {
         description: values.description,
-        amountCents: parseAmountCents(values.amount),
+        quantity: /^\d+$/.test(values.quantity.trim())
+          ? Number(values.quantity)
+          : Number.NaN,
+        unitPriceCents: parseUnitPriceCents(values.unitPrice),
       },
     );
   } catch (error) {

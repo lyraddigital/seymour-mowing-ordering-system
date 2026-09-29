@@ -120,7 +120,8 @@ beforeEach(async () => {
 it("loads invoice details", async () => {
   await createJobItem(env.DB, admin, jobId, {
     description: "Front lawn mow",
-    amountCents: 4500,
+    quantity: 1,
+    unitPriceCents: 4500,
   });
 
   await completeInvoiceJobs(admin, [jobId]);
@@ -190,7 +191,8 @@ it("returns 403 without invoice read permission", async () => {
 it("renders the invoice detail hierarchy", async () => {
   await createJobItem(env.DB, admin, jobId, {
     description: "Front lawn mow",
-    amountCents: 4500,
+    quantity: 1,
+    unitPriceCents: 4500,
   });
 
   await completeInvoiceJobs(admin, [jobId]);

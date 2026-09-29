@@ -7,7 +7,8 @@ import styles from "./add-job-item-page.module.css";
 
 interface AddJobItemFormValues {
   description: string;
-  amount: string;
+  quantity: string;
+  unitPrice: string;
 }
 
 interface AddJobItemPageProps {
@@ -57,8 +58,8 @@ export default function AddJobItemPage({
             <h2 id="item-details-heading">Item details</h2>
 
             <p>
-              Describe the work and enter the amount that should contribute to
-              the job total.
+              Describe the work and enter the quantity and unit price for the
+              job total.
             </p>
           </header>
 
@@ -113,37 +114,68 @@ export default function AddJobItemPage({
             </div>
 
             <div className={styles.amountField}>
-              <label htmlFor="amount">Amount</label>
+              <label htmlFor="quantity">Quantity</label>
+              <input
+                id="quantity"
+                name="quantity"
+                type="number"
+                min="1"
+                step="1"
+                required
+                defaultValue={values?.quantity ?? "1"}
+                aria-invalid={!!fieldErrors?.quantity}
+                aria-describedby={
+                  fieldErrors?.quantity ? "quantity-error" : undefined
+                }
+              />
+              {fieldErrors?.quantity && (
+                <p
+                  className={styles.fieldError}
+                  id="quantity-error"
+                  role="alert"
+                >
+                  {fieldErrors.quantity}
+                </p>
+              )}
+            </div>
+            <div className={styles.amountField}>
+              <label htmlFor="unitPrice">Unit price</label>
 
               <div
                 className={`${styles.moneyField} ${
-                  fieldErrors?.amountCents ? styles.moneyFieldError : ""
+                  fieldErrors?.unitPriceCents ? styles.moneyFieldError : ""
                 }`}
               >
                 <span aria-hidden="true">$</span>
 
                 <input
-                  id="amount"
-                  name="amount"
+                  id="unitPrice"
+                  name="unitPrice"
                   type="text"
                   inputMode="decimal"
                   placeholder="0.00"
                   required
                   autoComplete="off"
-                  defaultValue={values?.amount ?? ""}
-                  aria-invalid={!!fieldErrors?.amountCents}
+                  defaultValue={values?.unitPrice ?? ""}
+                  aria-invalid={!!fieldErrors?.unitPriceCents}
                   aria-describedby={
-                    fieldErrors?.amountCents ? "amount-error" : "amount-hint"
+                    fieldErrors?.unitPriceCents
+                      ? "unitPrice-error"
+                      : "unitPrice-hint"
                   }
                 />
               </div>
 
-              {fieldErrors?.amountCents ? (
-                <p className={styles.fieldError} id="amount-error" role="alert">
-                  {fieldErrors.amountCents}
+              {fieldErrors?.unitPriceCents ? (
+                <p
+                  className={styles.fieldError}
+                  id="unitPrice-error"
+                  role="alert"
+                >
+                  {fieldErrors.unitPriceCents}
                 </p>
               ) : (
-                <p className={styles.fieldHint} id="amount-hint">
+                <p className={styles.fieldHint} id="unitPrice-hint">
                   Enter the charge in Australian dollars.
                 </p>
               )}

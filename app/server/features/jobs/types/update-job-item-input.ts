@@ -1,4 +1,5 @@
 export interface UpdateJobItemInput {
   description: string;
-  amountCents: number;
+  quantity: number;
+  unitPriceCents: number;
 }

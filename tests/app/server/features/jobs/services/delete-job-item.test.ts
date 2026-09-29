@@ -49,7 +49,8 @@ beforeEach(async () => {
 
   ({ id: itemId } = await createJobItem(env.DB, user, jobId, {
     description: "Front lawn",
-    amountCents: 4500,
+    quantity: 1,
+    unitPriceCents: 4500,
   }));
 });
 
@@ -84,7 +85,8 @@ it.each(["admin", "operator"] as const)(
 it("only deletes the requested item", async () => {
   const { id: otherItemId } = await createJobItem(env.DB, user, jobId, {
     description: "Back lawn",
-    amountCents: 3500,
+    quantity: 1,
+    unitPriceCents: 3500,
   });
 
   await deleteJobItem(env.DB, user, jobId, itemId);
@@ -93,7 +95,8 @@ it("only deletes the requested item", async () => {
     expect.objectContaining({
       id: otherItemId,
       description: "Back lawn",
-      amountCents: 3500,
+      quantity: 1,
+      unitPriceCents: 3500,
     }),
   ]);
 });
@@ -130,7 +133,8 @@ it.each(["completed", "cancelled"] as const)(
         id: itemId,
         jobId,
         description: "Front lawn",
-        amountCents: 4500,
+        quantity: 1,
+        unitPriceCents: 4500,
       }),
     ]);
   },

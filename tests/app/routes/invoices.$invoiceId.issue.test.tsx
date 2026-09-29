@@ -128,7 +128,8 @@ beforeEach(async () => {
 
   await createJobItem(env.DB, admin, jobId, {
     description: "Front lawn mow",
-    amountCents: 7500,
+    quantity: 1,
+    unitPriceCents: 7500,
   });
 
   await completeInvoiceJobs(admin, [jobId]);

@@ -163,7 +163,8 @@ it("removes a job from a draft invoice", async () => {
 it("preserves invoice item snapshots for jobs that remain selected", async () => {
   const { id: firstItemId } = await createJobItem(env.DB, admin, firstJobId, {
     description: "Front lawn mow",
-    amountCents: 4500,
+    quantity: 1,
+    unitPriceCents: 4500,
   });
 
   await completeInvoiceJobs(admin, [firstJobId]);
@@ -174,7 +175,8 @@ it("preserves invoice item snapshots for jobs that remain selected", async () =>
   await createDb(env.DB)
     .update(jobItems)
     .set({
-      amountCents: 5000,
+      quantity: 2,
+      unitPriceCents: 5000,
     })
     .where(eq(jobItems.id, firstItemId));
 
@@ -201,7 +203,8 @@ it("preserves invoice item snapshots for jobs that remain selected", async () =>
 it("snapshots current job items when a job is newly added", async () => {
   await createJobItem(env.DB, admin, secondJobId, {
     description: "Back lawn mow",
-    amountCents: 3500,
+    quantity: 3,
+    unitPriceCents: 3500,
   });
 
   await completeInvoiceJobs(admin, [firstJobId]);
@@ -224,7 +227,9 @@ it("snapshots current job items when a job is newly added", async () => {
       invoiceId,
       jobId: secondJobId,
       description: "Back lawn mow",
-      amountCents: 3500,
+      quantity: 3,
+      unitPriceCents: 3500,
+      amountCents: 10500,
     }),
   );
 });
@@ -232,12 +237,14 @@ it("snapshots current job items when a job is newly added", async () => {
 it("removes snapshots belonging to removed jobs", async () => {
   await createJobItem(env.DB, admin, firstJobId, {
     description: "Front lawn mow",
-    amountCents: 4500,
+    quantity: 1,
+    unitPriceCents: 4500,
   });
 
   await createJobItem(env.DB, admin, secondJobId, {
     description: "Back lawn mow",
-    amountCents: 3500,
+    quantity: 3,
+    unitPriceCents: 3500,
   });
 
   await completeInvoiceJobs(admin, [firstJobId, secondJobId]);
@@ -447,7 +454,8 @@ it("requires invoice management permission", async () => {
 it("preserves manual and edited items for retained jobs, then removes them with their job", async () => {
   await createJobItem(env.DB, admin, firstJobId, {
     description: "Original",
-    amountCents: 1000,
+    quantity: 1,
+    unitPriceCents: 1000,
   });
   await completeInvoiceJobs(admin, [firstJobId]);
   const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
@@ -499,4 +507,37 @@ it("preserves manual and edited items for retained jobs, then removes them with 
       amountCents: 0,
     }),
   ]);
+});
+
+it("snapshots quantities when replacing all selected Jobs", async () => {
+  await createJobItem(env.DB, admin, secondJobId, {
+    description: "Green waste",
+    quantity: 3,
+    unitPriceCents: 1000,
+  });
+  await completeInvoiceJobs(admin, [firstJobId, secondJobId]);
+  const { id: invoiceId } = await createDraftInvoice(env.DB, admin, {
+    jobIds: [firstJobId],
+  });
+  await updateDraftInvoiceJobs(env.DB, admin, invoiceId, {
+    jobIds: [secondJobId],
+  });
+  expect(await createDb(env.DB).select().from(invoiceItems)).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        jobId: secondJobId,
+        description: "Back lawn",
+        quantity: 1,
+        unitPriceCents: 0,
+        amountCents: 0,
+      }),
+      expect.objectContaining({
+        jobId: secondJobId,
+        description: "Green waste",
+        quantity: 3,
+        unitPriceCents: 1000,
+        amountCents: 3000,
+      }),
+    ]),
+  );
 });

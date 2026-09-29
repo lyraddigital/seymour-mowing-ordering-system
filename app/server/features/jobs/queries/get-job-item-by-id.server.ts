@@ -22,7 +22,8 @@ export async function getJobItemById(
       id: jobItems.id,
       jobId: jobItems.jobId,
       description: jobItems.description,
-      amountCents: jobItems.amountCents,
+      quantity: jobItems.quantity,
+      unitPriceCents: jobItems.unitPriceCents,
       createdAt: jobItems.createdAt,
       updatedAt: jobItems.updatedAt,
     })

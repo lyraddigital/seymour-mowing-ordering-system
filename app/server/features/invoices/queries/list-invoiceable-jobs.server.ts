@@ -39,7 +39,7 @@ export async function listInvoiceableJobs(
       totalCents: sql<number>`
         ${jobs.servicePriceCents} + coalesce(
           (
-            select sum(${jobItems.amountCents})
+            select sum(${jobItems.quantity} * ${jobItems.unitPriceCents})
             from ${jobItems}
             where ${jobItems.jobId} = ${jobs.id}
           ),

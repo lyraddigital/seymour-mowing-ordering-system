@@ -90,6 +90,10 @@
   min-width: 0;
 }
 
+.fullField {
+  grid-column: 1 / -1;
+}
+
 .fields label {
   display: block;
   margin-bottom: 7px;

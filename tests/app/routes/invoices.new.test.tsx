@@ -22,6 +22,7 @@ import { jobStatusHistory } from "../../../app/server/db/schema/job-status-histo
 import { jobs } from "../../../app/server/db/schema/jobs";
 import { users } from "../../../app/server/db/schema/users";
 import { createDraftInvoice } from "../../../app/server/features/invoices/services/create-draft-invoice.server";
+import { completeJob } from "../../../app/server/features/jobs/services/complete-job.server";
 import { createJobItem } from "../../../app/server/features/jobs/services/create-job-item.server";
 import { createJob } from "../../../app/server/features/jobs/services/create-job.server";
 import NewInvoicePage from "../../../app/ui/features/invoices/pages/new-invoice-page/new-invoice-page";
@@ -184,7 +185,8 @@ it("loads jobs available for invoicing", async () => {
 it("renders the create invoice workflow", async () => {
   await createJobItem(env.DB, admin, firstJobId, {
     description: "Front lawn mow",
-    amountCents: 4500,
+    quantity: 1,
+    unitPriceCents: 4500,
   });
 
   await completeInvoiceJobs(admin, [
@@ -221,7 +223,8 @@ it("renders the create invoice workflow", async () => {
 it("preselects an eligible job from the query string", async () => {
   await createJobItem(env.DB, admin, firstJobId, {
     description: "Front lawn mow",
-    amountCents: 4500,
+    quantity: 1,
+    unitPriceCents: 4500,
   });
 
   await completeInvoiceJobs(admin, [
@@ -280,12 +283,14 @@ it("does not preselect a job already attached to an active invoice", async () =>
 it("creates a draft invoice from selected jobs", async () => {
   await createJobItem(env.DB, admin, firstJobId, {
     description: "Front lawn mow",
-    amountCents: 4500,
+    quantity: 1,
+    unitPriceCents: 4500,
   });
 
   await createJobItem(env.DB, admin, secondJobId, {
     description: "Back lawn mow",
-    amountCents: 3500,
+    quantity: 1,
+    unitPriceCents: 3500,
   });
 
   await completeInvoiceJobs(admin, [firstJobId, secondJobId]);
@@ -468,4 +473,17 @@ it("requires authenticated user context", async () => {
 
   await expect(loader(loaderArgs())).rejects.toThrow();
   await expect(action(actionArgs([firstJobId]))).rejects.toThrow();
+});
+
+it("lists a completed Job with service price plus quantity times unit price", async () => {
+  await createJobItem(env.DB, admin, firstJobId, {
+    description: "Green waste",
+    quantity: 3,
+    unitPriceCents: 1000,
+  });
+  await completeJob(env.DB, admin, firstJobId, 10000);
+  const result = await loader(loaderArgs());
+  expect(result.jobs).toEqual([
+    expect.objectContaining({ id: firstJobId, totalCents: 13000 }),
+  ]);
 });

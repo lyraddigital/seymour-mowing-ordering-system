@@ -226,9 +226,12 @@ export async function updateDraftInvoiceJobs(
 
               jobId: jobItems.jobId,
               description: jobItems.description,
-              quantity: sql<number>`1`.as("quantity"),
-              unitPriceCents: jobItems.amountCents,
-              amountCents: jobItems.amountCents,
+              quantity: jobItems.quantity,
+              unitPriceCents: jobItems.unitPriceCents,
+              amountCents:
+                sql<number>`${jobItems.quantity} * ${jobItems.unitPriceCents}`.as(
+                  "amount_cents",
+                ),
 
               createdAt: sql<number>`
                 ${now}
@@ -282,9 +285,12 @@ export async function updateDraftInvoiceJobs(
 
               jobId: jobItems.jobId,
               description: jobItems.description,
-              quantity: sql<number>`1`.as("quantity"),
-              unitPriceCents: jobItems.amountCents,
-              amountCents: jobItems.amountCents,
+              quantity: jobItems.quantity,
+              unitPriceCents: jobItems.unitPriceCents,
+              amountCents:
+                sql<number>`${jobItems.quantity} * ${jobItems.unitPriceCents}`.as(
+                  "amount_cents",
+                ),
 
               createdAt: sql<number>`
                 ${now}

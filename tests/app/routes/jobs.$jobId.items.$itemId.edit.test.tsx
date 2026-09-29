@@ -127,7 +127,8 @@ beforeEach(async () => {
 
   ({ id: itemId } = await createJobItem(env.DB, user, jobId, {
     description: "Front lawn",
-    amountCents: 4500,
+    quantity: 1,
+    unitPriceCents: 4500,
   }));
 });
 
@@ -145,7 +146,8 @@ it("loads the job and item", async () => {
     id: itemId,
     jobId,
     description: "Front lawn",
-    amountCents: 4500,
+    quantity: 1,
+    unitPriceCents: 4500,
   });
 });
 
@@ -166,7 +168,9 @@ it("renders the edit item workflow with job and customer context", async () => {
   expect(html).toContain('name="description"');
   expect(html).toContain('value="Front lawn"');
 
-  expect(html).toContain('name="amount"');
+  expect(html).toContain('name="quantity"');
+  expect(html).toMatch(/name="quantity"[^>]*value="1"/);
+  expect(html).toContain('name="unitPrice"');
   expect(html).toContain('value="45.00"');
 
   expect(html).toContain("Save changes");
@@ -181,13 +185,14 @@ it.each([
   ["0", 0],
   ["0.00", 0],
 ] as const)(
-  "stores amount %s as %i cents",
-  async (amount, expectedAmountCents) => {
+  "stores unitPrice %s as %i cents",
+  async (unitPrice, expectedAmountCents) => {
     const response = await action(
       actionArgs(
         new URLSearchParams({
+          quantity: "1",
           description: "Updated work",
-          amount,
+          unitPrice,
         }),
       ),
     );
@@ -204,19 +209,21 @@ it.each([
       id: itemId,
       jobId,
       description: "Updated work",
-      amountCents: expectedAmountCents,
+      quantity: 1,
+      unitPriceCents: expectedAmountCents,
     });
   },
 );
 
 it.each(["", "abc", "1.234", "-1", "$45.00"])(
-  "returns 400 for invalid amount %j",
-  async (amount) => {
+  "returns 400 for invalid unitPrice %j",
+  async (unitPrice) => {
     const result = await action(
       actionArgs(
         new URLSearchParams({
+          quantity: "1",
           description: "Updated work",
-          amount,
+          unitPrice,
         }),
       ),
     );
@@ -228,10 +235,10 @@ it.each(["", "abc", "1.234", "-1", "$45.00"])(
       data: {
         values: {
           description: "Updated work",
-          amount,
+          unitPrice,
         },
         fieldErrors: {
-          amountCents: expect.any(String),
+          unitPriceCents: expect.any(String),
         },
       },
     });
@@ -240,7 +247,8 @@ it.each(["", "abc", "1.234", "-1", "$45.00"])(
       expect.objectContaining({
         id: itemId,
         description: "Front lawn",
-        amountCents: 4500,
+        quantity: 1,
+        unitPriceCents: 4500,
       }),
     ]);
   },
@@ -250,8 +258,9 @@ it("returns 400 for a blank description", async () => {
   const result = await action(
     actionArgs(
       new URLSearchParams({
+        quantity: "1",
         description: " ",
-        amount: "45.00",
+        unitPrice: "45.00",
       }),
     ),
   );
@@ -263,7 +272,7 @@ it("returns 400 for a blank description", async () => {
     data: {
       values: {
         description: " ",
-        amount: "45.00",
+        unitPrice: "45.00",
       },
       fieldErrors: {
         description: expect.any(String),
@@ -275,7 +284,8 @@ it("returns 400 for a blank description", async () => {
     expect.objectContaining({
       id: itemId,
       description: "Front lawn",
-      amountCents: 4500,
+      quantity: 1,
+      unitPriceCents: 4500,
     }),
   ]);
 });
@@ -284,8 +294,9 @@ it("renders validation errors while preserving submitted values", async () => {
   const result = await action(
     actionArgs(
       new URLSearchParams({
+        quantity: "1",
         description: "Updated work",
-        amount: "invalid",
+        unitPrice: "invalid",
       }),
     ),
   );
@@ -306,8 +317,8 @@ it("renders validation errors while preserving submitted values", async () => {
   expect(html).toContain('value="invalid"');
 
   expect(html).toContain('aria-invalid="true"');
-  expect(html).toContain('aria-describedby="amount-error"');
-  expect(html).toContain('id="amount-error"');
+  expect(html).toContain('aria-describedby="unitPrice-error"');
+  expect(html).toContain('id="unitPrice-error"');
   expect(html).toContain('role="alert"');
 });
 
@@ -329,8 +340,9 @@ it.each(["scheduled", "in_progress"] as const)(
     const response = await action(
       actionArgs(
         new URLSearchParams({
+          quantity: "1",
           description: "Updated after status change",
-          amount: "50.00",
+          unitPrice: "50.00",
         }),
       ),
     );
@@ -342,7 +354,8 @@ it.each(["scheduled", "in_progress"] as const)(
       expect.objectContaining({
         id: itemId,
         description: "Updated after status change",
-        amountCents: 5000,
+        quantity: 1,
+        unitPriceCents: 5000,
       }),
     ]);
   },
@@ -365,8 +378,9 @@ it.each(["completed", "cancelled"] as const)(
       action(
         actionArgs(
           new URLSearchParams({
+            quantity: "1",
             description: "Updated after status change",
-            amount: "50.00",
+            unitPrice: "50.00",
           }),
         ),
       ),
@@ -378,7 +392,8 @@ it.each(["completed", "cancelled"] as const)(
         id: itemId,
         jobId,
         description: "Front lawn",
-        amountCents: 4500,
+        quantity: 1,
+        unitPriceCents: 4500,
       }),
     ]);
   },
@@ -403,8 +418,9 @@ it("returns 404 when updating a missing item", async () => {
     action(
       actionArgs(
         new URLSearchParams({
+          quantity: "1",
           description: "Updated work",
-          amount: "50.00",
+          unitPrice: "50.00",
         }),
       ),
     ),
@@ -437,8 +453,9 @@ it("returns 403 without manage permission", async () => {
     action(
       actionArgs(
         new URLSearchParams({
+          quantity: "1",
           description: "Updated work",
-          amount: "50.00",
+          unitPrice: "50.00",
         }),
       ),
     ),
@@ -455,4 +472,58 @@ it("requires the authenticated user context", async () => {
   });
 
   await expect(loader(loaderArgs())).rejects.toThrow();
+});
+
+it.each([
+  "",
+  " ",
+  "0",
+  "-1",
+  "1.5",
+  "NaN",
+  "abc",
+  "Infinity",
+  "1e2",
+  "0x10",
+  "9007199254740992",
+])("rejects and preserves invalid quantity %j", async (quantity) => {
+  const before = await createDb(env.DB).select().from(jobItems);
+  const result = await action(
+    actionArgs(
+      new URLSearchParams({
+        description: "Green waste",
+        quantity,
+        unitPrice: "10.00",
+      }),
+    ),
+  );
+  if (result instanceof Response) throw new Error("Expected validation data");
+  expect(result.init?.status).toBe(400);
+  expect(result.data).toMatchObject({
+    values: { quantity, unitPrice: "10.00" },
+    fieldErrors: { quantity: expect.any(String) },
+  });
+  expect(await createDb(env.DB).select().from(jobItems)).toEqual(before);
+  const html = renderPage({
+    ...(await loader(loaderArgs())),
+    values: result.data.values,
+    fieldErrors: result.data.fieldErrors,
+  });
+  expect(html).toContain('id="quantity-error"');
+  expect(html).toContain('aria-describedby="quantity-error"');
+});
+it("stores submitted quantity and unit price", async () => {
+  const result = await action(
+    actionArgs(
+      new URLSearchParams({
+        description: "Green waste",
+        quantity: "3",
+        unitPrice: "10.00",
+      }),
+    ),
+  );
+  expect(result).toBeInstanceOf(Response);
+  expect(await createDb(env.DB).select().from(jobItems)).toEqual([
+    expect.objectContaining({ quantity: 3, unitPriceCents: 1000 }),
+  ]);
 });

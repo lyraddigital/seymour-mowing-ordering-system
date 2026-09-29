@@ -44,7 +44,7 @@ export async function listJobsByStatus(
       totalCents: sql<number>`
         coalesce(${jobs.servicePriceCents}, 0) + coalesce(
           (
-            select sum(${jobItems.amountCents})
+            select sum(${jobItems.quantity} * ${jobItems.unitPriceCents})
             from ${jobItems}
             where ${jobItems.jobId} = ${jobs.id}
           ),

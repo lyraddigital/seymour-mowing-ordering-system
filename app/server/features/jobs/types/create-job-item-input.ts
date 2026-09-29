@@ -1,6 +1,7 @@
 export interface CreateJobItemInput {
   description: string;
-  amountCents: number;
+  quantity: number;
+  unitPriceCents: number;
 }
 
 export type CreateJobItemFieldErrors = Partial<

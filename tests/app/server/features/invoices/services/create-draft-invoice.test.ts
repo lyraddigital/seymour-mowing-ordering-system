@@ -158,12 +158,14 @@ it("creates a draft invoice from multiple jobs for the same customer", async () 
 it("snapshots service and additional-charge lines from all selected jobs", async () => {
   await createJobItem(env.DB, admin, firstJobId, {
     description: "Front lawn mow",
-    amountCents: 4500,
+    quantity: 3,
+    unitPriceCents: 4500,
   });
 
   await createJobItem(env.DB, admin, secondJobId, {
     description: "Back lawn mow",
-    amountCents: 3500,
+    quantity: 1,
+    unitPriceCents: 3500,
   });
 
   await completeJob(env.DB, admin, firstJobId, 12_300);
@@ -193,9 +195,9 @@ it("snapshots service and additional-charge lines from all selected jobs", async
         invoiceId,
         jobId: firstJobId,
         description: "Front lawn mow",
-        quantity: 1,
+        quantity: 3,
         unitPriceCents: 4500,
-        amountCents: 4500,
+        amountCents: 13500,
       }),
       expect.objectContaining({
         invoiceId,
@@ -259,7 +261,8 @@ it("derives the customer from the selected jobs", async () => {
 it("creates an independent snapshot of job items", async () => {
   const { id: jobItemId } = await createJobItem(env.DB, admin, firstJobId, {
     description: "Front lawn mow",
-    amountCents: 4500,
+    quantity: 3,
+    unitPriceCents: 4500,
   });
 
   await completeInvoiceJobs(admin, [firstJobId]);
@@ -271,7 +274,8 @@ it("creates an independent snapshot of job items", async () => {
     .update(jobItems)
     .set({
       description: "Changed later",
-      amountCents: 9999,
+      quantity: 2,
+      unitPriceCents: 9999,
       updatedAt: Date.now(),
     })
     .where(eq(jobItems.id, jobItemId));
@@ -293,9 +297,9 @@ it("creates an independent snapshot of job items", async () => {
       expect.objectContaining({
         jobId: firstJobId,
         description: "Front lawn mow",
-        quantity: 1,
+        quantity: 3,
         unitPriceCents: 4500,
-        amountCents: 4500,
+        amountCents: 13500,
       }),
     ]),
   );

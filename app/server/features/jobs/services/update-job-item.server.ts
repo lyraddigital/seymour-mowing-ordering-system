@@ -51,7 +51,8 @@ export async function updateJobItem(
     .update(jobItems)
     .set({
       description: values.description,
-      amountCents: values.amountCents,
+      quantity: values.quantity,
+      unitPriceCents: values.unitPriceCents,
       updatedAt: Date.now(),
     })
     .where(and(eq(jobItems.id, itemId), eq(jobItems.jobId, jobId), editable))

@@ -53,7 +53,8 @@ it.each(["admin", "operator"] as const)(
 
     const { id } = await createJobItem(env.DB, { ...user, role }, jobId, {
       description: "  Front lawn mow  ",
-      amountCents: 4500,
+      quantity: 3,
+      unitPriceCents: 4500,
     });
 
     const saved = await createDb(env.DB).select().from(jobItems).get();
@@ -62,7 +63,8 @@ it.each(["admin", "operator"] as const)(
       id,
       jobId,
       description: "Front lawn mow",
-      amountCents: 4500,
+      quantity: 3,
+      unitPriceCents: 4500,
     });
 
     expect(saved!.createdAt).toBeGreaterThanOrEqual(before);
@@ -87,7 +89,8 @@ it.each(["scheduled", "in_progress"] as const)(
 
     await createJobItem(env.DB, user, jobId, {
       description: "Lawn mowing",
-      amountCents: 5000,
+      quantity: 1,
+      unitPriceCents: 5000,
     });
 
     expect(await db.select().from(jobItems)).toHaveLength(1);
@@ -110,7 +113,8 @@ it.each(["completed", "cancelled"] as const)(
     await expect(
       createJobItem(env.DB, user, jobId, {
         description: "Lawn mowing",
-        amountCents: 5000,
+        quantity: 1,
+        unitPriceCents: 5000,
       }),
     ).rejects.toBeInstanceOf(JobStateConflictError);
 
@@ -133,14 +137,16 @@ it("allows an item to be added after a completed job is reopened", async () => {
 
   await createJobItem(env.DB, user, jobId, {
     description: "Lawn mowing",
-    amountCents: 5000,
+    quantity: 1,
+    unitPriceCents: 5000,
   });
 
   expect(await db.select().from(jobItems)).toEqual([
     expect.objectContaining({
       jobId,
       description: "Lawn mowing",
-      amountCents: 5000,
+      quantity: 1,
+      unitPriceCents: 5000,
     }),
   ]);
 });
@@ -148,13 +154,15 @@ it("allows an item to be added after a completed job is reopened", async () => {
 it("allows a zero-value item", async () => {
   await createJobItem(env.DB, user, jobId, {
     description: "No-charge follow-up",
-    amountCents: 0,
+    quantity: 1,
+    unitPriceCents: 0,
   });
 
   expect(await createDb(env.DB).select().from(jobItems)).toEqual([
     expect.objectContaining({
       description: "No-charge follow-up",
-      amountCents: 0,
+      quantity: 1,
+      unitPriceCents: 0,
     }),
   ]);
 });
@@ -162,23 +170,28 @@ it("allows a zero-value item", async () => {
 it.each([
   {
     description: "",
-    amountCents: 1000,
+    quantity: 1,
+    unitPriceCents: 1000,
   },
   {
     description: " ",
-    amountCents: 1000,
+    quantity: 1,
+    unitPriceCents: 1000,
   },
   {
     description: "x".repeat(501),
-    amountCents: 1000,
+    quantity: 1,
+    unitPriceCents: 1000,
   },
   {
     description: "Lawn mowing",
-    amountCents: -1,
+    quantity: 1,
+    unitPriceCents: -1,
   },
   {
     description: "Lawn mowing",
-    amountCents: 10.5,
+    quantity: 1,
+    unitPriceCents: 10.5,
   },
 ])("rejects invalid item input %#", async (input) => {
   await expect(
@@ -192,7 +205,8 @@ it("rejects a nonexistent job", async () => {
   await expect(
     createJobItem(env.DB, user, "missing", {
       description: "Lawn mowing",
-      amountCents: 5000,
+      quantity: 1,
+      unitPriceCents: 5000,
     }),
   ).rejects.toBeInstanceOf(JobNotFoundError);
 
@@ -203,9 +217,36 @@ it("requires manage permission", async () => {
   await expect(
     createJobItem(env.DB, { ...user, role: "unknown" as "admin" }, jobId, {
       description: "Lawn mowing",
-      amountCents: 5000,
+      quantity: 1,
+      unitPriceCents: 5000,
     }),
   ).rejects.toBeInstanceOf(PermissionDeniedError);
 
   expect(await createDb(env.DB).select().from(jobItems)).toEqual([]);
+});
+
+it.each([0, -1, 1.5, NaN, Infinity, Number.MAX_SAFE_INTEGER + 1])(
+  "rejects invalid quantity %s without changing charges",
+  async (quantity) => {
+    const before = await createDb(env.DB).select().from(jobItems);
+    const input = {
+      description: "Green waste",
+      quantity,
+      unitPriceCents: 1000,
+    };
+    await expect(
+      createJobItem(env.DB, user, jobId, input),
+    ).rejects.toBeInstanceOf(JobItemValidationError);
+    expect(await createDb(env.DB).select().from(jobItems)).toEqual(before);
+  },
+);
+it("rejects a line amount outside the safe integer range", async () => {
+  const input = {
+    description: "Green waste",
+    quantity: 2,
+    unitPriceCents: Number.MAX_SAFE_INTEGER,
+  };
+  await expect(
+    createJobItem(env.DB, user, jobId, input),
+  ).rejects.toBeInstanceOf(JobItemValidationError);
 });

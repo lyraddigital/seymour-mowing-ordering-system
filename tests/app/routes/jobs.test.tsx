@@ -177,7 +177,8 @@ it("shows completed date, final Job total, and ready-to-invoice state", async ()
     id: "charge",
     jobId: "ready",
     description: "Green waste",
-    amountCents: 2_345,
+    quantity: 3,
+    unitPriceCents: 2_345,
     createdAt: 1,
     updatedAt: 1,
   });
@@ -188,12 +189,12 @@ it("shows completed date, final Job total, and ready-to-invoice state", async ()
   const html = renderJobsPage(result);
 
   expect(result.jobs).toMatchObject([
-    { id: "ready", statusChangedAt: completedAt, totalCents: 14_645 },
+    { id: "ready", statusChangedAt: completedAt, totalCents: 19_335 },
   ]);
   expect(html).toContain("Ready lawn service");
   expect(html).toContain("Visible customer");
   expect(html).toContain("18 Sept 2026");
-  expect(html).toContain("$146.45");
+  expect(html).toContain("$193.35");
   expect(html).toContain("Ready to invoice");
 });
 

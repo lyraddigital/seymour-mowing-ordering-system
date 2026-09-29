@@ -46,12 +46,14 @@ beforeEach(async () => {
 it("returns job items in creation order", async () => {
   await createJobItem(env.DB, user, jobId, {
     description: "Front lawn",
-    amountCents: 4500,
+    quantity: 3,
+    unitPriceCents: 4500,
   });
 
   await createJobItem(env.DB, user, jobId, {
     description: "Back lawn",
-    amountCents: 3500,
+    quantity: 1,
+    unitPriceCents: 3500,
   });
 
   const result = await listJobItems(env.DB, user, jobId);
@@ -60,29 +62,33 @@ it("returns job items in creation order", async () => {
 
   expect(result.items[0]).toMatchObject({
     description: "Front lawn",
-    amountCents: 4500,
+    quantity: 3,
+    unitPriceCents: 4500,
   });
 
   expect(result.items[1]).toMatchObject({
     description: "Back lawn",
-    amountCents: 3500,
+    quantity: 1,
+    unitPriceCents: 3500,
   });
 });
 
 it("returns the derived total", async () => {
   await createJobItem(env.DB, user, jobId, {
     description: "Front lawn",
-    amountCents: 4500,
+    quantity: 3,
+    unitPriceCents: 4500,
   });
 
   await createJobItem(env.DB, user, jobId, {
     description: "Back lawn",
-    amountCents: 3500,
+    quantity: 1,
+    unitPriceCents: 3500,
   });
 
   const result = await listJobItems(env.DB, user, jobId);
 
-  expect(result.totalCents).toBe(8000);
+  expect(result.totalCents).toBe(17000);
 });
 
 it("returns an empty list and zero total when there are no items", async () => {
@@ -104,12 +110,14 @@ it("only returns items for the requested job", async () => {
 
   await createJobItem(env.DB, user, jobId, {
     description: "Correct item",
-    amountCents: 5000,
+    quantity: 1,
+    unitPriceCents: 5000,
   });
 
   await createJobItem(env.DB, user, otherJobId, {
     description: "Other item",
-    amountCents: 9000,
+    quantity: 1,
+    unitPriceCents: 9000,
   });
 
   const result = await listJobItems(env.DB, user, jobId);

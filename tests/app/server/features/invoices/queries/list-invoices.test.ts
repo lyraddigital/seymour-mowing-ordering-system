@@ -98,12 +98,14 @@ it("returns invoices with customer and job context", async () => {
 it("derives totals from invoice items across multiple jobs", async () => {
   await createJobItem(env.DB, admin, firstJobId, {
     description: "Front lawn mow",
-    amountCents: 4500,
+    quantity: 1,
+    unitPriceCents: 4500,
   });
 
   await createJobItem(env.DB, admin, secondJobId, {
     description: "Back lawn mow",
-    amountCents: 3500,
+    quantity: 1,
+    unitPriceCents: 3500,
   });
 
   await completeInvoiceJobs(admin, [firstJobId, secondJobId]);

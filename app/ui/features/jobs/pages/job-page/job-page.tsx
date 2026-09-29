@@ -19,7 +19,7 @@ const dateFormat = new Intl.DateTimeFormat("en-AU", {
 type JobPageProps = {
   job: JobSummary;
   jobItems: JobItemSummary[];
-  jobTotalCents: number;
+  additionalChargesCents: number;
   invoice: Pick<InvoiceSummary, "id" | "invoiceNumber" | "status"> | null;
   canManage: boolean;
   canCreateInvoice: boolean;
@@ -57,7 +57,7 @@ function formatInvoiceStatus(status: InvoiceSummary["status"]) {
 export default function JobPage({
   job,
   jobItems,
-  jobTotalCents,
+  additionalChargesCents,
   invoice,
   canManage,
   canCreateInvoice,
@@ -163,7 +163,8 @@ export default function JobPage({
       <JobItems
         jobId={job.id}
         items={jobItems}
-        totalCents={jobTotalCents}
+        totalCents={additionalChargesCents}
+        servicePriceCents={job.servicePriceCents}
         canManage={canManage && active}
       />
 

@@ -2,7 +2,8 @@ export type JobItemSummary = {
   id: string;
   jobId: string;
   description: string;
-  amountCents: number;
+  quantity: number;
+  unitPriceCents: number;
   createdAt: number;
   updatedAt: number;
 };

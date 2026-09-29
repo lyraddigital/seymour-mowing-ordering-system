@@ -92,7 +92,8 @@ beforeEach(async () => {
 it("deletes a draft invoice and redirects to invoices", async () => {
   await createJobItem(env.DB, admin, jobId, {
     description: "Front lawn mow",
-    amountCents: 4500,
+    quantity: 1,
+    unitPriceCents: 4500,
   });
 
   await completeInvoiceJobs(admin, [jobId]);

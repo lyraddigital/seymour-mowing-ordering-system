@@ -333,3 +333,26 @@ it("hides invoices for in-progress and reopened jobs", async () => {
     'id="job-invoice-heading"',
   );
 });
+
+it("shows the charge subtotal separately from the completed Job total", async () => {
+  await createDb(env.DB).insert(jobItems).values({
+    id: "charge",
+    jobId,
+    description: "Green waste",
+    quantity: 3,
+    unitPriceCents: 1000,
+    createdAt: 1,
+    updatedAt: 1,
+  });
+  await completeJob(env.DB, user, jobId, 10000);
+  const result = await loader(args());
+  expect(result.additionalChargesCents).toBe(3000);
+  const html = renderPage(result);
+  expect(html).toContain("3 × $10.00");
+  expect(html).toContain("Additional charges subtotal");
+  expect(html).toContain("$30.00");
+  expect(html).toContain("Service price");
+  expect(html).toContain("$100.00");
+  expect(html).toContain("Job total");
+  expect(html).toContain("$130.00");
+});

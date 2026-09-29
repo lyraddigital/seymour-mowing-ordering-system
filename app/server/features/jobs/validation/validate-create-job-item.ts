@@ -17,8 +17,19 @@ export function validateCreateJobItem(
     fieldErrors.description = "Use 500 characters or fewer.";
   }
 
-  if (!Number.isSafeInteger(input.amountCents) || input.amountCents < 0) {
-    fieldErrors.amountCents = "Enter a valid amount.";
+  if (!Number.isSafeInteger(input.quantity) || input.quantity <= 0) {
+    fieldErrors.quantity = "Enter a positive whole-number quantity.";
+  }
+
+  if (!Number.isSafeInteger(input.unitPriceCents) || input.unitPriceCents < 0) {
+    fieldErrors.unitPriceCents = "Enter a valid unit price.";
+  }
+
+  if (
+    !Object.keys(fieldErrors).length &&
+    !Number.isSafeInteger(input.quantity * input.unitPriceCents)
+  ) {
+    fieldErrors.unitPriceCents = "The line amount is too large.";
   }
 
   if (Object.keys(fieldErrors).length) {
@@ -27,6 +38,7 @@ export function validateCreateJobItem(
 
   return {
     description,
-    amountCents: input.amountCents,
+    quantity: input.quantity,
+    unitPriceCents: input.unitPriceCents,
   };
 }

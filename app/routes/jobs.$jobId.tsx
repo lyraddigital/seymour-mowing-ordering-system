@@ -41,7 +41,7 @@ export async function loader({ context, params }: Route.LoaderArgs) {
     return {
       job,
       jobItems: jobItems.items,
-      jobTotalCents: jobItems.totalCents,
+      additionalChargesCents: jobItems.totalCents,
       invoice,
       canManage: can(user, "jobs.manage"),
       canCreateInvoice: canManageInvoices && invoiceable,
@@ -62,7 +62,7 @@ export default function JobRoute({ loaderData }: Route.ComponentProps) {
     <JobPage
       job={loaderData.job}
       jobItems={loaderData.jobItems}
-      jobTotalCents={loaderData.jobTotalCents}
+      additionalChargesCents={loaderData.additionalChargesCents}
       invoice={loaderData.invoice}
       canManage={loaderData.canManage}
       canCreateInvoice={loaderData.canCreateInvoice}

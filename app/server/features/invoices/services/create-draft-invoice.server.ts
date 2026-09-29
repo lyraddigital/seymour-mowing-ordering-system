@@ -165,11 +165,14 @@ export async function createDraftInvoice(
 
             description: jobItems.description,
 
-            quantity: sql<number>`1`.as("quantity"),
+            quantity: jobItems.quantity,
 
-            unitPriceCents: jobItems.amountCents,
+            unitPriceCents: jobItems.unitPriceCents,
 
-            amountCents: jobItems.amountCents,
+            amountCents:
+              sql<number>`${jobItems.quantity} * ${jobItems.unitPriceCents}`.as(
+                "amount_cents",
+              ),
 
             createdAt: sql<number>`
               ${now}

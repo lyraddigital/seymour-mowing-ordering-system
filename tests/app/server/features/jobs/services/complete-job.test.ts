@@ -313,7 +313,8 @@ it("persists the final price, retains charges through reopening, and accepts a c
     id: "charge",
     jobId: "job",
     description: "Green waste",
-    amountCents: 2500,
+    quantity: 3,
+    unitPriceCents: 2500,
     createdAt: 1,
     updatedAt: 1,
   });

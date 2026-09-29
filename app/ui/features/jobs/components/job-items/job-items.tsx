@@ -12,6 +12,7 @@ interface JobItemsProps {
   jobId: string;
   items: JobItemSummary[];
   totalCents: number;
+  servicePriceCents: number | null;
   canManage: boolean;
 }
 
@@ -19,6 +20,7 @@ export default function JobItems({
   jobId,
   items,
   totalCents,
+  servicePriceCents,
   canManage,
 }: JobItemsProps) {
   return (
@@ -42,11 +44,18 @@ export default function JobItems({
           <ul className={styles.list}>
             {items.map((item) => (
               <li className={styles.item} key={item.id}>
-                <span className={styles.description}>{item.description}</span>
+                <span className={styles.description}>
+                  {item.description}
+                  <br />
+                  {item.quantity} ×{" "}
+                  {currencyFormatter.format(item.unitPriceCents / 100)}
+                </span>
 
                 <div className={styles.itemActions}>
                   <span className={styles.amount}>
-                    {currencyFormatter.format(item.amountCents / 100)}
+                    {currencyFormatter.format(
+                      (item.quantity * item.unitPriceCents) / 100,
+                    )}
                   </span>
 
                   {canManage && (
@@ -85,8 +94,22 @@ export default function JobItems({
           </ul>
 
           <div className={styles.total}>
-            <span>Total</span>
+            <span>Additional charges subtotal</span>
             <strong>{currencyFormatter.format(totalCents / 100)}</strong>
+          </div>
+        </>
+      )}
+      {servicePriceCents !== null && (
+        <>
+          <div className={styles.total}>
+            <span>Service price</span>
+            <strong>{currencyFormatter.format(servicePriceCents / 100)}</strong>
+          </div>
+          <div className={styles.total}>
+            <span>Job total</span>
+            <strong>
+              {currencyFormatter.format((servicePriceCents + totalCents) / 100)}
+            </strong>
           </div>
         </>
       )}

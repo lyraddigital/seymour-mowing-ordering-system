@@ -113,7 +113,8 @@ beforeEach(async () => {
 it("renders invoices as a scan-friendly table", async () => {
   await createJobItem(env.DB, admin, firstJobId, {
     description: "Front lawn mow",
-    amountCents: 4500,
+    quantity: 1,
+    unitPriceCents: 4500,
   });
 
   await completeInvoiceJobs(admin, [firstJobId]);

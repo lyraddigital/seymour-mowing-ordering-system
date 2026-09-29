@@ -159,7 +159,8 @@ it("loads current billing for review with server-side authorization", async () =
     id: "charge",
     jobId,
     description: "Green waste disposal",
-    amountCents: 2_500,
+    quantity: 3,
+    unitPriceCents: 2_500,
     createdAt: 1,
     updatedAt: 1,
   });
@@ -174,8 +175,14 @@ it("loads current billing for review with server-side authorization", async () =
   expect(await loader(args)).toMatchObject({
     job: { servicePriceCents: 10_000 },
     charges: {
-      items: [{ description: "Green waste disposal", amountCents: 2_500 }],
-      totalCents: 2_500,
+      items: [
+        {
+          description: "Green waste disposal",
+          quantity: 3,
+          unitPriceCents: 2_500,
+        },
+      ],
+      totalCents: 7_500,
     },
   });
   context.set(currentUserContext, { ...user, role: "unknown" as "admin" });

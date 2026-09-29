@@ -88,12 +88,14 @@ it("deletes a draft invoice", async () => {
 it("deletes all invoice items belonging to the draft", async () => {
   await createJobItem(env.DB, admin, firstJobId, {
     description: "Front lawn",
-    amountCents: 4500,
+    quantity: 1,
+    unitPriceCents: 4500,
   });
 
   await createJobItem(env.DB, admin, secondJobId, {
     description: "Back lawn",
-    amountCents: 3500,
+    quantity: 1,
+    unitPriceCents: 3500,
   });
 
   await completeInvoiceJobs(admin, [firstJobId, secondJobId]);
@@ -144,7 +146,8 @@ it("deletes all invoice job assignments belonging to the draft", async () => {
 it("does not delete data belonging to another draft", async () => {
   await createJobItem(env.DB, admin, firstJobId, {
     description: "Front lawn",
-    amountCents: 4500,
+    quantity: 1,
+    unitPriceCents: 4500,
   });
 
   await completeInvoiceJobs(admin, [firstJobId]);
@@ -250,7 +253,8 @@ it("rejects deleting an issued invoice", async () => {
 it("does not delete items from an issued invoice", async () => {
   await createJobItem(env.DB, admin, firstJobId, {
     description: "Front lawn",
-    amountCents: 4500,
+    quantity: 1,
+    unitPriceCents: 4500,
   });
 
   await completeInvoiceJobs(admin, [firstJobId]);

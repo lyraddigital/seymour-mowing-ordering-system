@@ -181,8 +181,17 @@ export default function CompleteJobDialog({
                 <ul className={styles.charges}>
                   {charges.items.map((item) => (
                     <li key={item.id}>
-                      <span>{item.description}</span>
-                      <strong>{currency.format(item.amountCents / 100)}</strong>
+                      <span>
+                        {item.description}
+                        <br />
+                        {item.quantity} ×{" "}
+                        {currency.format(item.unitPriceCents / 100)}
+                      </span>
+                      <strong>
+                        {currency.format(
+                          (item.quantity * item.unitPriceCents) / 100,
+                        )}
+                      </strong>
                     </li>
                   ))}
                 </ul>

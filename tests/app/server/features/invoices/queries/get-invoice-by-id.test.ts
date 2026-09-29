@@ -122,12 +122,14 @@ it("returns invoice detail with multiple jobs", async () => {
 it("returns invoice items with their source jobs", async () => {
   await createJobItem(env.DB, admin, firstJobId, {
     description: "Front lawn mow",
-    amountCents: 4500,
+    quantity: 1,
+    unitPriceCents: 4500,
   });
 
   await createJobItem(env.DB, admin, secondJobId, {
     description: "Back lawn mow",
-    amountCents: 3500,
+    quantity: 1,
+    unitPriceCents: 3500,
   });
 
   await completeInvoiceJobs(admin, [firstJobId, secondJobId]);
@@ -164,12 +166,14 @@ it("returns invoice items with their source jobs", async () => {
 it("derives the invoice total across all invoice items", async () => {
   await createJobItem(env.DB, admin, firstJobId, {
     description: "Front lawn mow",
-    amountCents: 4500,
+    quantity: 1,
+    unitPriceCents: 4500,
   });
 
   await createJobItem(env.DB, admin, secondJobId, {
     description: "Back lawn mow",
-    amountCents: 3500,
+    quantity: 1,
+    unitPriceCents: 3500,
   });
 
   await completeInvoiceJobs(admin, [firstJobId, secondJobId]);
@@ -199,7 +203,8 @@ it("returns jobs in scheduled-date order", async () => {
 it("keeps billing lines and completion dates independent from later job changes", async () => {
   const { id: chargeId } = await createJobItem(env.DB, admin, firstJobId, {
     description: "Green waste disposal",
-    amountCents: 2345,
+    quantity: 1,
+    unitPriceCents: 2345,
   });
   await completeJob(env.DB, admin, firstJobId, 12_300);
 
@@ -228,7 +233,7 @@ it("keeps billing lines and completion dates independent from later job changes"
     .where(eq(jobs.id, firstJobId));
   await db
     .update(jobItems)
-    .set({ description: "Changed charge", amountCents: 8888 })
+    .set({ description: "Changed charge", quantity: 2, unitPriceCents: 8888 })
     .where(eq(jobItems.id, chargeId));
   await db.insert(jobStatusHistory).values({
     id: "later-status",
@@ -280,11 +285,13 @@ it("requires invoice read permission", async () => {
 it("derives totals without multiplying item/payment rows and keeps ordered history after invoice void", async () => {
   await createJobItem(env.DB, admin, firstJobId, {
     description: "Mow",
-    amountCents: 6000,
+    quantity: 1,
+    unitPriceCents: 6000,
   });
   await createJobItem(env.DB, admin, secondJobId, {
     description: "Edge",
-    amountCents: 4000,
+    quantity: 1,
+    unitPriceCents: 4000,
   });
   await completeInvoiceJobs(admin, [firstJobId, secondJobId]);
   const { id } = await createDraftInvoice(env.DB, admin, {

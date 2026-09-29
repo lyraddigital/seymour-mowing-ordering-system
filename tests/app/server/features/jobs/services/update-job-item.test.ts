@@ -50,7 +50,8 @@ beforeEach(async () => {
 
   ({ id: itemId } = await createJobItem(env.DB, user, jobId, {
     description: "Front lawn",
-    amountCents: 4500,
+    quantity: 1,
+    unitPriceCents: 4500,
   }));
 });
 
@@ -82,7 +83,8 @@ it.each(["admin", "operator"] as const)(
     expect(
       await updateJobItem(env.DB, { ...user, role }, jobId, itemId, {
         description: "  Front and back lawn  ",
-        amountCents: 8000,
+        quantity: 3,
+        unitPriceCents: 8000,
       }),
     ).toEqual({ id: itemId });
 
@@ -92,7 +94,8 @@ it.each(["admin", "operator"] as const)(
       id: itemId,
       jobId,
       description: "Front and back lawn",
-      amountCents: 8000,
+      quantity: 3,
+      unitPriceCents: 8000,
       createdAt: original!.createdAt,
     });
 
@@ -103,12 +106,14 @@ it.each(["admin", "operator"] as const)(
 it("allows the amount to be changed to zero", async () => {
   await updateJobItem(env.DB, user, jobId, itemId, {
     description: "No-charge follow-up",
-    amountCents: 0,
+    quantity: 1,
+    unitPriceCents: 0,
   });
 
   expect(await getItem()).toMatchObject({
     description: "No-charge follow-up",
-    amountCents: 0,
+    quantity: 1,
+    unitPriceCents: 0,
   });
 });
 
@@ -121,12 +126,14 @@ it.each(["scheduled", "in_progress"] as const)(
 
     await updateJobItem(env.DB, user, jobId, itemId, {
       description: "Updated work",
-      amountCents: 5000,
+      quantity: 1,
+      unitPriceCents: 5000,
     });
 
     expect(await getItem()).toMatchObject({
       description: "Updated work",
-      amountCents: 5000,
+      quantity: 1,
+      unitPriceCents: 5000,
     });
   },
 );
@@ -139,7 +146,8 @@ it.each(["completed", "cancelled"] as const)(
     await expect(
       updateJobItem(env.DB, user, jobId, itemId, {
         description: "Updated work",
-        amountCents: 5000,
+        quantity: 1,
+        unitPriceCents: 5000,
       }),
     ).rejects.toBeInstanceOf(JobStateConflictError);
 
@@ -147,7 +155,8 @@ it.each(["completed", "cancelled"] as const)(
       id: itemId,
       jobId,
       description: "Front lawn",
-      amountCents: 4500,
+      quantity: 1,
+      unitPriceCents: 4500,
     });
   },
 );
@@ -159,37 +168,44 @@ it("allows an item to be edited after a completed job is reopened", async () => 
 
   await updateJobItem(env.DB, user, jobId, itemId, {
     description: "Updated after reopening",
-    amountCents: 5500,
+    quantity: 1,
+    unitPriceCents: 5500,
   });
 
   expect(await getItem()).toMatchObject({
     id: itemId,
     jobId,
     description: "Updated after reopening",
-    amountCents: 5500,
+    quantity: 1,
+    unitPriceCents: 5500,
   });
 });
 
 it.each([
   {
     description: "",
-    amountCents: 1000,
+    quantity: 1,
+    unitPriceCents: 1000,
   },
   {
     description: " ",
-    amountCents: 1000,
+    quantity: 1,
+    unitPriceCents: 1000,
   },
   {
     description: "x".repeat(501),
-    amountCents: 1000,
+    quantity: 1,
+    unitPriceCents: 1000,
   },
   {
     description: "Lawn mowing",
-    amountCents: -1,
+    quantity: 1,
+    unitPriceCents: -1,
   },
   {
     description: "Lawn mowing",
-    amountCents: 10.5,
+    quantity: 1,
+    unitPriceCents: 10.5,
   },
 ])("rejects invalid item input %#", async (input) => {
   await expect(
@@ -198,7 +214,8 @@ it.each([
 
   expect(await getItem()).toMatchObject({
     description: "Front lawn",
-    amountCents: 4500,
+    quantity: 1,
+    unitPriceCents: 4500,
   });
 });
 
@@ -206,7 +223,8 @@ it("rejects a nonexistent item", async () => {
   await expect(
     updateJobItem(env.DB, user, jobId, "missing", {
       description: "Updated work",
-      amountCents: 5000,
+      quantity: 1,
+      unitPriceCents: 5000,
     }),
   ).rejects.toBeInstanceOf(JobItemNotFoundError);
 });
@@ -222,14 +240,16 @@ it("rejects an item that belongs to another job", async () => {
   await expect(
     updateJobItem(env.DB, user, otherJobId, itemId, {
       description: "Updated work",
-      amountCents: 5000,
+      quantity: 1,
+      unitPriceCents: 5000,
     }),
   ).rejects.toBeInstanceOf(JobItemNotFoundError);
 
   expect(await getItem()).toMatchObject({
     jobId,
     description: "Front lawn",
-    amountCents: 4500,
+    quantity: 1,
+    unitPriceCents: 4500,
   });
 });
 
@@ -242,13 +262,41 @@ it("requires manage permission", async () => {
       itemId,
       {
         description: "Updated work",
-        amountCents: 5000,
+        quantity: 1,
+        unitPriceCents: 5000,
       },
     ),
   ).rejects.toBeInstanceOf(PermissionDeniedError);
 
   expect(await getItem()).toMatchObject({
     description: "Front lawn",
-    amountCents: 4500,
+    quantity: 1,
+    unitPriceCents: 4500,
   });
+});
+
+it.each([0, -1, 1.5, NaN, Infinity, Number.MAX_SAFE_INTEGER + 1])(
+  "rejects invalid quantity %s without changing charges",
+  async (quantity) => {
+    const before = await createDb(env.DB).select().from(jobItems);
+    const input = {
+      description: "Green waste",
+      quantity,
+      unitPriceCents: 1000,
+    };
+    await expect(
+      updateJobItem(env.DB, user, jobId, itemId, input),
+    ).rejects.toBeInstanceOf(JobItemValidationError);
+    expect(await createDb(env.DB).select().from(jobItems)).toEqual(before);
+  },
+);
+it("rejects a line amount outside the safe integer range", async () => {
+  const input = {
+    description: "Green waste",
+    quantity: 2,
+    unitPriceCents: Number.MAX_SAFE_INTEGER,
+  };
+  await expect(
+    updateJobItem(env.DB, user, jobId, itemId, input),
+  ).rejects.toBeInstanceOf(JobItemValidationError);
 });

@@ -137,12 +137,14 @@ it("preserves issuedAt when voided", async () => {
 it("does not change invoice items when voided", async () => {
   await createJobItem(env.DB, admin, firstJobId, {
     description: "Front lawn",
-    amountCents: 4500,
+    quantity: 1,
+    unitPriceCents: 4500,
   });
 
   await createJobItem(env.DB, admin, secondJobId, {
     description: "Back lawn",
-    amountCents: 3500,
+    quantity: 1,
+    unitPriceCents: 3500,
   });
 
   await completeInvoiceJobs(admin, [firstJobId, secondJobId]);

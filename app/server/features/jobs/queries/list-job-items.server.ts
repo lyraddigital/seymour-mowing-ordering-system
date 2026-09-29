@@ -23,7 +23,8 @@ export async function listJobItems(
       id: jobItems.id,
       jobId: jobItems.jobId,
       description: jobItems.description,
-      amountCents: jobItems.amountCents,
+      quantity: jobItems.quantity,
+      unitPriceCents: jobItems.unitPriceCents,
       createdAt: jobItems.createdAt,
       updatedAt: jobItems.updatedAt,
     })
@@ -33,6 +34,9 @@ export async function listJobItems(
 
   return {
     items,
-    totalCents: items.reduce((total, item) => total + item.amountCents, 0),
+    totalCents: items.reduce(
+      (total, item) => total + item.quantity * item.unitPriceCents,
+      0,
+    ),
   };
 }
