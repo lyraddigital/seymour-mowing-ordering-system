@@ -1,25 +1,12 @@
-import type { Route } from "./+types/jobs.history";
+import { redirect } from "react-router";
+import { can } from "../server/auth/authorization/policies/can";
 import { currentUserContext } from "../server/auth/context/current-user-context";
-import { runtimeContext } from "../server/auth/context/runtime-context";
-import { PermissionDeniedError } from "../server/auth/authorization/errors/permission-denied-error";
-import { listJobHistory } from "../server/features/jobs/queries/list-job-history.server";
-import JobHistoryPage from "../ui/features/jobs/pages/job-history-page/job-history-page";
+import type { Route } from "./+types/jobs.history";
 
-export async function loader({ context }: Route.LoaderArgs) {
-  try {
-    return {
-      jobs: await listJobHistory(
-        context.get(runtimeContext).env.DB,
-        context.get(currentUserContext),
-      ),
-    };
-  } catch (error) {
-    if (error instanceof PermissionDeniedError)
-      throw new Response("Forbidden", { status: 403 });
-    throw error;
+export function loader({ context }: Route.LoaderArgs) {
+  if (!can(context.get(currentUserContext), "jobs.read")) {
+    throw new Response("Forbidden", { status: 403 });
   }
-}
 
-export default function JobHistoryRoute({ loaderData }: Route.ComponentProps) {
-  return <JobHistoryPage jobs={loaderData.jobs} />;
+  return redirect("/jobs?status=completed");
 }

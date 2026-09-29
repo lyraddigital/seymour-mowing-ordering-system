@@ -1,3 +1,3 @@
-import type { listActiveJobs } from "../queries/list-active-jobs.server";
+import type { getJobById } from "../queries/get-job-by-id.server";
 
-export type JobSummary = Awaited<ReturnType<typeof listActiveJobs>>[number];
+export type JobSummary = NonNullable<Awaited<ReturnType<typeof getJobById>>>;

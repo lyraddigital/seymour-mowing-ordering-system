@@ -2,7 +2,11 @@ import { env } from "cloudflare:workers";
 import { eq } from "drizzle-orm";
 import { RouterContextProvider } from "react-router";
 import { beforeEach, expect, it } from "vitest";
-import { action, loader } from "../../../app/routes/jobs.$jobId.complete";
+import {
+  action,
+  loader,
+  shouldRevalidate,
+} from "../../../app/routes/jobs.$jobId.complete";
 import { currentUserContext } from "../../../app/server/auth/context/current-user-context";
 import { runtimeContext } from "../../../app/server/auth/context/runtime-context";
 import { createDb } from "../../../app/server/db/client/create-db.server";
@@ -89,6 +93,10 @@ it("performs the dedicated operation and redirects to job detail despite forged 
     currentStatus: "completed",
     servicePriceCents: 12550,
   });
+});
+
+it("does not revalidate the billing-review loader after a successful completion redirect", () => {
+  expect(shouldRevalidate()).toBe(false);
 });
 
 it("returns 404 for an unknown job", async () => {

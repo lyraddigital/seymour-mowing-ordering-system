@@ -987,11 +987,9 @@ Invoice snapshots remain independent of subsequent Job changes. Do not implicitl
 
 ---
 
-# Active Jobs and Job History
+# Jobs Workspace Status Views
 
-The primary Jobs list represents active operational work.
-
-The current active statuses are:
+Jobs are browsed in one `/jobs` workspace by authoritative lifecycle status:
 
 ```text
 
@@ -999,65 +997,19 @@ scheduled
 
 in_progress
 
-```
-
-Therefore:
-
-```text
-
-/jobs
-
-```
-
-contains Jobs whose authoritative current status is either:
-
-```text
-
-scheduled
-
-in_progress
-
-```
-
-Historical/non-active Jobs are shown separately.
-
-The current history statuses are:
-
-```text
-
 completed
 
 cancelled
 
 ```
 
-Therefore:
+The selected status is represented by the `status` query parameter. Status-based collection filtering belongs in the server/query layer, using the latest applicable status-history record.
 
-```text
+Job lifecycle status and Invoice allocation are separate concepts. Do not introduce `invoiced` as a Job lifecycle status or change a completed Job's status when it is allocated to an Invoice.
 
-/jobs/history
+Completed Job views may show active Invoice-allocation information. They must continue to include both Jobs ready to invoice and Jobs already allocated to an Invoice.
 
-```
-
-contains Jobs whose authoritative current status is either:
-
-```text
-
-completed
-
-cancelled
-
-```
-
-The latest applicable status-history record determines which list a Job belongs to.
-
-Do not model completed or cancelled Jobs as deleted or archived merely to support this UI separation.
-
-Completed and cancelled are Job statuses, not archival flags.
-
-Both active and historical Jobs must continue to link to the normal Job detail page.
-
-Do not duplicate separate Job-detail implementations for active and historical Jobs.
+Completed and cancelled Jobs remain normal Job records and continue to link to the shared Job detail page.
 
 ---
 

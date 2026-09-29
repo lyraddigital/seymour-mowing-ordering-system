@@ -1,4 +1,5 @@
 import { env } from "cloudflare:workers";
+import { eq } from "drizzle-orm";
 import type { ComponentProps } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import {
@@ -13,23 +14,29 @@ import { currentUserContext } from "../../../app/server/auth/context/current-use
 import { runtimeContext } from "../../../app/server/auth/context/runtime-context";
 import { createDb } from "../../../app/server/db/client/create-db.server";
 import { customers } from "../../../app/server/db/schema/customers";
+import { invoiceItems } from "../../../app/server/db/schema/invoice-items";
+import { invoiceJobs } from "../../../app/server/db/schema/invoice-jobs";
+import { invoices } from "../../../app/server/db/schema/invoices";
+import { jobItems } from "../../../app/server/db/schema/job-items";
 import { jobStatusHistory } from "../../../app/server/db/schema/job-status-history";
 import { jobs } from "../../../app/server/db/schema/jobs";
+import { payments } from "../../../app/server/db/schema/payments";
 import { users } from "../../../app/server/db/schema/users";
-import { createJob } from "../../../app/server/features/jobs/services/create-job.server";
+import { cancelJob } from "../../../app/server/features/jobs/services/cancel-job.server";
 import { startJob } from "../../../app/server/features/jobs/services/start-job.server";
 import JobsPage from "../../../app/ui/features/jobs/pages/jobs-page/jobs-page";
 import { internalUser } from "../../support/fixtures/internal-user";
 
 const user = internalUser();
+const completedAt = Date.UTC(2026, 8, 18, 1);
 
 let context: RouterContextProvider;
 
-function args() {
+function args(url = "https://example.test/jobs") {
   return {
     context,
-    request: new Request("https://example.test/jobs"),
-    url: new URL("https://example.test/jobs"),
+    request: new Request(url),
+    url: new URL(url),
     params: {},
     pattern: "/jobs",
   };
@@ -37,15 +44,8 @@ function args() {
 
 function renderJobsPage(props: ComponentProps<typeof JobsPage>) {
   const router = createMemoryRouter(
-    [
-      {
-        path: "/jobs",
-        element: <JobsPage {...props} />,
-      },
-    ],
-    {
-      initialEntries: ["/jobs"],
-    },
+    [{ path: "/jobs", element: <JobsPage {...props} /> }],
+    { initialEntries: [`/jobs?status=${props.status}`] },
   );
 
   return renderToStaticMarkup(<RouterProvider router={router} />);
@@ -53,22 +53,21 @@ function renderJobsPage(props: ComponentProps<typeof JobsPage>) {
 
 beforeEach(async () => {
   context = new RouterContextProvider();
-
   context.set(currentUserContext, user);
-  context.set(runtimeContext, {
-    env,
-    ctx: {} as ExecutionContext,
-  });
+  context.set(runtimeContext, { env, ctx: {} as ExecutionContext });
 
   const db = createDb(env.DB);
-
+  await db.delete(payments);
+  await db.delete(invoiceItems);
+  await db.delete(invoiceJobs);
+  await db.delete(invoices);
+  await db.delete(jobItems);
   await db.delete(jobStatusHistory);
   await db.delete(jobs);
   await db.delete(customers);
   await db.delete(users);
 
   await db.insert(users).values(user);
-
   await db.insert(customers).values({
     id: "customer",
     name: "Visible customer",
@@ -77,213 +76,222 @@ beforeEach(async () => {
   });
 });
 
-it("renders active jobs as a scan-friendly table", async () => {
-  const { id } = await createJob(env.DB, user, {
-    customerId: "customer",
-    name: "Lawn service",
-    description: "Mow front lawn",
-    scheduledDate: "2026-09-15",
-  });
-
-  const result = await loader(args());
-
-  expect(result.canManage).toBe(true);
-  expect(result.jobs).toHaveLength(1);
-
-  const html = renderJobsPage(result);
-
-  expect(html).toContain("<table");
-  expect(html).toContain('aria-label="Active jobs"');
-
-  expect(html).toContain("Job");
-  expect(html).toContain("Customer");
-  expect(html).toContain("Scheduled");
-  expect(html).toContain("Status");
-  expect(html).toContain("Actions");
-  expect(html).toContain("Details");
-
-  expect(html).toContain("Lawn service");
-  expect(html).toContain("Visible customer");
-  expect(html).toContain("15 Sept 2026");
-  expect(html).toContain("Scheduled");
-
-  expect(html).toContain(`href="/jobs/${id}"`);
-  expect(html).toContain('href="/customers/customer"');
-});
-
-it("renders the active jobs and job history tabs", async () => {
-  const html = renderJobsPage(await loader(args()));
-
-  expect(html).toContain('aria-label="Job views"');
-  expect(html).toContain('href="/jobs"');
-  expect(html).toContain('aria-current="page"');
-  expect(html).toContain("Active jobs");
-
-  expect(html).toContain('href="/jobs/history"');
-  expect(html).toContain("Job history");
-});
-
-it("shows quick lifecycle and edit actions to managers", async () => {
-  const { id } = await createJob(env.DB, user, {
-    customerId: "customer",
-    name: "Lawn service",
-    description: "Mow front lawn",
-    scheduledDate: "2026-09-15",
-  });
-
-  const html = renderJobsPage(await loader(args()));
-
-  expect(html).toContain(`action="/jobs/${id}/start"`);
-  expect(html).toContain(`action="/jobs/${id}/complete"`);
-
-  expect(html).toContain("Start Job");
-  expect(html).toContain("Complete Job");
-
-  expect(html).toContain(`href="/jobs/${id}/edit"`);
-  expect(html).toContain("Edit");
-
-  expect(html).not.toContain(`action="/jobs/${id}/cancel"`);
-  expect(html).not.toContain("Cancel Job");
-});
-
-it("shows only complete as the lifecycle action for an in-progress job", async () => {
-  const { id } = await createJob(env.DB, user, {
-    customerId: "customer",
-    name: "Lawn service",
-    description: "Mow front lawn",
-    scheduledDate: "2026-09-15",
-  });
-
-  await startJob(env.DB, user, id);
-
-  const result = await loader(args());
-
-  expect(result.jobs[0]).toMatchObject({
+async function createNamedJob(id: string, name: string) {
+  const db = createDb(env.DB);
+  await db.insert(jobs).values({
     id,
-    currentStatus: "in_progress",
-  });
-
-  const html = renderJobsPage(result);
-
-  expect(html).toContain("In progress");
-
-  expect(html).not.toContain(`action="/jobs/${id}/start"`);
-  expect(html).not.toContain("Start Job");
-
-  expect(html).toContain(`action="/jobs/${id}/complete"`);
-  expect(html).toContain("Complete Job");
-
-  expect(html).toContain(`href="/jobs/${id}/edit"`);
-
-  expect(html).not.toContain(`action="/jobs/${id}/cancel"`);
-  expect(html).not.toContain("Cancel Job");
-});
-
-it("shows the create job action to managers", async () => {
-  const html = renderJobsPage(await loader(args()));
-
-  expect(html).toContain('href="/jobs/new"');
-  expect(html).toContain("New job");
-});
-
-it("allows operators to manage jobs", async () => {
-  const { id } = await createJob(env.DB, user, {
     customerId: "customer",
-    name: "Lawn service",
+    name,
     description: "Mow front lawn",
     scheduledDate: "2026-09-15",
+    createdAt: 1,
+    updatedAt: 1,
   });
+  await db.insert(jobStatusHistory).values({
+    id: `scheduled-${id}`,
+    jobId: id,
+    status: "scheduled",
+    createdByUserId: user.id,
+    createdAt: 1,
+  });
+}
 
-  context.set(currentUserContext, {
-    ...user,
-    role: "operator",
+async function markCompleted(id: string, name: string) {
+  await createNamedJob(id, name);
+  const db = createDb(env.DB);
+  await db
+    .update(jobs)
+    .set({ servicePriceCents: 12_300 })
+    .where(eq(jobs.id, id));
+  await db.insert(jobStatusHistory).values({
+    id: `completed-${id}`,
+    jobId: id,
+    status: "completed",
+    createdByUserId: user.id,
+    createdAt: completedAt,
   });
+}
+
+it("defaults /jobs to Scheduled and excludes non-scheduled Jobs", async () => {
+  await createNamedJob("scheduled", "Scheduled lawn service");
+  await createNamedJob("progress", "Started lawn service");
+  await startJob(env.DB, user, "progress");
 
   const result = await loader(args());
 
-  expect(result.canManage).toBe(true);
+  expect(result.status).toBe("scheduled");
+  expect(result.jobs).toMatchObject([
+    { id: "scheduled", currentStatus: "scheduled" },
+  ]);
 
   const html = renderJobsPage(result);
-
-  expect(html).toContain("Lawn service");
-  expect(html).toContain("Visible customer");
-
-  expect(html).toContain('href="/jobs/new"');
-  expect(html).toContain("New job");
-
-  expect(html).toContain(`action="/jobs/${id}/start"`);
-  expect(html).toContain(`action="/jobs/${id}/complete"`);
-  expect(html).toContain(`href="/jobs/${id}/edit"`);
-
-  expect(html).toContain("Start Job");
-  expect(html).toContain("Complete Job");
-  expect(html).toContain("Edit");
-
-  expect(html).not.toContain(`action="/jobs/${id}/cancel"`);
-  expect(html).not.toContain("Cancel Job");
-
-  expect(html).toContain('href="/jobs/history"');
+  expect(html).toContain('aria-label="Scheduled jobs"');
+  expect(html).toContain("Scheduled lawn service");
+  expect(html).not.toContain("Started lawn service");
 });
 
-it("renders the manager empty state", async () => {
-  const result = await loader(args());
+it.each([
+  ["scheduled", "Scheduled"],
+  ["in_progress", "In progress"],
+  ["completed", "Completed"],
+  ["cancelled", "Cancelled"],
+] as const)(
+  "loads and marks the %s status view active",
+  async (status, label) => {
+    const result = await loader(
+      args(`https://example.test/jobs?status=${status}`),
+    );
+    const html = renderJobsPage(result);
 
-  expect(result.jobs).toEqual([]);
-  expect(result.canManage).toBe(true);
+    expect(result.status).toBe(status);
+    expect(html).toContain(`aria-current="page" href="/jobs?status=${status}"`);
+    expect(html).toContain(label);
+  },
+);
 
-  const html = renderJobsPage(result);
+it("renders links for all four bookmarkable status views", async () => {
+  const html = renderJobsPage(await loader(args()));
 
-  expect(html).toContain("No active jobs");
-  expect(html).toContain(
-    "Create a job for an active customer to start planning your work.",
+  expect(html).toContain('aria-label="Job status views"');
+  expect(html).toContain('href="/jobs?status=scheduled"');
+  expect(html).toContain('href="/jobs?status=in_progress"');
+  expect(html).toContain('href="/jobs?status=completed"');
+  expect(html).toContain('href="/jobs?status=cancelled"');
+});
+
+it("normalises an invalid status to Scheduled without passing it to the query", async () => {
+  await createNamedJob("scheduled", "Scheduled lawn service");
+
+  const result = await loader(
+    args("https://example.test/jobs?status=invoiced"),
   );
 
-  expect(html).toContain('href="/jobs/new"');
-  expect(html).toContain("Create job");
-
-  expect(html).toContain('href="/jobs/history"');
-  expect(html).not.toContain("<table");
+  expect(result.status).toBe("scheduled");
+  expect(result.jobs).toMatchObject([{ id: "scheduled" }]);
 });
 
-it("renders the operator empty state with a create action", async () => {
-  context.set(currentUserContext, {
-    ...user,
-    role: "operator",
+it("shows completed date, final Job total, and ready-to-invoice state", async () => {
+  await markCompleted("ready", "Ready lawn service");
+  const db = createDb(env.DB);
+  await db.insert(jobItems).values({
+    id: "charge",
+    jobId: "ready",
+    description: "Green waste",
+    amountCents: 2_345,
+    createdAt: 1,
+    updatedAt: 1,
   });
+
+  const result = await loader(
+    args("https://example.test/jobs?status=completed"),
+  );
+  const html = renderJobsPage(result);
+
+  expect(result.jobs).toMatchObject([
+    { id: "ready", statusChangedAt: completedAt, totalCents: 14_645 },
+  ]);
+  expect(html).toContain("Ready lawn service");
+  expect(html).toContain("Visible customer");
+  expect(html).toContain("18 Sept 2026");
+  expect(html).toContain("$146.45");
+  expect(html).toContain("Ready to invoice");
+});
+
+it("keeps an allocated Job in Completed and links its invoice", async () => {
+  await markCompleted("allocated", "Allocated lawn service");
+  const db = createDb(env.DB);
+  await db.insert(invoices).values({
+    id: "invoice",
+    customerId: "customer",
+    status: "draft",
+    createdAt: 1,
+    updatedAt: 1,
+  });
+  await db.insert(invoiceJobs).values({
+    invoiceId: "invoice",
+    jobId: "allocated",
+    completedAt,
+  });
+
+  const result = await loader(
+    args("https://example.test/jobs?status=completed"),
+  );
+  const html = renderJobsPage(result);
+
+  expect(result.jobs).toMatchObject([
+    { id: "allocated", currentStatus: "completed", invoiceId: "invoice" },
+  ]);
+  expect(html).toContain("Allocated lawn service");
+  expect(html).toContain('href="/invoices/invoice"');
+  expect(html).toContain("Draft invoice");
+  expect(html).not.toContain("Ready to invoice");
+});
+
+it("shows cancelled Jobs only in Cancelled with their cancellation date", async () => {
+  await createNamedJob("cancelled", "Cancelled lawn service");
+  await cancelJob(env.DB, user, "cancelled");
+
+  const cancelled = await loader(
+    args("https://example.test/jobs?status=cancelled"),
+  );
+  const completed = await loader(
+    args("https://example.test/jobs?status=completed"),
+  );
+
+  expect(cancelled.jobs).toMatchObject([
+    { id: "cancelled", currentStatus: "cancelled" },
+  ]);
+  expect(completed.jobs).toEqual([]);
+
+  const html = renderJobsPage(cancelled);
+  expect(html).toContain("Cancelled lawn service");
+  expect(html).toContain("Cancelled");
+  expect(html).not.toContain("Ready to invoice");
+});
+
+it("preserves lifecycle and edit actions on operational views", async () => {
+  await createNamedJob("scheduled", "Lawn service");
+  const html = renderJobsPage(await loader(args()));
+
+  expect(html).toContain('action="/jobs/scheduled/start"');
+  expect(html).toContain('action="/jobs/scheduled/complete"');
+  expect(html).toContain('href="/jobs/scheduled/edit"');
+});
+
+it("allows operators to use the Jobs workspace", async () => {
+  await createNamedJob("scheduled", "Operator lawn service");
+  context.set(currentUserContext, { ...user, role: "operator" });
 
   const result = await loader(args());
   const html = renderJobsPage(result);
 
-  expect(result.jobs).toEqual([]);
   expect(result.canManage).toBe(true);
-
-  expect(html).toContain("No active jobs");
-  expect(html).toContain('href="/jobs/history"');
-
+  expect(html).toContain("Operator lawn service");
   expect(html).toContain('href="/jobs/new"');
-  expect(html).toContain("Create job");
-
-  expect(html).not.toContain("<table");
+  expect(html).toContain('action="/jobs/scheduled/start"');
 });
 
-it("denies access without read permission", async () => {
-  context.set(currentUserContext, {
-    ...user,
-    role: "unknown" as "admin",
-  });
+it.each(["scheduled", "in_progress", "completed", "cancelled"] as const)(
+  "renders the %s empty state",
+  async (status) => {
+    const html = renderJobsPage(
+      await loader(args(`https://example.test/jobs?status=${status}`)),
+    );
 
-  await expect(loader(args())).rejects.toMatchObject({
-    status: 403,
-  });
+    expect(html).toContain("No ");
+    expect(html).not.toContain("<table");
+  },
+);
+
+it("denies access without read permission", async () => {
+  context.set(currentUserContext, { ...user, role: "unknown" as "admin" });
+
+  await expect(loader(args())).rejects.toMatchObject({ status: 403 });
 });
 
 it("requires the authenticated user context", async () => {
   context = new RouterContextProvider();
-
-  context.set(runtimeContext, {
-    env,
-    ctx: {} as ExecutionContext,
-  });
+  context.set(runtimeContext, { env, ctx: {} as ExecutionContext });
 
   await expect(loader(args())).rejects.toThrow();
 });

@@ -19,6 +19,19 @@
   white-space: nowrap;
 }
 
+.invoice {
+  min-width: 145px;
+}
+
+.invoice a {
+  font-weight: 600;
+}
+
+.ready {
+  color: var(--brand-forest);
+  font-weight: 600;
+}
+
 .scheduled {
   composes: badge from "../../../../styles/product.module.css";
   color: #805311;

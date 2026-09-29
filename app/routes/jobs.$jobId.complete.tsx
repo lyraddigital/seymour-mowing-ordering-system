@@ -12,6 +12,13 @@ import { getJobById } from "../server/features/jobs/queries/get-job-by-id.server
 import { listJobItems } from "../server/features/jobs/queries/list-job-items.server";
 import { parseServicePrice } from "../server/features/jobs/validation/parse-service-price";
 
+export function shouldRevalidate() {
+  // The modal explicitly loads fresh billing data whenever it opens. Prevent
+  // React Router from automatically reloading this review-only resource after
+  // completion, when the Job is intentionally no longer completable.
+  return false;
+}
+
 export async function loader({ context, params }: Route.LoaderArgs) {
   const user = context.get(currentUserContext);
   if (!can(user, "jobs.manage"))

@@ -14,7 +14,7 @@ import { users } from "../../../../../../app/server/db/schema/users";
 import { JobNotFoundError } from "../../../../../../app/server/features/jobs/errors/job-not-found-error";
 import { JobStateConflictError } from "../../../../../../app/server/features/jobs/errors/job-state-conflict-error";
 import { getJobById } from "../../../../../../app/server/features/jobs/queries/get-job-by-id.server";
-import { listActiveJobs } from "../../../../../../app/server/features/jobs/queries/list-active-jobs.server";
+import { listJobsByStatus } from "../../../../../../app/server/features/jobs/queries/list-jobs-by-status.server";
 import { cancelJob } from "../../../../../../app/server/features/jobs/services/cancel-job.server";
 import { completeJob } from "../../../../../../app/server/features/jobs/services/complete-job.server";
 import { internalUser } from "../../../../../support/fixtures/internal-user";
@@ -102,9 +102,9 @@ it.each(["admin", "operator"] as const)(
       currentStatus: "completed",
     });
 
-    expect((await listActiveJobs(env.DB, user)).map((job) => job.id)).toEqual([
-      "other",
-    ]);
+    expect(
+      (await listJobsByStatus(env.DB, user, "scheduled")).map((job) => job.id),
+    ).toEqual(["other"]);
   },
 );
 
