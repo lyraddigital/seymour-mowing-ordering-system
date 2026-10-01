@@ -5,6 +5,7 @@ import type { CurrentUser } from "../../../auth/principal/types/current-user";
 import { createDb } from "../../../db/client/create-db.server";
 import { customers } from "../../../db/schema/customers";
 import { jobs } from "../../../db/schema/jobs";
+import { jobItems } from "../../../db/schema/job-items";
 import { jobStatusHistory } from "../../../db/schema/job-status-history";
 import type { CreateJobInput } from "../types/create-job-input";
 import { validateCreateJob } from "../validation/validate-create-job";
@@ -63,6 +64,24 @@ export async function createJob(
         })
         .from(jobs)
         .where(eq(jobs.id, id)),
+    ),
+    ...values.charges.map((charge) =>
+      db.insert(jobItems).select(
+        db
+          .select({
+            id: sql<string>`${crypto.randomUUID()}`.as("id"),
+            jobId: jobs.id,
+            description: sql<string>`${charge.description}`.as("description"),
+            quantity: sql<number>`${charge.quantity}`.as("quantity"),
+            unitPriceCents: sql<number>`${charge.unitPriceCents}`.as(
+              "unit_price_cents",
+            ),
+            createdAt: sql<number>`${now}`.as("created_at"),
+            updatedAt: sql<number>`${now}`.as("updated_at"),
+          })
+          .from(jobs)
+          .where(eq(jobs.id, id)),
+      ),
     ),
   ]);
 

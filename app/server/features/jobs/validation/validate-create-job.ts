@@ -1,10 +1,12 @@
 import { JobValidationError } from "../errors/job-validation-error";
+import { JobItemValidationError } from "../errors/job-item-validation-error";
+import { validateCreateJobItem } from "./validate-create-job-item";
 import type {
   CreateJobInput,
   CreateJobFieldErrors,
 } from "../types/create-job-input";
 
-export function validateCreateJob(input: CreateJobInput): CreateJobInput {
+export function validateCreateJob(input: CreateJobInput) {
   const name = input.name.trim();
   const customerId = input.customerId.trim();
   const scheduledDate = input.scheduledDate.trim();
@@ -29,7 +31,23 @@ export function validateCreateJob(input: CreateJobInput): CreateJobInput {
   if (!description) fieldErrors.description = "Enter a job description.";
   else if (description.length > 2000)
     fieldErrors.description = "Use 2,000 characters or fewer.";
+  const charges = (input.charges ?? []).map((charge, index) => {
+    try {
+      return validateCreateJobItem(charge);
+    } catch (error) {
+      if (!(error instanceof JobItemValidationError)) throw error;
+      for (const field of [
+        "description",
+        "quantity",
+        "unitPriceCents",
+      ] as const) {
+        const message = error.fieldErrors[field];
+        if (message) fieldErrors[`charges[${index}].${field}`] = message;
+      }
+      return charge;
+    }
+  });
   if (Object.keys(fieldErrors).length)
     throw new JobValidationError(fieldErrors);
-  return { name, customerId, scheduledDate, description };
+  return { name, customerId, scheduledDate, description, charges };
 }

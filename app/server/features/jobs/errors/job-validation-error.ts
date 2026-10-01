@@ -1,6 +1,10 @@
 export class JobValidationError extends Error {
-  constructor(public readonly fieldErrors: Record<string, string>) {
-    super("Check the job details.");
+  readonly fieldErrors: Partial<Record<string, string>>;
+
+  constructor(fieldErrors: Partial<Record<string, string>>) {
+    super("Job validation failed.");
+
     this.name = "JobValidationError";
+    this.fieldErrors = fieldErrors;
   }
 }

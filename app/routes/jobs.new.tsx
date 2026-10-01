@@ -8,6 +8,7 @@ import { listActiveCustomers } from "../server/features/customers/queries/list-a
 import { createJob } from "../server/features/jobs/services/create-job.server";
 import { JobValidationError } from "../server/features/jobs/errors/job-validation-error";
 import NewJobPage from "../ui/features/jobs/pages/new-job-page/new-job-page";
+import { parseJobItemForm } from "../server/features/jobs/validation/parse-job-item-form";
 
 export async function loader({ context }: Route.LoaderArgs) {
   const user = context.get(currentUserContext);
@@ -41,9 +42,27 @@ export async function action({ request, context }: Route.ActionArgs) {
     customerId: text("customerId"),
     scheduledDate: text("scheduledDate"),
     description: text("description"),
+    charges: [
+      ...new Set(
+        [...form.keys()].flatMap((key) => {
+          const match =
+            /^charges\[(\d+)\]\.(description|quantity|unitPrice)$/.exec(key);
+          return match ? [match[1]] : [];
+        }),
+      ),
+    ]
+      .sort((a, b) => Number(a) - Number(b))
+      .map((index) => ({
+        description: text(`charges[${index}].description`),
+        quantity: text(`charges[${index}].quantity`),
+        unitPrice: text(`charges[${index}].unitPrice`),
+      })),
   };
   try {
-    await createJob(context.get(runtimeContext).env.DB, user, values);
+    await createJob(context.get(runtimeContext).env.DB, user, {
+      ...values,
+      charges: values.charges.map(parseJobItemForm),
+    });
   } catch (error) {
     if (error instanceof JobValidationError)
       return data({ values, fieldErrors: error.fieldErrors }, { status: 400 });

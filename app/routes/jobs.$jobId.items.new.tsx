@@ -1,3 +1,4 @@
+import { parseJobItemForm } from "../server/features/jobs/validation/parse-job-item-form";
 import { data, redirect } from "react-router";
 
 import type { Route } from "./+types/jobs.$jobId.items.new";
@@ -11,18 +12,6 @@ import { JobStateConflictError } from "../server/features/jobs/errors/job-state-
 import { getJobById } from "../server/features/jobs/queries/get-job-by-id.server";
 import { createJobItem } from "../server/features/jobs/services/create-job-item.server";
 import AddJobItemPage from "../ui/features/jobs/pages/add-job-item-page/add-job-item-page";
-
-function parseUnitPriceCents(value: string) {
-  const trimmed = value.trim();
-
-  if (!/^\d+(?:\.\d{1,2})?$/.test(trimmed)) {
-    return Number.NaN;
-  }
-
-  const [dollars, cents = ""] = trimmed.split(".");
-
-  return Number(dollars) * 100 + Number(cents.padEnd(2, "0"));
-}
 
 export async function loader({ context, params }: Route.LoaderArgs) {
   const user = context.get(currentUserContext);
@@ -77,13 +66,7 @@ export async function action({ request, context, params }: Route.ActionArgs) {
       context.get(runtimeContext).env.DB,
       user,
       params.jobId,
-      {
-        description: values.description,
-        quantity: /^\d+$/.test(values.quantity.trim())
-          ? Number(values.quantity)
-          : Number.NaN,
-        unitPriceCents: parseUnitPriceCents(values.unitPrice),
-      },
+      parseJobItemForm(values),
     );
   } catch (error) {
     if (error instanceof JobItemValidationError) {

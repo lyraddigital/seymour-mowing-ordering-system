@@ -7,10 +7,12 @@ import type {
 import Icon from "../../../../components/icon/icon";
 import ui from "../../../../styles/product.module.css";
 import styles from "./new-job-page.module.css";
+import InitialJobCharges from "../../components/initial-job-charges/initial-job-charges";
+import type { JobItemFormValues } from "../../../../../server/features/jobs/validation/parse-job-item-form";
 
 interface NewJobPageProps {
   customers: { id: string; name: string }[];
-  values?: CreateJobInput;
+  values?: Omit<CreateJobInput, "charges"> & { charges?: JobItemFormValues[] };
   fieldErrors?: CreateJobFieldErrors;
 }
 
@@ -212,6 +214,13 @@ export default function NewJobPage({
             </div>
           </div>
         </section>
+
+        <InitialJobCharges
+          key={JSON.stringify({ charges: values?.charges, fieldErrors })}
+          values={values?.charges}
+          fieldErrors={fieldErrors}
+          disabled={saving || !hasCustomers}
+        />
 
         <footer className={styles.actions}>
           <button
